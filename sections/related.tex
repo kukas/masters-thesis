@@ -51,7 +51,7 @@ The principle of BPE is to iteratively merge the most frequent byte pairs in the
 
 \subsection{Wordpiece}
 
-First introduced in \cite{Schuster and Nakajima, 2012)} the Wordpiece algorithm is a similar technique to BPE. It is used in the well known pretrained models such as BERT \citep{Devlin2018}. The training is based on greedy merging of the subword units. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an n-gram language model trained on the corpus.
+First introduced in \cite{SchusterandNakajima2012)} the Wordpiece algorithm is a similar technique to BPE. It is used in the well known pretrained models such as BERT \citep{Devlin2018}. The training is based on greedy merging of the subword units. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an n-gram language model trained on the corpus.
 
 Contrary to BPE and UnigramLM, there is no official, public implementation of the original Wordpiece algorithm. There are several implementations of the algorithm available but these diverge from the original algorithm. For example, the implementation in the HuggingFace library \citep{Wolf2019} does not use the n-gram language model to merge the subword units. Instead, the training follows the BPE procedure and only adds prefixes to the subword units to mimic the output format of the BERT Wordpiece implementation.
 
@@ -59,7 +59,7 @@ The implementation in the Tensorflow library follows a top-down approach to crea
 
 \subsection{UnigramLM}
 
-The Unigram LM tokenizer, sometimes referred to as the SentencePiece tokenizer \citep{Kudo and Richardson, 2018}, was introduced by \citet{Kudo2018}. The motivation for this method was to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
+The Unigram LM tokenizer, sometimes referred to as the SentencePiece tokenizer \citep{KudoandRichardson2018}, was introduced by \citet{Kudo2018}. The motivation for this method was to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
 
 Given an input sentence $X$, the Unigram LM algorithm finds the most probable segmentation $x^\star$ for the input sentence X:
 
