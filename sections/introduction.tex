@@ -1,0 +1,27 @@
+
+\chapwithtoc{Introduction}
+
+% Introduction should answer the following questions, ideally in this order:
+% \begin{enumerate}
+% \item What is the nature of the problem the thesis is addressing?
+% \item What is the common approach for solving that problem now?
+% \item How this thesis approaches the problem?
+% \item What are the results? Did something improve?
+% \item What can the reader expect in the individual chapters of the thesis?
+% \end{enumerate}
+
+% Expected length of the introduction is between 1--4 pages. Longer introductions may require sub-sectioning with appropriate headings --- use \texttt{\textbackslash{}section*} to avoid numbering (with section names like `Motivation' and `Related work'), but try to avoid lengthy discussion of anything specific. Any ``real science'' (definitions, theorems, methods, data) should go into other chapters.
+% \todo{You may notice that this paragraph briefly shows different ``types'' of `quotes' in TeX, and the usage difference between a hyphen (-), en-dash (--) and em-dash (---).}
+
+% It is very advisable to skim through a book about scientific English writing before starting the thesis. I can recommend `\citetitle{glasman2010science}' by \citet{glasman2010science}.
+
+
+Tokenization is the crucial first step we take when tackling a natural language processing (NLP) problem. Traditionally, the term tokenization referred to the methods of splitting up an input text into words as a preprocessing step for NLP methods. After the advent of large neural models, we have seen a shift towards using subword tokenization methods such as Byte Pair Encoding (BPE), Unigram Language Model or Wordpiece. These methods split up words into subword units, which are then used as the input tokens for the neural models.
+
+The reason for this shift is computational complexity and mitigation of the out-of-vocabulary problem. The computation of softmax cross-entropy loss over a very large output vocabulary is computationally intractable and reducing the size of the vocabulary is desirable in this case. The second reason is that by using subword tokenization, we can handle out-of-vocabulary (OOV) words better. The uncommon words are split into subword units present in the vocabulary.
+
+Lately, we have seen a shift towards multilingual pretrained models in the NLP field. These models are pretrained on a large corpus of text in multiple languages and have been shown to perform on par with monolingual models. While much effort has been put into scaling up the pretrained models, the training data or increasing the number of languages, little attention has been paid to the tokenization methods used in these models.
+
+Still today, the usual approach is simply to construct the subword vocabulary using the joint multilingual corpus used for training the model. This approach however has been shown to underrepresent the low-resource languages in the corpus and over-represent languages that use the Latin script. It has been also hypothesized that constructing the vocabulary using the joint corpus might lead to non-optimal tokenization for the languages that share the script but belong to different language families.
+
+In this work, we propose a new method for constructing the subword vocabulary for multilingual pretrained models. We use the monolingual corpora of the languages in the multilingual corpus to construct the subword vocabulary. We show that this approach leads to better tokenization for the low-resource languages in the multilingual corpus.

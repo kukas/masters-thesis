@@ -1,0 +1,152 @@
+
+% Example pseudo-code from the original thesis template:
+% \begin{algorithm}
+%     \begin{algorithmic}
+%     \Function{ExecuteWithHighProbability}{$A$}
+%         \State $r \gets$ a random number between $0$ and $1$
+%         \State $\varepsilon \gets 0.0000000000000000000000000000000000000042$
+%         \If{$r\geq\varepsilon$}
+%             \State execute $A$ \Comment{We discard the return value}
+%         \Else
+%             \State print: \texttt{Not today, sorry.}
+%         \EndIf
+%     \EndFunction
+%     \end{algorithmic}
+%     \caption{Algorithm that executes an action with high probability. Do not care about formal semantics in the pseudocode --- semicolons, types, correct function call parameters and similar nonsense from `realistic' languages can be safely omitted. Instead make sure that the intuition behind (and perhaps some hints about its correctness or various corner cases) can be seen as easily as possible.}
+%     \label{alg:w}
+% \end{algorithm}
+
+
+
+\chapter{Related work}
+\label{chap:related_work}
+
+In this chapter we discuss the related work in the field of subword tokenization and multilingual pretrained models. We start with a brief overview of the subword tokenization methods and then discuss the multilingual pretrained models. We also discuss the work that has been done in the field of multilingual subword tokenization.
+
+\section{Subword tokenization}
+
+Subword tokenization methods split up words into subword units, which are then used as the input tokens for the neural models. This is done to mitigate the out-of-vocabulary (OOV) problem and to reduce the computational complexity of the softmax cross-entropy loss over a very large output vocabulary. The most common subword tokenization methods are Byte Pair Encoding (BPE), UnigramLM and Wordpiece.
+
+\subsection{Byte Pair Encoding (BPE)}
+
+The Byte Pair Encoding (BPE) algorithm was introduced by \citet{Sennrich2015}. They have adapted a compression algorithm \todo{cite Gage 1994} to learn a subword vocabulary from a corpus. This method was shown to improve the performance of neural machine translation (NMT) models. BPE was subsequently used for some of the well known pretrained models such as GPT-2 \citep{Radford2019}.
+
+The principle of BPE is to iteratively merge the most frequent byte pairs in the corpus until the vocabulary size reaches the target size. The algorithm starts with a vocabulary of unique characters used in the input corpus. Using this vocabulary, we then compute the frequency of every character pair and merge the most frequent pair to create a new subword unit. We recompute the frequency of the subword unit pairs and repeat the process until the target vocabulary size is reached.
+
+\begin{algorithm}
+    \begin{algorithmic}
+        \Function{BPE}{$C$}
+        \State $V \gets$ unique characters in $C$
+        \While{$|V| < V_{target}$}
+        \State $p \gets$ most frequent pair in $V$
+        % \State $V \gets V \setminus p$
+        \State $V \gets V \cup \{p\}$
+        \EndWhile
+        \State \Return $V$
+        \EndFunction
+    \end{algorithmic}
+    \caption{The Byte Pair Encoding algorithm.}
+    \label{alg:bpe}
+\end{algorithm}
+
+\subsection{Wordpiece}
+
+First introduced in \cite{Schuster and Nakajima, 2012)} the Wordpiece algorithm is a similar technique to BPE. It is used in the well known pretrained models such as BERT \citep{Devlin2018}. The training is based on greedy merging of the subword units. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an n-gram language model trained on the corpus.
+
+Contrary to BPE and UnigramLM, there is no official, public implementation of the original Wordpiece algorithm. There are several implementations of the algorithm available but these diverge from the original algorithm. For example, the implementation in the HuggingFace library \citep{Wolf2019} does not use the n-gram language model to merge the subword units. Instead, the training follows the BPE procedure and only adds prefixes to the subword units to mimic the output format of the BERT Wordpiece implementation.
+
+The implementation in the Tensorflow library follows a top-down approach to create the subword vocabulary. It starts with a vocabulary of words and then iteratively splits the words into subword units to reach a target vocabulary size.
+
+\subsection{UnigramLM}
+
+The Unigram LM tokenizer, sometimes referred to as the SentencePiece tokenizer \citep{Kudo and Richardson, 2018}, was introduced by \citet{Kudo2018}. The motivation for this method was to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
+
+Given an input sentence $X$, the Unigram LM algorithm finds the most probable segmentation $x^\star$ for the input sentence X:
+
+\begin{equation}
+    x^\star = {\arg\max}_{x \in \mathcal{S}(X)} P(x)
+\end{equation}
+
+
+Where $\mathcal{S}(X)$ is the set of all possible segmentations of the input sentence $X$ given a subword vocabulary $\mathcal{V}$. The probability $P(x)$ of a segmentation $x$ is computed as a product of subword occurrence probabilities $p(x_i)$:
+
+\begin{equation}
+    P(x) = \prod_{i=1}^{|x|} p(x_i)
+\end{equation}
+
+Here, the subword occurence probabilities cannot be computed using occurence statistics in the corpus. With a given vocabulary, there is usually many posibilites on how to segment the input sentence from character level granularity to word level. Instead, the Unigram LM uses the Expectation-Maximization (EM) algorithm to estimate the subword occurrence probabilities $p(x_i)$. The EM algorithm maximizes the marginal likelihood $\mathcal{L}$ with respect to the latent variables $p(x_i)$:
+
+\begin{equation}
+    \mathcal{L} = \sum_{s=1}^{|D|} \log (P(X^{(s)})) = \sum_{s=1}^{|D|} \log( \sum_{x \in \mathcal{S}(X^{(s)})} P(x) )
+\end{equation}
+
+By maximizing the marginal likelihood, the Unigram LM considers all possible segmentations of the input sentences when estimating the subword occurrence probabilities $p(x_i)$. After optimization of $p(x)$, it is then possible to compute the most probable segmentation $x^\star$ for a given input sentence $X$ using the Viterbi algorithm.
+
+The training of the Unigram LM works in a top-down fashion. It starts with a large seed vocabulary of the most frequent character n-grams. These character n-grams are then iteratively pruned down to the target vocabulary size in the following way:
+
+\begin{enumerate}
+    \item With a given vocabulary $\mathcal{V}$, estimate the subword occurrence probabilities $p(x_i)$ using the EM algorithm.
+    \item Segment the training corpus, sample the best segmentation for every sentence.
+    \item For each subword $x_i$ in the vocabulary, compute the loss. The loss is defined as the decrease in the unigram language model likelihood if the subword is removed from the vocabulary.
+    \item Keep the top 80\% of the subwords with the lowest loss.
+    \item Repeat this process with the new vocabulary $\mathcal{V}$ until the target vocabulary size is reached.
+\end{enumerate}
+
+-> bostrom has really nice pseudocode
+
+% For a given vocabulary $\mathcal{V}$,
+
+% The pruning is done using a unigram language model. With a subword vocabulary and corresponding subword occurence probabilities $p(x_i)$, the unigram language model computes the probability of a sentence $X$ as follows:
+
+% The Unigram LM algorithm uses, as the name suggests, a unigram language model to learn the subword vocabulary. 
+
+
+% With the default hyperparameter settings, the algorithm starts with an initial vocabulary of $1 000 000$ \todo{fix num} most frequent character ngrams found within the word boundaries. These character n-grams are then iteratively pruned down to the target vocabulary size. T
+
+% The overview of the algorithm is as follows:
+
+% 1. Create a large seed vocabulary
+
+% 2. Repeat until the target vocabulary size is reached:
+
+
+% (a). Optimize the subword occurence probabilities $p(x_i)$ using the EM algorithm (default value is 2 EM subiterations). The EM algorithm maximizes the marginal likelihood $\mathcal{L}$ with $p(x_i)$ as the latent variables:
+
+% Expectation step: Compute the marginal probability of each subword $x_i$ using the current probabilities $p(x_i)$.
+
+% Maximization step: Compute the new probabilities $p(x_i)$ using the expected number of occurrences $E(x_i)$.
+
+% (b). Merge the n-gram with the highest probability
+
+% Under the assumptions of the unigram language model, the probability of a sequence $x = ( x_1, \dots, x_n )$ is given by the product of the probabilities of the individual tokens $x_i$:
+
+% \begin{equation}
+%     P(x) = \prod_{i=1}^{n} P(x_i)
+% \end{equation}
+
+% The initial probability of the character n-grams is given by their frequency in the corpus over the sum of all frequencies:
+
+% \begin{equation}
+%     P(x_i) = \frac{f(x_i)}{\sum_{j=1}^{N} f(x_j)}
+% \end{equation}
+
+% Where asfdas
+
+\section{Subword regularization}
+
+\begin{enumerate}
+    \item bpe dropout
+    \item unigram lm
+\end{enumerate}
+
+\section{Multilingual tokenization}
+
+- Big models such as XLM-R do not care, train SentencePiece on 100M sentences with alpha=0.3 on all languages.
+
+- Problems:
+- Rust et al: the multilingual performance of mBERT can be improved by switching to monolingual vocabulary. The performance gap between monolingual and multilingual models is training data size AND language-specific vocabulary capacity
+
+
+
+- Chung - cluster languages
+
