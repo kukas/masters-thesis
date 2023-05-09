@@ -1,0 +1,15 @@
+
+
+\chapter{Method}
+\label{chap:method}
+
+In this chapter, we discuss the methodology of the thesis. We motivate and specify the research question, state the hypothesis and the specify how we test it.
+
+The main goal of the thesis is to \textbf{improve multilingual models with better tokenization}. The standard procedure followed by most of the large multilingual models is to train the tokenizer on the joint, multilingual corpus used for training the model \cite{mielke_between_2021,conneau_unsupervised_2020,conneau_cross-lingual_nodate}. As many authors pointed out \cite{wang_improving_2019,chung_improving_2020,rust_how_2021}, by using this simple approach the resulting tokenizer overtokenizes some of the low-resource languages, especially those that do not use the latin script. The latin script tokens appear more often in the resulting vocabulary because the procedure of merging all corpora together greatly increases the occurence statistics of the Latin character n-grams. \cite{zheng_allocating_2021}
+
+To this end, several methods of mitigating this issue were suggested. \citet{chung_improving_2020} proposed a method based on creating multiple clusters of corpora instead of one joint cluster. The multilingual tokenizer is then created by merging together smaller, specialized tokenizers trained on these clusters. \citet{zheng_allocating_2021} proposed a method of allocating the vocabulary budget to the languages based on a heuristic function similar to entropy. \citet{liang_xlm-v_2023} showed that by combining the two approaches, the resulting tokenizer scales better to larger vocabulary sizes.
+
+Unrelated to multilingual models, we have seen also other approaches of tokenizer improvement related to Domain Adaptation. In the paper \Citetitle{gururangan_dont_2020}, \citeauthor{gururangan_dont_2020} \cite{gururangan_dont_2020} showed that a continued pretraining models on a domain-specific data leads to performance improvements of in-domain tasks. \citet{sachidananda_efficient_2021} showed that these improvements can be achieved not only by costly pretraining continuation but also by simply extending the model vocabulary with a small amount of domain-specific tokens that are then fine-tuned on the domain tasks.
+
+% With this goal in mind, we iterate on the work of \citet{chung_improving_2020}, \citet{zheng_allocating_2021}, and \citet{liang_xlm-v_2023}. The common goal of these works is to improve the tokenization of low-resource languages by changing the process of tokenizer vocabulary creation. The authors agree that some languages in the corpora are under-
+% \citet{chung_improving_2020} trained
