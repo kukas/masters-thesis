@@ -11,5 +11,53 @@ To this end, several methods of mitigating this issue were suggested. \citet{chu
 
 Unrelated to multilingual models, we have seen also other approaches of tokenizer improvement related to Domain Adaptation. In the paper \Citetitle{gururangan_dont_2020}, \citeauthor{gururangan_dont_2020} \cite{gururangan_dont_2020} showed that a continued pretraining models on a domain-specific data leads to performance improvements of in-domain tasks. \citet{sachidananda_efficient_2021} showed that these improvements can be achieved not only by costly pretraining continuation but also by simply extending the model vocabulary with a small amount of domain-specific tokens that are then fine-tuned on the domain tasks.
 
-% With this goal in mind, we iterate on the work of \citet{chung_improving_2020}, \citet{zheng_allocating_2021}, and \citet{liang_xlm-v_2023}. The common goal of these works is to improve the tokenization of low-resource languages by changing the process of tokenizer vocabulary creation. The authors agree that some languages in the corpora are under-
-% \citet{chung_improving_2020} trained
+In this thesis we first replicate the results of \citet{chung_improving_2020}, \citet{zheng_allocating_2021} and \citet{liang_xlm-v_2023} on our selected subset of languages. We then use our evaluation framework of \citet{limisiewicz_tokenization_2023} to compare these methods and pick a strong baseline. We then present our novel method of improving the tokenizer based on a extension of the clustering idea of \citet{chung_improving_2020}.
+
+\section{Methodology overview}
+
+To be able to compare several tokenization methods we need to fix a training and evaluation procedure that we will use throught the thesis for each experiment, be it a replication of a previous work or our own novel method. In following sections we describe the training and evaluation procedure that we use in the thesis.
+
+For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised_2020}. Using the data we create multilingual vocabularies with the same size of 120K unique tokens using different methods. We use intrinsic evaluation framework from \citet{limisiewicz_tokenization_2023} to evaluate the tokenizers. Then we use the tokenizers to train multilingual masked language models on the same data and evaluate them on the same set of downstream tasks. We compare the results of the intrinsic and extrinsic evaluation to see if the improvements in the intrinsic evaluation translate to improvements in the downstream tasks.
+
+\section{Data and scope}
+
+For training the vocabularies and the masked language models we use the CC100 dataset \cite{conneau_unsupervised_2020}.
+
+This unlabeled, multilingual dataset was created from the Common Crawl corpus using an automatic pipeline. The data was deduplicated and language-identified. Then for each monolingual corpus the data was filtered using Kneser-Ney language models trained on Wikipedia. Documents with perplexity under a certain language-specific threshold were filtered out. The data processing process is described in detail in \citet{wenzek_ccnet_nodate}. A reproduction of the dataset is available at \url{https://data.statmt.org/cc-100/}.
+
+For purposes of this thesis, we select 20 out of 116 languages following \citet{limisiewicz_tokenization_2023} and download 10\% of the data for each language. We choose to focus on this subset of the dataset due to computational constraints.
+
+\todo{add table with the languages with a summary of some of the properties (which languages share script, which are typologically related, which use spaces and which don't, which are low-resource)}
+
+This subset of CC100 is then used for further experiments with vocabulary creation that will be described in the following sections.
+
+For pretraining the models, we further subsample the data following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. The empirical probability of sampling a line from language $l$ is given by:
+
+\begin{equation}
+    p(l) = \frac{N_l}{\sum_{l' \in L} N_{l'}}
+\end{equation}
+
+Where $N_l$ is the number of lines in the dataset for language $l$.
+
+To ensure that the low-resource languages are not underrepresented in the training data, we modify this probability distribution using an exponential smoothing parameter $\alpha$:
+
+\begin{equation}
+    p'(l) = \frac{p(l)^\alpha}{\sum_{l' \in L} p(l')^\alpha}
+\end{equation}
+
+For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha = 1$ we get the original distribution. We use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}.
+
+\section{Reproducing the vocabulary capacity balancing methods}
+
+As the first step towards
+
+\section{Proposed method}
+
+\subsection{Clustering corpora on the document level}
+
+\section{Evaluation}
+
+\subsection{Intrinsic evaluation}
+
+\subsection{Extrinsic evaluation}
+

@@ -18,11 +18,11 @@
 
 
 
-\chapter{Related work}
-\label{chap:related_work}
+\chapter{Background}
+\label{chap:background}
 
-In this chapter we discuss the related work in the field of subword tokenization and multilingual pretrained models. We start with a brief overview of the subword tokenization methods and then discuss the multilingual pretrained models. We also discuss the work that has been done in the field of multilingual subword tokenization.
-
+\xxx{In this chapter we discuss the related work in the field of subword tokenization and multilingual pretrained models. We start with a brief overview of the subword tokenization methods and then discuss the multilingual pretrained models. We also discuss the work that has been done in the field of multilingual subword tokenization.
+}
 \section{Subword tokenization}
 
 Subword tokenization methods split up words into subword units, which are then used as the input tokens for the neural models. This is done to mitigate the out-of-vocabulary (OOV) problem and to reduce the computational complexity of the softmax cross-entropy loss over a very large output vocabulary. The most common subword tokenization methods are Byte Pair Encoding (BPE), UnigramLM and Wordpiece.
@@ -49,9 +49,12 @@ The principle of BPE is to iteratively merge the most frequent byte pairs in the
     \label{alg:bpe}
 \end{algorithm}
 
+\subsection{Byte-level BPE}
+
+
 \subsection{Wordpiece}
 
-First introduced in \cite{SchusterandNakajima2012)} the Wordpiece algorithm is a similar technique to BPE. It is used in the well known pretrained models such as BERT \citep{Devlin2018}. The training is based on greedy merging of the subword units. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an n-gram language model trained on the corpus.
+First introduced in \cite{SchusterandNakajima2012)} the Wordpiece algorithm is a similar technique to BPE. It is used in the well known pretrained models such as BERT \citep{devlin_bert_2019}. The training is based on greedy merging of the subword units. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an n-gram language model trained on the corpus.
 
 Contrary to BPE and UnigramLM, there is no official, public implementation of the original Wordpiece algorithm. There are several implementations of the algorithm available but these diverge from the original algorithm. For example, the implementation in the HuggingFace library \citep{Wolf2019} does not use the n-gram language model to merge the subword units. Instead, the training follows the BPE procedure and only adds prefixes to the subword units to mimic the output format of the BERT Wordpiece implementation.
 
@@ -130,23 +133,116 @@ The training of the Unigram LM works in a top-down fashion. It starts with a lar
 %     P(x_i) = \frac{f(x_i)}{\sum_{j=1}^{N} f(x_j)}
 % \end{equation}
 
-% Where asfdas
+\subsection{Alternative tokenization approaches (low priority)}
 
-\section{Subword regularization}
+\subsubsection{Character-level models}
+\subsubsection{Morphology based models}
+
+\section{Subword regularization (low priority)}
 
 \begin{enumerate}
     \item bpe dropout
     \item unigram lm
 \end{enumerate}
 
-\section{Multilingual tokenization}
+\section{Language modeling}
 
-- Big models such as XLM-R do not care, train SentencePiece on 100M sentences with alpha=0.3 on all languages.
+\section{Multilingual Language Models}
 
-- Problems:
-- Rust et al: the multilingual performance of mBERT can be improved by switching to monolingual vocabulary. The performance gap between monolingual and multilingual models is training data size AND language-specific vocabulary capacity
+\chapter{Related work}
+\label{chap:related_work}
+
+\section{Tokenization with many languages}
+
+Despite the recent advances in language modeling, the tokenization methods used in the multilingual language models remain mostly unchanged. The first models trained on multiple languages, such as mBERT \cite{devlin_bert_2019} and XLM \cite{lample_cross-lingual_2019} use the same tokenization methods as their monolingual versions - namely the Wordpiece and BPE algorithms.
+Later language models such as XLM-R \cite{conneau_unsupervised_2020}, mBART \cite{liu_multilingual_2020} or mT5 \cite{xue_mt5_2021} use the Unigram LM algorithm to learn the subword vocabulary. The most recent multilingual generative models, such as the 176B parameter BLOOM model \cite{scao_bloom_2022} or the XGLM \cite{lin_few-shot_2022} use the Byte-level BPE and Unigram LM algorithms respectively.
+
+The method these models use to tokenize the input text is the same as the one used in the monolingual models. The only difference is that the tokenization algorithm is run on the concatenation of all languages in the training data, usually after performing random sampling with exponential smoothing to mitigate the bias towards high-resource languages.
+
+As \citet{rust_how_2021} have shown, this bias however still persists. \citet{rust_how_2021} compare the performance of the multilingual model mBERT and language specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different langugaes, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. They show that the performance of mBERT can be improved for a specific language by switching to a monolingual vocabulary and that the downstream task performance is correlated with how often the tokenizer splits single words into several subwords. This metric is called \textit{fertility} \cite{acs_exploring_2019} and is defined as the average number of subwords per word.
+
+The oversegmentation of low-resource languages leads to longer sequence lengths and more frequent splitting of words. Thus the multilingual model must learn to compose the subwords back into semantic units and also learn to attend to correct subwords over longer distances \cite{chung_improving_2020}. Moreover, mismatched segmentation granularity might lead to incompatible representations for subwords across languages. \citet{maronikolakis_wine_2021} have shown that tokenization compatibility can have a significant impact on multilingual performance.
+
+\subsection{Mitigating the language bias}
+
+There have been several attempts to mitigate the language bias in multilingual language models. We will now describe the most prominent ones.
+
+\subsubsection{Language-Clustered Vocabularies}
+
+In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \citeauthor{chung_improving_2020} propose a method to mitigate the language bias by using language-clustered vocabularies. They construct an improved vocabulary by merging together several smaller vocabularies that were trained on subsets of the whole, multilingual training corpus. These smaller vocabularies are constructed by clustering the monolingual corpora based on their similarity and then training a separate vocabulary for each cluster. The authors show that the language-clustered vocabularies lead to improved performance on low-resource languages.
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{img/temp/chung_language_vectors.png}
+    \caption{Binary vector representations used for language clustering. Figure taken from \cite{chung_improving_2020}.}
+    \label{fig:chung_vectors}
+\end{figure}
+
+Their method works by clustering the languages and then merging the cluster-level vocabularies. To cluster the languages using the k-means algorithm, it is necessary to define an euclidean vector space with each language having a representative vector (\autoref{fig:chung_vectors}). To this end, the authors first train equally sized vocabularies $V^l$ for each language separately using the UnigramLM method. Then they create a merged vocabulary $V^L$ by taking the union of the vocabularies $V^l$. To produce a language vector $\vec{v}^l$ for each language $l$, the presence of each subword $V^L_i$ is checked in the language-specific $V^l$ and the value is set to 1 if the subword is present and 0 otherwise.
+
+\begin{equation}
+    \vec{v}^l_i = \begin{cases}
+        1 & \text{if } V^L_i \in V^l \\
+        0 & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+With the languages represented as vectors, the k-means algorithm can be used to cluster them. The authors use the cosine distance as the distance metric (or equvalently: they normalize the language vectors to have a length 1 before clustering). With 104 languages in total, the number of clusters is set to 8. The choice of $k$ is determined empirically using results on a TYDYQA benchmark. The resulting clusters are shown in \autoref{fig:chung_clusters}.
+
+After the languages are clustered, the cluster-specific vocabularies are trained using the UnigramLM algorithm on the union of the corpora of the languages in the cluster. The size of each cluster-specific vocabulary is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. The final vocabulary is simply union over the cluster vocabularies.
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/temp/chung_clusters.png}
+    \caption{Clusters of languages used in \cite{chung_improving_2020}. The clusters are numbered from 0 to 7. Figure taken from \cite{chung_improving_2020}.}
+    \label{fig:chung_clusters}
+\end{figure}
+
+
+The final vocabulary is then compared to the standard recipe of training a Unigram LM vocabulary on a joint corpus. Because the proposed clustering method does not have a way of controlling the size of the final vocabulary, the authors compare the vocabularies by first following the clustering method and arriving at a 488k subword vocabulary. Then the standard method is followed to train a vocabulary of the same size.
+
+The authors evaluate the vocabularies intrinsically - by examining the average number of tokens per sentence, out-of-vocabulary rate and vocabulary overlap using the Wasserstein-1 distance.
+By computing the average number of tokens per sentence over the whole training corpus, the authors show that the language-clustered vocabulary leads to a smaller average number of tokens per sentence.
 
 
 
-- Chung - cluster languages
 
+% The authors propose a new multilingual tokenization method. The vocabulary is constructed by clustering languages, applying SentencePiece to each cluster and merging the vocabularies together.
+% The clustering is done by comparing similarity between monolingual vocabularies (NOT taking frequency of tokens into account - that is done in Liang et al 2023). Target vocabulary size for each cluster is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. The final vocabulary is simply union over the cluster vocabs (how do they ensure the target size for the whole vocab?)
+% Intrinsic evaluation of the alternative vocabularies is done by computing the empirical distributions of the languages using Wasserstein-1 distance. The metric is used to compare the tokenizers and to prove that in the new approach, there is a smaller distance in the similar languages and at the same time bigger distance in the linguistically different languages. They also show that the Chinese and Arabic scripts is now in a larger share of the vocabulary.
+% To analyze the “vocabulary allocation” they use a reformulation of description length for tokenizers = description length is equivalent to the the vocabulary size, and the number of integers of the encoded or tokenized input data. When comparing two tokenizers with the same vocabulary size, this is equivalent to comparing the average number of tokens per sentence. Caveat: there might be tradeoff with the out of vocabulary rate. They propose DL as a proxy metric to compare vocabularies.
+% this work, we introduce a novel procedure for multilingual vocabulary generation that combines the separately trained vocabularies of several automatically derived language clusters, thus balancing the trade-off between cross-lingual subword sharing and language-specific vocabularies. Our experiments show improvements across languages on key multilingual benchmark tasks TYDI QA (+2.9 F1), XNLI (+2.1\%), and WikiAnn NER (+2.8 F1) and factor of 8 reduction in out-of-vocabulary rate, all without increasing the size of the model or data.
+% Notes
+% Because these algorithms look at overall subword frequencies in the combined multilingual corpus, they may learn suboptimal decompositions for low-resource languages that happen to have character combinations that resemble subwords of high-resources languages.
+% subwords in common scripts like Latin and Cyrillic have a higher chance of selection since their counts are combined across a large number of languages (Wu and Dredze, 2019)
+% subword sharing is not the principal reason for the effectiveness of multilingual models K et al. (2020)
+% Ideas:
+
+% - This still does not seem to solve the problem with cross-lingual sharing of wrong tokens such as “a” (conj in cs vs prep in eng)
+% - Can we do the clustering better so that the languages are clustered according to the  downstream performance rather than hand-picked similarity metric between langs?
+
+
+% - How Robust is Neural Machine Translation to Language Imbalance in Multilingual Tokenizer Training?
+
+% - section about how language models are still using the tokenization techniques such as BPE and UnigramLM that were developed for monolingual models.
+% - example models: mBERT uses Wordpiece, XLM uses BPE, XLM-R uses Unigram LM. More currently - mBART uses Unigram LM, T5 and mT5 uses Unigram LM. Even more recently, the 176B parameter BLOOM model uses Byte-level BPE and the multilingual generative model XGLM uses Unigram LM. Most of these models use the SentencePiece implementation and run the tokenization algorithm on the concatenation of all languages in the training data.
+
+
+
+
+
+% - Big models such as XLM-R do not care, train SentencePiece on 100M sentences with alpha=0.3 on all languages.
+
+% - Problems:
+% - Rust et al: the multilingual performance of mBERT can be improved by switching to monolingual vocabulary. The performance gap between monolingual and multilingual models is training data size AND language-specific vocabulary capacity
+
+
+
+% - Chung - cluster languages
+
+\section{Improving models with tokenization}
+
+
+\subsection{Domain Adaptation}
