@@ -16,12 +16,72 @@
 % It is very advisable to skim through a book about scientific English writing before starting the thesis. I can recommend `\citetitle{glasman2010science}' by \citet{glasman2010science}.
 
 
-Tokenization is the crucial first step we take when tackling a natural language processing (NLP) problem. Traditionally, the term tokenization referred to the methods of splitting up an input text into words as a preprocessing step for NLP methods. After the advent of large neural models, we have seen a shift towards using subword tokenization methods such as Byte Pair Encoding (BPE), Unigram Language Model or Wordpiece. These methods split up words into subword units, which are then used as the input tokens for the neural models.
+% Tokenization is the crucial first step we take when tackling a natural language processing (NLP) problem. Traditionally, the term tokenization referred to the methods of splitting up an input text into words as a preprocessing step for NLP methods. After the advent of large neural models, we have seen a shift towards using subword tokenization methods such as Byte Pair Encoding (BPE), Unigram Language Model or Wordpiece. These methods split up words into subword units, which are then used as the input tokens for the neural models.
 
-The reason for this shift is computational complexity and mitigation of the out-of-vocabulary problem. The computation of softmax cross-entropy loss over a very large output vocabulary is computationally intractable and reducing the size of the vocabulary is desirable in this case. The second reason is that by using subword tokenization, we can handle out-of-vocabulary (OOV) words better. The uncommon words are split into subword units present in the vocabulary.
+% The reason for this shift is computational complexity and mitigation of the out-of-vocabulary problem. The computation of softmax cross-entropy loss over a very large output vocabulary is computationally intractable and reducing the size of the vocabulary is desirable in this case. The second reason is that by using subword tokenization, we can handle out-of-vocabulary (OOV) words better. The uncommon words are split into subword units present in the vocabulary.
 
-Lately, we have seen a shift towards multilingual pretrained models in the NLP field. These models are pretrained on a large corpus of text in multiple languages and have been shown to perform on par with monolingual models. While much effort has been put into scaling up the pretrained models, the training data or increasing the number of languages, little attention has been paid to the tokenization methods used in these models.
+% Lately, we have seen a shift towards multilingual pretrained models in the NLP field. These models are pretrained on a large corpus of text in multiple languages and have been shown to perform on par with monolingual models. While much effort has been put into scaling up the pretrained models, the training data or increasing the number of languages, little attention has been paid to the tokenization methods used in these models.
 
-Still today, the usual approach is simply to construct the subword vocabulary using the joint multilingual corpus used for training the model. This approach however has been shown to underrepresent the low-resource languages in the corpus and over-represent languages that use the Latin script. It has been also hypothesized that constructing the vocabulary using the joint corpus might lead to non-optimal tokenization for the languages that share the script but belong to different language families.
+% Still today, the usual approach is simply to construct the subword vocabulary using the joint multilingual corpus used for training the model. This approach however has been shown to underrepresent the low-resource languages in the corpus and over-represent languages that use the Latin script. It has been also hypothesized that constructing the vocabulary using the joint corpus might lead to non-optimal tokenization for the languages that share the script but belong to different language families.
 
-In this work, we propose a new method for constructing the subword vocabulary for multilingual pretrained models. We use the monolingual corpora of the languages in the multilingual corpus to construct the subword vocabulary. We show that this approach leads to better tokenization for the low-resource languages in the multilingual corpus.
+% In this work, we propose a new method for constructing the subword vocabulary for multilingual pretrained models. We use the monolingual corpora of the languages in the multilingual corpus to construct the subword vocabulary. We show that this approach leads to better tokenization for the low-resource languages in the multilingual corpus.
+
+\xxx{Add an example of tokenization - in an image}
+
+% large multilingual models
+Large multilingual models such as XLM-R ...
+
+% what is tokenization
+Tokenization is the crucial first step we take when tackling a natural language processing (NLP) problem.
+- We need it because the input to the NLP methods is text and we need a method to somehow represent this text as a series of integers Characters are too fine-grained, one character on its own does not carry much meaning. Words are better but there are too many words in the language and for agglutinative and synthetic languages, the number of words is very large. We need to somehow split up the input text into smaller pieces that are still meaningful.
+- say what is tokenization
+    - process of splitting up the input text into smaller pieces - words or subwords (subword units)
+    - The step of splitting up an input text into words or smaller units is integral whether we translate a sentence, generate a summary or classify a text.
+    - The input text is split into tokens, which are then used as the input for the NLP methods
+% why is it important
+    - The choice of tokenization method affects the performance of the NLP methods
+
+% shift from words to subword tokenization
+% Traditionally, the term tokenization referred to the methods of splitting up an input text into words as a preprocessing step for NLP methods. With the advent of large neural models based on the Transformer architecture and their gradual domination across the NLP field, we have seen a shift towards using subword tokenization methods such as Byte Pair Encoding (BPE), Unigram Language Model or Wordpiece. These methods split up words into subword units, which are then used as the input tokens for the neural models.
+Traditionally, tokenization referred to splitting an input text into words as a preprocessing step for NLP methods. However, with the rise of large neural models based on the Transformer architecture, there has been a shift towards subword tokenization methods like Byte Pair Encoding (BPE), Unigram Language Model, and Wordpiece. These methods break down words into subword units, which then serve as input tokens for neural models.
+
+% where is it used - NMT, large language models and large multilingual models
+These subword tokenization methods have been found beneficial first in the Neural Machine Translation domain \citep{sennrich_neural_2016,kudo_sentencepiece_2018}. There they helped to tackle the problem of translation of rare words while keeping the vocabulary size manageable.
+- later they have been used in large language models (BERT, GPT-2) and multilingual models (mBERT, XLM-R)
+
+% multilingual models are useful but the tokenization is not optimal
+- The multilingual models enable access to language technology for low-resource languages
+- Similarly to the pretrained monolingual models, they can be used for various downstream tasks through finetuning
+- Additionally they can be used for zero-shot cross-lingual transfer
+    - where we do not need any data in the target language
+- However, the tokenization is not optimal
+    - Rust et al. (2021) show that the tokenization is not optimal for the low-resource languages in mBERT (they compare the performance of mBERT and language-specific BERTs)
+
+% we will focus on tokenization for multilingual models
+In this work, we focus on tokenization methods for multilingual language models.
+
+% we propose metrics for measuring the quality of tokenization
+- First we examine what properties of the tokenization are desirable for multilingual models
+    - To this end, we propose three metrics for measuring the quality of tokenization for multilingual models
+        - Intuitivelly, we measure the "vocabulary allocation" - how well is each language represented in the vocabulary
+        - We measure the "vocabulary overlap" - to what degree are the tokens shared between languages
+    - We show which metrics correlate with the performance of the model on the downstream tasks
+
+% we propose simple baselines for balancing the vocabulary that perform on par with more complex methods
+- Then we metodically examine and reproduce three tokenization methods \citep{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} proposed to tackle the problem of suboptimal tokenization in multilingual models in our setting
+- We compare these methods with two simpler baseline methods we propose
+- We measure the quality of tokenization using the metrics we propose
+- Then we select the best method and compare it with the baseline methods on the downstream tasks
+- We show that the baseline methods perform on par with the more complex methods
+- We show that all balancing methods improve the performance of the model on the word-level downstream tasks
+
+\section{Contributions}
+
+\section{Research Questions}
+
+% summary of the thesis structure with links to the chapters
+The thesis is structured as follows: In Chapter 1 we provide the necessary background on tokenization and multilingual models. 
+
+
+
+% In this thesis, our main objective is to investigate the effect of subword tokenization on the performance of multilingual pretrained models, with a specific focus on low-resource languages.
