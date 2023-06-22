@@ -21,8 +21,20 @@
 \chapter{Background}
 \label{chap:background}
 
-\xxx{In this chapter we discuss the related work in the field of subword tokenization and multilingual pretrained models. We start with a brief overview of the subword tokenization methods and then discuss the multilingual pretrained models. We also discuss the work that has been done in the field of multilingual subword tokenization.
-}
+% \xxx{In this chapter we discuss the related work in the field of subword tokenization and multilingual pretrained models. We start with a brief overview of the subword tokenization methods and then discuss the multilingual pretrained models. We also discuss the work that has been done in the field of multilingual subword tokenization.}
+
+% In order to organize Chapter Two, you will first start with an introduction about the general problem and your topic. Then you will provide an advance organizer, which indicates what will be covered in the literature review.
+
+In this thesis we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end we first introduce the reader to the field of pretrained models and subword tokenization. We then review the role of pretrained models in the field of natural language processing. We explain the concept of subword tokenization and the most common subword tokenization methods. Lastly, we show what problems arise when using pretrained models in multilingual settings and what methods have been proposed to mitigate these problems.
+
+
+\section{Language representation models}
+
+
+
+\section{Multilingual pretrained models}
+
+
 \section{Subword tokenization}
 
 Subword tokenization methods split up words into subword units, which are then used as the input tokens for the neural models. This is done to mitigate the out-of-vocabulary (OOV) problem and to reduce the computational complexity of the softmax cross-entropy loss over a very large output vocabulary. The most common subword tokenization methods are Byte Pair Encoding (BPE), UnigramLM and Wordpiece.
@@ -145,12 +157,9 @@ The training of the Unigram LM works in a top-down fashion. It starts with a lar
     \item unigram lm
 \end{enumerate}
 
-\section{Language modeling}
 
-\section{Multilingual Language Models}
-
-\chapter{Related work}
-\label{chap:related_work}
+% \chapter{Related work}
+% \label{chap:related_work}
 
 \section{Tokenization with many languages}
 
@@ -241,8 +250,3 @@ By computing the average number of tokens per sentence over the whole training c
 
 
 % - Chung - cluster languages
-
-\section{Improving models with tokenization}
-
-
-\subsection{Domain Adaptation}

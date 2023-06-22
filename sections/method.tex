@@ -9,12 +9,120 @@ The main goal of the thesis is to \textbf{improve multilingual models with bette
 
 To this end, several methods of mitigating this issue were suggested. \citet{chung_improving_2020} proposed a method based on creating multiple clusters of corpora instead of one joint cluster. The multilingual tokenizer is then created by merging together smaller, specialized tokenizers trained on these clusters. \citet{zheng_allocating_2021} proposed a method of allocating the vocabulary budget to the languages based on a heuristic function similar to entropy. \citet{liang_xlm-v_2023} showed that by combining the two approaches, the resulting tokenizer scales better to larger vocabulary sizes.
 
-Unrelated to multilingual models, we have seen also other approaches of tokenizer improvement related to Domain Adaptation. In the paper \Citetitle{gururangan_dont_2020}, \citeauthor{gururangan_dont_2020} \cite{gururangan_dont_2020} showed that a continued pretraining models on a domain-specific data leads to performance improvements of in-domain tasks. \citet{sachidananda_efficient_2021} showed that these improvements can be achieved not only by costly pretraining continuation but also by simply extending the model vocabulary with a small amount of domain-specific tokens that are then fine-tuned on the domain tasks.
+% Unrelated to multilingual models, we have seen also other approaches of tokenizer improvement related to Domain Adaptation. In the paper \Citetitle{gururangan_dont_2020}, \citeauthor{gururangan_dont_2020} \cite{gururangan_dont_2020} showed that a continued pretraining models on a domain-specific data leads to performance improvements of in-domain tasks. \citet{sachidananda_efficient_2021} showed that these improvements can be achieved not only by costly pretraining continuation but also by simply extending the model vocabulary with a small amount of domain-specific tokens that are then fine-tuned on the domain tasks.
 
+\xxx{rewrite this paragraph}
 In this thesis we first replicate the results of \citet{chung_improving_2020}, \citet{zheng_allocating_2021} and \citet{liang_xlm-v_2023} on our selected subset of languages. We then use our evaluation framework of \citet{limisiewicz_tokenization_2023} to compare these methods and pick a strong baseline. We then present our novel method of improving the tokenizer based on a extension of the clustering idea of \citet{chung_improving_2020}.
 
 \section{Methodology overview}
 
+- prepare the pretraining/tokenizer training data
+    - selecting the dataset
+        - mBERT, Zheng - wikipedias
+        - XLM, Chung, Liang - CC100 
+    - select the languages
+        - which languages to use
+        - we follow the XNLI selection more or less
+        - show the table with the languages
+    - download the data
+        - how much data to use
+    - subsample the data
+        - what alphas to use?
+            - Conneau, Chung uses 0.3 \xxx{check this}
+            - Liang uses T=2 -> alpha=0.5
+            - Zheng uses 0.7!
+        - we choose alpha 0.0 and 0.3 (for Limi it was 0.25)
+        - we also create a evaluation and test set
+
+
+- test the tokenizer metrics, show correlation between CPT, AR and JSD -> downstream
+    - 
+    - compare 4 tokenizers
+        - vanilla Unigram, vanilla BPE
+        - NoOverlap - to study the effect of the overlap
+        - TokMix - to ensure a uniform 
+    - experiments for 6 languages
+    - experiments for 20 languages
+
+
+- replication of the previous balancing work
+    - the code is not available for Chung and Liang, for Zheng we reimplement even though the code is available
+    - therefore we follow all papers closely
+    - Chung
+        - reproductions of chung are available in the paper Overlap-based Vocabulary Generation Improves Cross-lingual Transfer Among Related Languages
+            - they do not replicate the results of Chung
+        - we run training with 8k vocab size, unigram, coverage 0.9995 (default in Sentencepiece) for each language
+            - this is specified in the paper
+            - we use 1M lines for each language which we have shown to be enough in preliminary experiments
+        - we compute the binary vectors for each language and normalize them to unit length
+        - we compute clusters using k-means, with Liangk=4, 8, 12, 16, 20 (=all languages)
+        - train the tokenizers on the clusters
+            - target vocab size is 120k, again use Sentencepiece defaults
+            - to reach the vocab size we train also +10\%, +20\%, +30\% of the target size and then prune
+        - then we merge the tokenizers
+
+    - Zheng
+        - train monolingual tokenizers for all 20 languages with vocab sizes 1k ... 40k
+        - load a sample of CC100 data for each language (50k lines per language)
+        - tokenize the data with all of the monolingual tokenizers
+        - compute the ALP for each language and vocabulary size
+        - select the best vocabulary size for each language greedily
+        - we also experiment with optimizing CPT instead of ALP
+        - we also experiment with computing the CPT improvement on each merge step instead of precomputing it for all vocab sizes
+
+        - they have this suspicious plot with ALP with Joint250k, Joint500k and VoCap500k and the differences are too much
+
+    - Liang
+        - we follow the same procedure as in Chung
+        - compute negative log-likelihoods for each token over the corpus and use the euclidean distance to compute the similarity
+        - but we use the sizes from Zheng
+
+    - merging the tokenizers
+        - merging is not really described in the papers
+        - of course we take the union of the vocabularies
+        - but how to set the logits?
+            - to illustrate that even this step should be documented, the probabilities of XLM-V vocabulary do not sum to one
+    - reaching the target size
+        - train +10\%, +20\% of the target size and then prune
+- training the tokenizers
+    - the choice of implementation
+        - Huggingface vs Sentencepiece
+            - in Limisiewicz we use Huggingface
+            - in later experiments we use Sentencepiece
+                - it has its own limitations but the Huggingface implementation seems to produce suboptimal vocabularies
+    - the choice of vocabulary size
+        - we use 120k
+        - this was used in mBERT
+        - Chung uses 488k and 104 langs => 4.7k tokens per language
+        - Liang uses 900k and 104 langs => 
+        - XLM-R uses 250k and 104 languages, we use 20 languages
+            - thus XLM-R has 2.4k tokens per language
+            - we have 6k tokens per language
+
+    - choice of model - BPE vs unigram
+        - all my experiments are with unigram
+        - all balancing methods use unigram so it makes sense to use unigram for the baseline
+    - the choice of coverage parameter
+        - for 120k multilingual unigram tokenizer
+            - the coverage affects the alphabet size 
+                - max alphabet 13658, "recommended" alphabet 2678 (coverage 0.9995), 
+                - XLM-R reproduction alphabet 8226 (0.999995), XLM-R actual alphabet 13828
+            - the coverage affects the CPT
+                - but the difference is small +- 0.05 cpt
+                - TODO: compute fair cpt and count unk as single characters
+
+
+
+- training the models
+    - we train with 10K steps, 8192 batch size, 128 sequence length
+    - on 2x A100
+- evaluation on downstream
+    - utilized Huggingface examples for the downstream tasks so that there are no mistakes
+    - on how to compute significance for the cross-lingual tasks
+        - we want to compare the average over languages
+        - we can use bootstrapping to compute the confidence intervals
+            - for each language select a random seed and compute the average over these seeds
+            - sample many times and compute the confidence intervals
 To be able to compare several tokenization methods we need to fix a training and evaluation procedure that we will use throught the thesis for each experiment, be it a replication of a previous work or our own novel method. In following sections we describe the training and evaluation procedure that we use in the thesis.
 
 For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised_2020}. Using the data we create multilingual vocabularies with the same size of 120K unique tokens using different methods. We use intrinsic evaluation framework from \citet{limisiewicz_tokenization_2023} to evaluate the tokenizers. Then we use the tokenizers to train multilingual masked language models on the same data and evaluate them on the same set of downstream tasks. We compare the results of the intrinsic and extrinsic evaluation to see if the improvements in the intrinsic evaluation translate to improvements in the downstream tasks.
@@ -61,3 +169,10 @@ As the first step towards
 
 \subsection{Extrinsic evaluation}
 
+
+Probes
+- Analyzing the Mono- and Cross-Lingual Pretraining Dynamics of Multilingual Language Models
+- Interpretability and Analysis in Neural NLP, Belinkov
+
+Model
+- mBERT - 120k vocabulary, 12-layer, 768-hidden, 12-heads, 110M parameters
