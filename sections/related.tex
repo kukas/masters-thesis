@@ -25,15 +25,35 @@
 
 % In order to organize Chapter Two, you will first start with an introduction about the general problem and your topic. Then you will provide an advance organizer, which indicates what will be covered in the literature review.
 
-In this thesis we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end we first introduce the reader to the field of pretrained models and subword tokenization. We then review the role of pretrained models in the field of natural language processing. We explain the concept of subword tokenization and the most common subword tokenization methods. Lastly, we show what problems arise when using pretrained models in multilingual settings and what methods have been proposed to mitigate these problems.
+In this thesis we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end we first introduce the reader to the recent field of pretrained language models and cross-lingual models. We explain the concept of subword tokenization and the most common subword tokenization methods. Lastly, we show what problems arise when using pretrained models in multilingual settings and what methods have been proposed to mitigate these problems.
 
 
 \section{Language representation models}
 
+In recent years we have seen a dramatic rise in the use of neural language models. The premise of these models is the ability to learn effectively from large amounts of unlabeled data. 
 
+\xxx{TODO}
+
+Language modeling is a task where we predict the next word given the previous words. \cite{manning_foundations_1999} More formally, given a sequence of words $w_1, w_2, \dots, w_{m-1}$, the language model computes the probability of the next word $w_{m}$:
+
+\begin{equation}
+    P(w_{m} | w_1, w_2, \dots, w_{m-1})
+\end{equation}
+
+One method to compute this probability is to use n-gram language models. These models simplify the problem by making a Markov assumption --- the probability of the next word is conditioned only on the previous $n-1$ words:
+
+\begin{equation}
+    P(w_{m} | w_1, w_2, \dots, w_{m-1}) \approx P(w_{m} | w_{m-n+1}, w_{m-n+2}, \dots, w_{m-1})
+\end{equation}
+
+\xxx{TODO}
+
+terms I use later that need explaination:
+- embedding layer of mBERT
 
 \section{Multilingual pretrained models}
 
+\xxx{TODO}
 
 \section{Subword tokenization}
 
@@ -168,13 +188,19 @@ Later language models such as XLM-R \cite{conneau_unsupervised_2020}, mBART \cit
 
 The method these models use to tokenize the input text is the same as the one used in the monolingual models. The only difference is that the tokenization algorithm is run on the concatenation of all languages in the training data, usually after performing random sampling with exponential smoothing to mitigate the bias towards high-resource languages.
 
-As \citet{rust_how_2021} have shown, this bias however still persists. \citet{rust_how_2021} compare the performance of the multilingual model mBERT and language specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different langugaes, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. They show that the performance of mBERT can be improved for a specific language by switching to a monolingual vocabulary and that the downstream task performance is correlated with how often the tokenizer splits single words into several subwords. This metric is called \textit{fertility} \cite{acs_exploring_2019} and is defined as the average number of subwords per word.
+As \citet{rust_how_2021} have shown, this bias however still persists. \citet{rust_how_2021} compare the performance of the multilingual model mBERT and language specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different langugaes, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. 
+
+They show that the performance of mBERT can be improved for a specific language by switching to a monolingual vocabulary and retraining only the embedding layer of mBERT. The model with a dedicated vocabulary outperforms the vanilla mBERT on a variety of tasks, which indicates that the multilignual vocabulary of mBERT is not optimal. 
+
+They also show that the downstream task performance is correlated with how often the tokenizer splits single words into several subwords. This metric is called \textit{fertility} \cite{acs_exploring_2019} and is defined as the average number of subwords per word.
 
 The oversegmentation of low-resource languages leads to longer sequence lengths and more frequent splitting of words. Thus the multilingual model must learn to compose the subwords back into semantic units and also learn to attend to correct subwords over longer distances \cite{chung_improving_2020}. Moreover, mismatched segmentation granularity might lead to incompatible representations for subwords across languages. \citet{maronikolakis_wine_2021} have shown that tokenization compatibility can have a significant impact on multilingual performance.
 
 \subsection{Mitigating the language bias}
 
 There have been several attempts to mitigate the language bias in multilingual language models. We will now describe the most prominent ones.
+
+\xxx{add simple explanation of the methods}
 
 \subsubsection{Language-Clustered Vocabularies}
 
@@ -197,7 +223,7 @@ Their method works by clustering the languages and then merging the cluster-leve
     \end{cases}
 \end{equation}
 
-With the languages represented as vectors, the k-means algorithm can be used to cluster them. The authors use the cosine distance as the distance metric (or equvalently: they normalize the language vectors to have a length 1 before clustering). With 104 languages in total, the number of clusters is set to 8. The choice of $k$ is determined empirically using results on a TYDYQA benchmark. The resulting clusters are shown in \autoref{fig:chung_clusters}.
+With the languages represented as vectors, the k-means algorithm can be used to cluster them. The authors use the cosine distance as the distance metric (or equivalently: they normalize the language vectors to have a length 1 before clustering). With 104 languages in total, the number of clusters is set to 8. The choice of $k$ is determined empirically using results on a TYDYQA benchmark. The resulting clusters are shown in \autoref{fig:chung_clusters}.
 
 After the languages are clustered, the cluster-specific vocabularies are trained using the UnigramLM algorithm on the union of the corpora of the languages in the cluster. The size of each cluster-specific vocabulary is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. The final vocabulary is simply union over the cluster vocabularies.
 
@@ -215,8 +241,43 @@ The final vocabulary is then compared to the standard recipe of training a Unigr
 The authors evaluate the vocabularies intrinsically - by examining the average number of tokens per sentence, out-of-vocabulary rate and vocabulary overlap using the Wasserstein-1 distance.
 By computing the average number of tokens per sentence over the whole training corpus, the authors show that the language-clustered vocabulary leads to a smaller average number of tokens per sentence.
 
+\subsubsection{Determining vocabulary capacity for each language}
+
+The paper \Citetitle{zheng_allocating_2021} 
+
+Zheng: merge monolingual tokenizers. monolingual vocab size based on greedy search that maximizes average ALP
+
+The authors propose an algorithm for determining the suitable vocabulary capacity for the training languages and a way of combining monolingual vocabularies to achieve good capacity for every language. They determine the capacity based on the size of monolingual training corpus and ALP = average log probability. They show that computing the average log probability of a monolingual corpus using the unigram distribution of the tokens correlates well with the downstream task performance. Therefore ALP is a good measure to determine the optimal vocabulary capacity for each language. To efficiently allocate vocabulary, they take into account the sizes of training corpus so that the low-resource languages are not overrepresented (they would not benefit from a large vocab because there is not enough data to train this large vocab on).
+
+Then with VoCap algorithm they create new dictionaries and show that for larger dictionaries (500K vocabs) their allocation works better than runnning sentencepiece on the joined multilingual corpus.
 
 
+- they observe that multilignual models do have a larger vocabulary than monolingual models (30k to 60k vs 250k). Still it is 2.5k per language on average in xlm-r
+- they consider each language separately and calculate the optimal vocabulary size for each language
+- using subword segmentation algorithms like BPE or unigram language model → they select subword tokens shared across languages with the same script and have lower chance to select language-specific subword units
+- VoCap: algorithm to allocate large vocabulary for cross-lingual language model by separately evaluating the required vocabulary capacity of each individual language
+
+- they use the average log probability
+- ALP is highly correlated with downstream performance
+    - investigation: pretrain monolingual models with different vocab sizes, evaluate on downstream tasks and study the correlation between ALP and downstream performance
+    - select 4 languages with different pre-train corpus sizes
+    - try vocab sizes 1K to 30K
+    - eval on NER and POS
+    - Increasing vocabulary size affects ALP of different languages in varying degrees.
+    - We observe the ALP varies across different languages, mainly because ALP correlates with the lexicon granularity of the language, i.e., the average number of tokens per sentence.
+    - ALP correlates positively with downstream task performance
+    - correlates better than only comparing vocabulary size
+        - here they must compare pearson correlation because spearman would be the same for both - because ALP is a monotonic transformation of vocab size
+
+
+
+- allocating too much vocabulary capacity for low-resource languages is inefficient because they cannot utilize it effectively
+- VOCAP leverages both ALP and pre-training corpus size to evaluate the required vocabulary capacity of each language
+- Use VOCAP to allocate 500K subword vocabulary → increase model performance
+
+$$
+ALP(\mathcal{D}_i, V) = \frac{1}{|\mathcal{D}_i|} \sum_{j=1}^{|\mathcal{D}_i|} \sum_{k=1}^{|s_j|} \log(p_{uni}(s^k_{j}))
+$$
 
 % The authors propose a new multilingual tokenization method. The vocabulary is constructed by clustering languages, applying SentencePiece to each cluster and merging the vocabularies together.
 % The clustering is done by comparing similarity between monolingual vocabularies (NOT taking frequency of tokens into account - that is done in Liang et al 2023). Target vocabulary size for each cluster is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. The final vocabulary is simply union over the cluster vocabs (how do they ensure the target size for the whole vocab?)
