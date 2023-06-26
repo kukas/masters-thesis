@@ -186,6 +186,11 @@ The training of the Unigram LM works in a top-down fashion. It starts with a lar
 Despite the recent advances in language modeling, the tokenization methods used in the multilingual language models remain mostly unchanged. The first models trained on multiple languages, such as mBERT \cite{devlin_bert_2019} and XLM \cite{lample_cross-lingual_2019} use the same tokenization methods as their monolingual versions - namely the Wordpiece and BPE algorithms.
 Later language models such as XLM-R \cite{conneau_unsupervised_2020}, mBART \cite{liu_multilingual_2020} or mT5 \cite{xue_mt5_2021} use the Unigram LM algorithm to learn the subword vocabulary. The most recent multilingual generative models, such as the 176B parameter BLOOM model \cite{scao_bloom_2022} or the XGLM \cite{lin_few-shot_2022} use the Byte-level BPE and Unigram LM algorithms respectively.
 
+
+% - section about how language models are still using the tokenization techniques such as BPE and UnigramLM that were developed for monolingual models.
+% - example models: mBERT uses Wordpiece, XLM uses BPE, XLM-R uses Unigram LM. More currently - mBART uses Unigram LM, T5 and mT5 uses Unigram LM. Even more recently, the 176B parameter BLOOM model uses Byte-level BPE and the multilingual generative model XGLM uses Unigram LM. Most of these models use the SentencePiece implementation and run the tokenization algorithm on the concatenation of all languages in the training data.
+
+
 The method these models use to tokenize the input text is the same as the one used in the monolingual models. The only difference is that the tokenization algorithm is run on the concatenation of all languages in the training data, usually after performing random sampling with exponential smoothing to mitigate the bias towards high-resource languages.
 
 As \citet{rust_how_2021} have shown, this bias however still persists. \citet{rust_how_2021} compare the performance of the multilingual model mBERT and language specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different langugaes, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. 
@@ -241,43 +246,6 @@ The final vocabulary is then compared to the standard recipe of training a Unigr
 The authors evaluate the vocabularies intrinsically - by examining the average number of tokens per sentence, out-of-vocabulary rate and vocabulary overlap using the Wasserstein-1 distance.
 By computing the average number of tokens per sentence over the whole training corpus, the authors show that the language-clustered vocabulary leads to a smaller average number of tokens per sentence.
 
-\subsubsection{Determining vocabulary capacity for each language}
-
-The paper \Citetitle{zheng_allocating_2021} 
-
-Zheng: merge monolingual tokenizers. monolingual vocab size based on greedy search that maximizes average ALP
-
-The authors propose an algorithm for determining the suitable vocabulary capacity for the training languages and a way of combining monolingual vocabularies to achieve good capacity for every language. They determine the capacity based on the size of monolingual training corpus and ALP = average log probability. They show that computing the average log probability of a monolingual corpus using the unigram distribution of the tokens correlates well with the downstream task performance. Therefore ALP is a good measure to determine the optimal vocabulary capacity for each language. To efficiently allocate vocabulary, they take into account the sizes of training corpus so that the low-resource languages are not overrepresented (they would not benefit from a large vocab because there is not enough data to train this large vocab on).
-
-Then with VoCap algorithm they create new dictionaries and show that for larger dictionaries (500K vocabs) their allocation works better than runnning sentencepiece on the joined multilingual corpus.
-
-
-- they observe that multilignual models do have a larger vocabulary than monolingual models (30k to 60k vs 250k). Still it is 2.5k per language on average in xlm-r
-- they consider each language separately and calculate the optimal vocabulary size for each language
-- using subword segmentation algorithms like BPE or unigram language model → they select subword tokens shared across languages with the same script and have lower chance to select language-specific subword units
-- VoCap: algorithm to allocate large vocabulary for cross-lingual language model by separately evaluating the required vocabulary capacity of each individual language
-
-- they use the average log probability
-- ALP is highly correlated with downstream performance
-    - investigation: pretrain monolingual models with different vocab sizes, evaluate on downstream tasks and study the correlation between ALP and downstream performance
-    - select 4 languages with different pre-train corpus sizes
-    - try vocab sizes 1K to 30K
-    - eval on NER and POS
-    - Increasing vocabulary size affects ALP of different languages in varying degrees.
-    - We observe the ALP varies across different languages, mainly because ALP correlates with the lexicon granularity of the language, i.e., the average number of tokens per sentence.
-    - ALP correlates positively with downstream task performance
-    - correlates better than only comparing vocabulary size
-        - here they must compare pearson correlation because spearman would be the same for both - because ALP is a monotonic transformation of vocab size
-
-
-
-- allocating too much vocabulary capacity for low-resource languages is inefficient because they cannot utilize it effectively
-- VOCAP leverages both ALP and pre-training corpus size to evaluate the required vocabulary capacity of each language
-- Use VOCAP to allocate 500K subword vocabulary → increase model performance
-
-$$
-ALP(\mathcal{D}_i, V) = \frac{1}{|\mathcal{D}_i|} \sum_{j=1}^{|\mathcal{D}_i|} \sum_{k=1}^{|s_j|} \log(p_{uni}(s^k_{j}))
-$$
 
 % The authors propose a new multilingual tokenization method. The vocabulary is constructed by clustering languages, applying SentencePiece to each cluster and merging the vocabularies together.
 % The clustering is done by comparing similarity between monolingual vocabularies (NOT taking frequency of tokens into account - that is done in Liang et al 2023). Target vocabulary size for each cluster is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. The final vocabulary is simply union over the cluster vocabs (how do they ensure the target size for the whole vocab?)
@@ -294,20 +262,54 @@ $$
 % - Can we do the clustering better so that the languages are clustered according to the  downstream performance rather than hand-picked similarity metric between langs?
 
 
-% - How Robust is Neural Machine Translation to Language Imbalance in Multilingual Tokenizer Training?
-
-% - section about how language models are still using the tokenization techniques such as BPE and UnigramLM that were developed for monolingual models.
-% - example models: mBERT uses Wordpiece, XLM uses BPE, XLM-R uses Unigram LM. More currently - mBART uses Unigram LM, T5 and mT5 uses Unigram LM. Even more recently, the 176B parameter BLOOM model uses Byte-level BPE and the multilingual generative model XGLM uses Unigram LM. Most of these models use the SentencePiece implementation and run the tokenization algorithm on the concatenation of all languages in the training data.
 
 
 
+\subsubsection{Determining vocabulary capacity for each language}
+
+In the paper \Citetitle{zheng_allocating_2021}, \citeauthor{zheng_allocating_2021} propose a method for determining the optimal vocabulary capacity for each language in a multilingual model. Then they propose a method for constructing a multilingual vocabulary by combining monolingual vocabularies so that the optimal capacity is achieved for each language. 
+
+% % - they observe that multilignual models do have a larger vocabulary than monolingual models (30k to 60k vs 250k). Still it is 2.5k per language on average in xlm-r
+% - they consider each language separately and calculate the optimal vocabulary size for each language
+% - using subword segmentation algorithms like BPE or unigram language model → they select subword tokens shared across languages with the same script and have lower chance to select language-specific subword units
 
 
-% - Big models such as XLM-R do not care, train SentencePiece on 100M sentences with alpha=0.3 on all languages.
+To determine the optimal vocabulary capacity for each language, the authors propose a metric called \textit{average log probability} (ALP). 
 
-% - Problems:
-% - Rust et al: the multilingual performance of mBERT can be improved by switching to monolingual vocabulary. The performance gap between monolingual and multilingual models is training data size AND language-specific vocabulary capacity
+$$
+ALP(\mathcal{D}_i, V) = \frac{1}{|\mathcal{D}_i|} \sum_{j=1}^{|\mathcal{D}_i|} \sum_{k=1}^{|s_j|} \log(p_{uni}(s^k_{j}))
+$$
+
+where $\mathcal{D}_i$ is the monolingual corpus of language $i$, $V$ is the vocabulary and $p_{uni}(s^k_{j})$ is the unigram probability of the $k$-th token in the $j$-th sentence. The authors show that the average log probability correlates with the downstream task performance on a series of experiments with four distinct languages, increasing vocabulary size and evaluated on two word-level classification tasks. Although the authors report that the vocabulary size itself is also a good predictor of downstream task performance, the authors argue that ALP correlates better with the downstream task performance and is therefore a better metric for determining the optimal vocabulary capacity.
+
+%     - ALP correlates positively with downstream task performance
+% - correlates better than only comparing vocabulary size
+% - here they must compare pearson correlation because spearman would be the same for both - because ALP is a monotonic transformation of vocab size
+% - but also for their usecase maximizing pearson is better because they then greedily select the vocab sizes based on ALP and then they want the metric to be linear with the downstream performance - so that the greedy selection is optimal
 
 
+To efficiently allocate the tokenizer vocabulary, the authors hypothesize that the pretraining size of the corpora must be also taken into account. The reason is that for low-resource languages, it is better to allocate less tokens as the language model does not have enough data to learn robust representations for the low-frequency tokens. This observation is in line with the research in machine translation \cite{gowda_finding_2020}. In the end the authors propose a greedy vocabulary allocation algorithm \textsc{VoCap} that maximizes the following objective:
 
-% - Chung - cluster languages
+$$
+\underset{t_1, \ldots, t_N}{\operatorname{argmax}} \sum_{i=1}^N q_i^\beta \operatorname{ALP}\left(D_i, V_{t_i}^i\right) \text { s.t. }\left|\bigcup_{i=1}^N V_{t_i}^i\right|=T
+$$
+
+Where $N$ is the number of languages, $q_i$ is the probability of sampling training instances from i-th language during pre-training \xxx{add link to the method->data chapter}, $\beta$ is a hyperparameter that controls the importance of the corpus size and $T$ is the total vocabulary capacity. 
+
+The algorithm works by precomputing a series of tokenizer vocabularies with vocabulary sizes from 1000 to 50000 and computing the ALP metric for each of them. Then we iteratively build the final vocabulary by merging the tokenizers with the highest ALP increase compared to the previous selected size. The algorithm is shown in \autoref{alg:vocab_allocation}.
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/temp/vocap_algo.png}
+    \caption{\textsc{VoCap} algorithm pseudocode \cite{zheng_allocating_2021}. Figure taken from \cite{zheng_allocating_2021}.}
+    \label{alg:vocab_allocation}
+\end{figure}
+
+With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with sizes 250k and 500k and show that for larger dictionaries (500k vocabulary size) their method outperforms the standard method of training a joint vocabulary on the union of the corpora. 
+
+
+\subsubsection{Combination of methods for scaling the vocabulary size}
+
+In the paper \Citetitle{liang_xlm-v_2023}, \citeauthor{liang_xlm-v_2023} propose a method for combining the two methods described above. 
+
