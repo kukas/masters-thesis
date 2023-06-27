@@ -3,40 +3,18 @@
 \chapter{Method}
 \label{chap:method}
 
-In this chapter, we discuss the methodology of the thesis. We motivate and specify the research question, state the hypothesis and the specify how we test it.
+% In this chapter, we discuss the methodology of the thesis. We motivate and specify the research question, state the hypothesis and the specify how we test it.
 
-The main goal of the thesis is to \textbf{improve multilingual models with better tokenization}. The standard procedure followed by most of the large multilingual models is to train the tokenizer on the joint, multilingual corpus used for training the model \cite{mielke_between_2021,conneau_unsupervised_2020,conneau_cross-lingual_nodate}. As many authors pointed out \cite{wang_improving_2019,chung_improving_2020,rust_how_2021}, by using this simple approach the resulting tokenizer overtokenizes some of the low-resource languages, especially those that do not use the latin script. The latin script tokens appear more often in the resulting vocabulary because the procedure of merging all corpora together greatly increases the occurence statistics of the Latin character n-grams. \cite{zheng_allocating_2021}
-
-To this end, several methods of mitigating this issue were suggested. \citet{chung_improving_2020} proposed a method based on creating multiple clusters of corpora instead of one joint cluster. The multilingual tokenizer is then created by merging together smaller, specialized tokenizers trained on these clusters. \citet{zheng_allocating_2021} proposed a method of allocating the vocabulary budget to the languages based on a heuristic function similar to entropy. \citet{liang_xlm-v_2023} showed that by combining the two approaches, the resulting tokenizer scales better to larger vocabulary sizes.
-
-% Unrelated to multilingual models, we have seen also other approaches of tokenizer improvement related to Domain Adaptation. In the paper \Citetitle{gururangan_dont_2020}, \citeauthor{gururangan_dont_2020} \cite{gururangan_dont_2020} showed that a continued pretraining models on a domain-specific data leads to performance improvements of in-domain tasks. \citet{sachidananda_efficient_2021} showed that these improvements can be achieved not only by costly pretraining continuation but also by simply extending the model vocabulary with a small amount of domain-specific tokens that are then fine-tuned on the domain tasks.
-
-\xxx{rewrite this paragraph}
-In this thesis we first replicate the results of \citet{chung_improving_2020}, \citet{zheng_allocating_2021} and \citet{liang_xlm-v_2023} on our selected subset of languages. We then use our evaluation framework of \citet{limisiewicz_tokenization_2023} to compare these methods and pick a strong baseline. We then present our novel method of improving the tokenizer based on a extension of the clustering idea of \citet{chung_improving_2020}.
+In this chapter, we discuss the methodology of the thesis. 
 
 \section{Methodology overview}
 
-- prepare the pretraining/tokenizer training data
-    - selecting the dataset
-        - mBERT, Zheng - wikipedias
-        - XLM, Chung, Liang - CC100 
-    - select the languages
-        - which languages to use
-        - we follow the XNLI selection more or less
-        - show the table with the languages
-    - download the data
-        - how much data to use
-    - subsample the data
-        - what alphas to use?
-            - Conneau, Chung uses 0.3 \xxx{check this}
-            - Liang uses T=2 -> alpha=0.5
-            - Zheng uses 0.7!
-        - we choose alpha 0.0 and 0.3 (for Limi it was 0.25)
-        - we also create a evaluation and test set
-
 
 - test the tokenizer metrics, show correlation between CPT, AR and JSD -> downstream
-    - 
+    - define the metrics
+        - CPT
+        - AR
+        - JSD
     - compare 4 tokenizers
         - vanilla Unigram, vanilla BPE
         - NoOverlap - to study the effect of the overlap
@@ -44,46 +22,6 @@ In this thesis we first replicate the results of \citet{chung_improving_2020}, \
     - experiments for 6 languages
     - experiments for 20 languages
 
-
-- replication of the previous balancing work
-    - the code is not available for Chung and Liang, for Zheng we reimplement even though the code is available
-    - therefore we follow all papers closely
-    - Chung
-        - reproductions of chung are available in the paper Overlap-based Vocabulary Generation Improves Cross-lingual Transfer Among Related Languages
-            - they do not replicate the results of Chung
-        - we run training with 8k vocab size, unigram, coverage 0.9995 (default in Sentencepiece) for each language
-            - this is specified in the paper
-            - we use 1M lines for each language which we have shown to be enough in preliminary experiments
-        - we compute the binary vectors for each language and normalize them to unit length
-        - we compute clusters using k-means, with Liangk=4, 8, 12, 16, 20 (=all languages)
-        - train the tokenizers on the clusters
-            - target vocab size is 120k, again use Sentencepiece defaults
-            - to reach the vocab size we train also +10\%, +20\%, +30\% of the target size and then prune
-        - then we merge the tokenizers
-
-    - Zheng
-        - train monolingual tokenizers for all 20 languages with vocab sizes 1k ... 40k
-        - load a sample of CC100 data for each language (50k lines per language)
-        - tokenize the data with all of the monolingual tokenizers
-        - compute the ALP for each language and vocabulary size
-        - select the best vocabulary size for each language greedily
-        - we also experiment with optimizing CPT instead of ALP
-        - we also experiment with computing the CPT improvement on each merge step instead of precomputing it for all vocab sizes
-
-        - they have this suspicious plot with ALP with Joint250k, Joint500k and VoCap500k and the differences are too much
-
-    - Liang
-        - we follow the same procedure as in Chung
-        - compute negative log-likelihoods for each token over the corpus and use the euclidean distance to compute the similarity
-        - but we use the sizes from Zheng
-
-    - merging the tokenizers
-        - merging is not really described in the papers
-        - of course we take the union of the vocabularies
-        - but how to set the logits?
-            - to illustrate that even this step should be documented, the probabilities of XLM-V vocabulary do not sum to one
-    - reaching the target size
-        - train +10\%, +20\% of the target size and then prune
 - training the tokenizers
     - the choice of implementation
         - Huggingface vs Sentencepiece
@@ -130,16 +68,39 @@ For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised
 
 \section{Data and scope}
 
-For training the vocabularies and the masked language models we use the CC100 dataset \cite{conneau_unsupervised_2020}.
+% - prepare the pretraining/tokenizer training data
+%     - selecting the dataset
+%         - mBERT, Zheng - wikipedias
+%         - XLM, Chung, Liang - CC100 
+%     - select the languages
+%         - which languages to use
+%         - we follow the XNLI selection more or less
+%         - show the table with the languages
+%     - download the data
+%         - how much data to use
+%     - subsample the data
+%         - what alphas to use?
+%             - Conneau, Chung uses 0.3 \xxx{check this}
+%             - Liang uses T=2 -> alpha=0.5
+%             - Zheng uses 0.7!
+%         - we choose alpha 0.0 and 0.3 (for Limi it was 0.25)
+%         - we also create a evaluation and test set
 
-This unlabeled, multilingual dataset was created from the Common Crawl corpus using an automatic pipeline. The data was deduplicated and language-identified. Then for each monolingual corpus the data was filtered using Kneser-Ney language models trained on Wikipedia. Documents with perplexity under a certain language-specific threshold were filtered out. The data processing process is described in detail in \citet{wenzek_ccnet_nodate}. A reproduction of the dataset is available at \url{https://data.statmt.org/cc-100/}.
+For training the vocabularies and the masked language models we follow our related work \cite{conneau_unsupervised_2020,chung_improving_2020,liang_xlm-v_2023} and use the CC100 dataset. The other common choice is using Wikipedia data \cite{devlin_bert_2019,zheng_allocating_2021} but the CC100 have been shown to improve low-resource languages such as Swahili and Urdu \cite{conneau_unsupervised_2020}.
 
-For purposes of this thesis, we select 20 out of 116 languages following \citet{limisiewicz_tokenization_2023} and download 10\% of the data for each language. We choose to focus on this subset of the dataset due to computational constraints.
+This unlabeled, multilingual dataset was created from the Common Crawl corpus using an automatic pipeline. The data was deduplicated and language-identified. Then for each monolingual corpus the data was filtered using Kneser-Ney language models trained on Wikipedia. Documents with perplexity under a certain language-specific threshold were filtered out. The data processing pipeline is described in detail in \citet{wenzek_ccnet_nodate}. A reproduction of the dataset is available at \url{https://data.statmt.org/cc-100/}.
+
+For the purposes of this thesis, we select 20 out of 116 languages following \citet{limisiewicz_tokenization_2023} and download 10\% of the data for each language. The reason for selecting a subset of the languages available and using only part of the data is our computational constraints. First, by limiting the amount of data, we can train the models faster. Second, by limiting the number of languages, we can scale down the vocabulary size. Because a large amount of the model parameters is in the embedding matrix, the vocabulary size has a large impact on the model size. In turn this affects the training time and the memory requirements. We use the same 20 languages for all experiments in this thesis.
+
+The exact choice of the language subset is motivated by the downstream evaluation datasets. We use the 15 languages covered by XNLI and add 5 more. The languages are selected to cover a wide range of language families and scripts. The full list of languages is shown in Table \xxx{tab:languages}.
 
 \todo{add table with the languages with a summary of some of the properties (which languages share script, which are typologically related, which use spaces and which don't, which are low-resource)}
 
-This subset of CC100 is then used for further experiments with vocabulary creation that will be described in the following sections.
+% This subset of CC100 is then used for further experiments with vocabulary creation that will be described in the following sections.
 
+For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages, we resample the data using . \xxx{TODO: describe the resampling method}
+
+Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. The empirical probability of sampling a line from language $l$ is given by:
 For pretraining the models, we further subsample the data following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. The empirical probability of sampling a line from language $l$ is given by:
 
 \begin{equation}
@@ -156,9 +117,79 @@ To ensure that the low-resource languages are not underrepresented in the traini
 
 For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha = 1$ we get the original distribution. We use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}.
 
+\section{Tokenizer metrics}
+
+\section{Investigating the influences on the tokenizer}
+
 \section{Reproducing the vocabulary capacity balancing methods}
 
-As the first step towards
+% - replication of the previous balancing work
+%     - the code is not available for Chung and Liang, for Zheng we reimplement even though the code is available
+%     - therefore we follow all papers closely
+%     - Chung
+%         - reproductions of chung are available in the paper Overlap-based Vocabulary Generation Improves Cross-lingual Transfer Among Related Languages
+%             - they do not replicate the results of Chung
+%         - we run training with 8k vocab size, unigram, coverage 0.9995 (default in Sentencepiece) for each language
+%             - this is specified in the paper
+%             - we use 1M lines for each language which we have shown to be enough in preliminary experiments
+%         - we compute the binary vectors for each language and normalize them to unit length
+%         - we compute clusters using k-means, with Liangk=4, 8, 12, 16, 20 (=all languages)
+%         - train the tokenizers on the clusters
+%             - target vocab size is 120k, again use Sentencepiece defaults
+%             - to reach the vocab size we train also +10\%, +20\%, +30\% of the target size and then prune
+%         - then we merge the tokenizers
+
+%     - Zheng
+%         - train monolingual tokenizers for all 20 languages with vocab sizes 1k ... 40k
+%         - load a sample of CC100 data for each language (50k lines per language)
+%         - tokenize the data with all of the monolingual tokenizers
+%         - compute the ALP for each language and vocabulary size
+%         - select the best vocabulary size for each language greedily
+%         - we also experiment with optimizing CPT instead of ALP
+%         - we also experiment with computing the CPT improvement on each merge step instead of precomputing it for all vocab sizes
+
+%         - they have this suspicious plot with ALP with Joint250k, Joint500k and VoCap500k and the differences are too much
+
+%     - Liang
+%         - we follow the same procedure as in Chung
+%         - compute negative log-likelihoods for each token over the corpus and use the euclidean distance to compute the similarity
+%         - but we use the sizes from Zheng
+
+%     - merging the tokenizers
+%         - merging is not really described in the papers
+%         - of course we take the union of the vocabularies
+%         - but how to set the logits?
+%             - to illustrate that even this step should be documented, the probabilities of XLM-V vocabulary do not sum to one
+%     - reaching the target size
+%         - train +10\%, +20\% of the target size and then prune
+
+In this section, we describe the reproduced methods for balancing the low- and high- resource languages in the vocabulary. As the code for two out of three of the methods is not available, we follow the original papers closely and describe the differences in our implementation.
+
+The methods of \citet{chung_improving_2020} and \citet{liang_xlm-v_2023} follow a three step process: 1) grouping the languages into clusters by similarity, 2) running the Unigram LM tokenizer training on the clustered corpora and 3) combining the cluster-vocabularies into a single, multilingual vocabulary. The method of \citet{zheng_allocating_2021} works in two steps: 1) training the Unigram LM tokenizers for each language separately and 2) selecting the best vocabulary size for each language and combining the vocabularies into a single, multilingual vocabulary.
+
+As we can see the methods share the last merging step and differ in the clustering approaches. We therefore describe the clustering approaches first and then describe the merging step for all methods.
+
+\subsection{Reproducing the clustering methods}
+
+The first step for the Chung and Liang methods is to train monolingual Unigram LM tokenizers for each language $l$ from the set of 20 languages $L$. As specified in \citet{chung_improving_2020}, we use the default Sentencepiece settings. Namely, we use the Unigram LM model, character coverage of 0.9995, number of seed sentencepieces is 1M. \xxx{add all parameters to appendix}. We use 1M lines for each language which we have shown to be enough in preliminary experiments \xxx{add ref}. This choice also corresponds to the \citet{zheng_allocating_2021} method, which uses 1M lines for each language. The vocabulary size differs between Chung and Liang and so we train two sets of monolingual tokenizers, with 8k and 30k vocabulary size respectively.
+
+We arrive at $|L|$ vocabularies $V^l$. Next we take the union of all vocabularies $V^L = \bigcup_{l \in L} V^l$ and compute the "vector representation" $\vec{v}^l$ for each language $l$ as described in \xxx{ref:related work}. For Chung we compute a binary vector of size $|V^L|$, where each element $v^l_i$ is 1 if the token $i$ is in the vocabulary $V^l$ of language $l$ and 0 otherwise. For Liang we compute a vector of size $|V^L|$, where each element $v^l_i$ is the negative log-likelihood of the token $i$ in the language $l$\footnote{Here we need to handle the tokens that occur 0 times for a given language and thus would have an infinite negative log-likelihood. From Figure 1 in \cite{liang_xlm-v_2023} we infer, that the authors substitute inf with 0. This is strange considering that log-likelihood of 0 implies probability 1. The euclidean distance between two language vector representations used in the k-means algorithm could be then affected by low-occurence tokens that occur infrequently in one language (high negative log-likelihood) but do not occur in another ($v^l_i = 0$). Nevertheless as we show in figure \xxx{ref}, the language similarities still correlate with the overlap count based similarity used in \cite{chung_improving_2020}}.
+
+With the vector representations $\vec{v}^l$ we can cluster the languages into $k$ clusters $C^k$ using the k-means algorithm. We use the implementation from \cite{scikit-learn} with the default parameters \xxx{check the parameters}. By normalizing the language representation vectors to unit length, we effectively switch to the cosine distance as the metric for the k-means algorithm. We experiment with $k \in \{4, 8, 12, 16, 20\}$. Note that $k=20$ corresponds to separating each language into a separate cluster which is similar to the method \textsc{TokMix} we introduce in \citet{limisiewicz_tokenization_2023}. 
+
+Then, given a clustering of languages $C$, for each cluster $c_j \in C$ we create new training corpus by concatenating all of the pretraining data belonging to the cluster\footnote{Here we have departed slightly from the recipe in the papers and used 1M lines per language instead of using the pretraining data. The reasoning is that we know that 1M lines per language is enough data to train the tokenizers effectively and at the same time we do not run into out-of-memory problems. On the other hand we have effectively used more balanced data to train the cluster tokenizers than Chung and Liang did. The difference is best illustrated by considering the marginal case of number of clusters $k=1$. With one cluster we would effectively train the tokenizer on the balanced multilingual dataset ($\alpha = 0$) as opposed to the original papers where in the case of $k=1$ the tokenizer would be trained on the pretraining data where the language imbalance is present ($\alpha = 0.5$).}. We run the Sentencepiece algorithm again on these clustered corpora to arrive at cluster-specific vocabularies $V^{c_j}$. The vocabulary size for each cluster is determined following the Chung and Liang methods. For both methods we want to arrive at the final size of 120k tokens after merging the cluster-specific vocabularies. Therefore we need to determine the size of each cluster vocabulary $|V^{c_j}|$ such that $\sum_{j=1}^k |V^{c_j}| = 120k$. Moreover, we would like to distribute the capacity of the final vocabulary effectively so that each cluster is assigned enough tokens to cover the languages it contains. The Chung method sets the size of the cluster vocabulary to be proportional to the the size of the union over the monolignual vocabularies $|\bigcup_{l \in c_j} V^l|$ to determine the size of each cluster vocabulary $|V^{c_j}| = \frac{|\bigcup_{l \in c_j} V^l|}{\sum_{i=1}^k |\bigcup_{l' \in c_i} V^{l'}|} \cdot 120k$.
+
+The Liang method sets the size of the cluster vocabulary to be proportional to the sum of the vocabulary allocations from \citet{zheng_allocating_2021} for the languages belonging to the cluster. We use the statistics from Table 9 in \citet{zheng_allocating_2021}, following \citet{liang_xlm-v_2023}.
+
+After the tokenizers are trained, we merge the vocabularies using the method described in \xxx{ref}. 
+
+Here we slightly improve the methods of Chung and Liang. By following the original method as described above, the final size of the vocabulary will be lower than the target we set. This is because the cluster vocabularies $V^{c_j}$ will contain overlapping tokens and merging will remove these duplicates. This negative effect becomes larger with the increasing number of clusters $k$. Therefore, on top of training the prescribed cluster vocabulary of size $|V^{c_j}|$, we also train slightly larger vocabularies $V_q^{c_j'}$ of size $|V_q^{c_j}| = q|V^{c_j}|$ for $q = 1.1, 1.2, 1.3$. We then select the minimum $q$ that results in a vocabulary of size at least 120k tokens after merging the cluster vocabularies. After that we trim the vocabulary if needed. This improvement is done to ensure the final vocabulary size is exactly 120k tokens and the comparison between the methods is fair.
+
+The resulting clusters and the corresponding per-cluster vocabulary sizes are found in Table \xxx{todo add table}
+
+\subsection{Reproducing the \textsc{VoCap} method}
+
+
 
 \section{Proposed method}
 

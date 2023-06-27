@@ -49,15 +49,25 @@ One method to compute this probability is to use n-gram language models. These m
 \xxx{TODO}
 
 terms I use later that need explaination:
-- embedding layer of mBERT
+- embedding layer of mBERT, embedding matrix
+- model size
+- masked language models
 
 \section{Multilingual pretrained models}
 
 \xxx{TODO}
 
+\subsection{Assessing the ability of multilingual models}
+
+- word level tasks
+- sentence level tasks
+- inlanguage vs crosslingual
+
 \section{Subword tokenization}
 
 Subword tokenization methods split up words into subword units, which are then used as the input tokens for the neural models. This is done to mitigate the out-of-vocabulary (OOV) problem and to reduce the computational complexity of the softmax cross-entropy loss over a very large output vocabulary. The most common subword tokenization methods are Byte Pair Encoding (BPE), UnigramLM and Wordpiece.
+
+\xxx{TODO: define vocabulary - set of all tokens, vocabulary size}
 
 \subsection{Byte Pair Encoding (BPE)}
 
@@ -188,7 +198,8 @@ Later language models such as XLM-R \cite{conneau_unsupervised_2020}, mBART \cit
 
 
 % - section about how language models are still using the tokenization techniques such as BPE and UnigramLM that were developed for monolingual models.
-% - example models: mBERT uses Wordpiece, XLM uses BPE, XLM-R uses Unigram LM. More currently - mBART uses Unigram LM, T5 and mT5 uses Unigram LM. Even more recently, the 176B parameter BLOOM model uses Byte-level BPE and the multilingual generative model XGLM uses Unigram LM. Most of these models use the SentencePiece implementation and run the tokenization algorithm on the concatenation of all languages in the training data.
+% - example models: mBERT uses Wordpiece, XLM uses BPE, XLM-R uses Unigram LM. More curHow can we evaluate and improve them?  (va, vo)
+What are their strengths and weaknesses, and how you’ll tackle the latter in this work. Describerently - mBART uses Unigram LM, T5 and mT5 uses Unigram LM. Even more recently, the 176B parameter BLOOM model uses Byte-level BPE and the multilingual generative model XGLM uses Unigram LM. Most of these models use the SentencePiece implementation and run the tokenization algorithm on the concatenation of all languages in the training data.
 
 
 The method these models use to tokenize the input text is the same as the one used in the monolingual models. The only difference is that the tokenization algorithm is run on the concatenation of all languages in the training data, usually after performing random sampling with exponential smoothing to mitigate the bias towards high-resource languages.
@@ -313,3 +324,8 @@ With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create
 
 In the paper \Citetitle{liang_xlm-v_2023}, \citeauthor{liang_xlm-v_2023} propose a method for combining the two methods described above. 
 
+\subsubsection{Other approaches}
+
+- extending the vocabulary with new tokens
+- multiview tokenization
+- etc, go through my notes
