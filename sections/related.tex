@@ -104,7 +104,7 @@ The implementation in the Tensorflow library follows a top-down approach to crea
 
 \subsection{UnigramLM}
 
-The Unigram LM tokenizer, sometimes referred to as the SentencePiece tokenizer \citep{KudoandRichardson2018}, was introduced by \citet{Kudo2018}. The motivation for this method was to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
+The Unigram LM tokenizer, sometimes referred to as the SentencePiece tokenizer \citep{kudo_sentencepiece_2018}, was introduced by \citet{kudo_subword_2018}. The motivation for this method was to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
 
 Given an input sentence $X$, the Unigram LM algorithm finds the most probable segmentation $x^\star$ for the input sentence X:
 

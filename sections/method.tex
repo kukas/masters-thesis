@@ -9,49 +9,6 @@ In this chapter, we discuss the methodology of the thesis.
 
 \section{Methodology overview}
 
-
-- test the tokenizer metrics, show correlation between CPT, AR and JSD -> downstream
-    - define the metrics
-        - CPT
-        - AR
-        - JSD
-    - compare 4 tokenizers
-        - vanilla Unigram, vanilla BPE
-        - NoOverlap - to study the effect of the overlap
-        - TokMix - to ensure a uniform 
-    - experiments for 6 languages
-    - experiments for 20 languages
-
-- training the tokenizers
-    - the choice of implementation
-        - Huggingface vs Sentencepiece
-            - in Limisiewicz we use Huggingface
-            - in later experiments we use Sentencepiece
-                - it has its own limitations but the Huggingface implementation seems to produce suboptimal vocabularies
-    - the choice of vocabulary size
-        - we use 120k
-        - this was used in mBERT
-        - Chung uses 488k and 104 langs => 4.7k tokens per language
-        - Zheng uses 500k and 86 langs => 5.8k tokens per language
-        - Liang uses 900k and 104 langs => 8.7k tokens per language
-        - XLM-R uses 250k and 104 languages, we use 20 languages
-            - thus XLM-R has 2.4k tokens per language
-            - we have 6k tokens per language
-
-    - choice of model - BPE vs unigram
-        - all my experiments are with unigram
-        - all balancing methods use unigram so it makes sense to use unigram for the baseline
-    - the choice of coverage parameter
-        - for 120k multilingual unigram tokenizer
-            - the coverage affects the alphabet size 
-                - max alphabet 13658, "recommended" alphabet 2678 (coverage 0.9995), 
-                - XLM-R reproduction alphabet 8226 (0.999995), XLM-R actual alphabet 13828
-            - the coverage affects the CPT
-                - but the difference is small +- 0.05 cpt
-                - TODO: compute fair cpt and count unk as single characters
-
-
-
 - training the models
     - we train with 10K steps, 8192 batch size, 128 sequence length
     - on 2x A100
@@ -97,11 +54,8 @@ The exact choice of the language subset is motivated by the downstream evaluatio
 \todo{add table with the languages with a summary of some of the properties (which languages share script, which are typologically related, which use spaces and which don't, which are low-resource)}
 
 % This subset of CC100 is then used for further experiments with vocabulary creation that will be described in the following sections.
-
-For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages, we resample the data using . \xxx{TODO: describe the resampling method, compare different alphas used in the literature}
-
-Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. The empirical probability of sampling a line from language $l$ is given by:
-For pretraining the models, we further subsample the data following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. The empirical probability of sampling a line from language $l$ is given by:
+\xxx{TODO: describe the resampling method, compare different alphas used in the literature}
+For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages. Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. The empirical probability of sampling a line from language $l$ is given by:
 
 \begin{equation}
     p(l) = \frac{N_l}{\sum_{l' \in L} N_{l'}}
@@ -115,9 +69,24 @@ To ensure that the low-resource languages are not underrepresented in the traini
     p'(l) = \frac{p(l)^\alpha}{\sum_{l' \in L} p(l')^\alpha}
 \end{equation}
 
-For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha = 1$ we get the original distribution. We use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}.
+For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha = 1$ we get the original distribution. For pretraining the language models, we use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}. For training the tokenizers, we specify the alpha as a parameter of the tokenizer training procedure. Usually we use $\alpha = 0.0$ and $\alpha = 0.3$.
 
 \section{Tokenizer metrics}
+
+\xxx{lets write the motivation here and maybe move it to the background section later}
+
+% - test the tokenizer metrics, show correlation between CPT, AR and JSD -> downstream
+%     - define the metrics
+%         - CPT
+%         - AR
+%         - JSD
+%     - compare 4 tokenizers
+%         - vanilla Unigram, vanilla BPE
+%         - NoOverlap - to study the effect of the overlap
+%         - TokMix - to ensure a uniform 
+%     - experiments for 6 languages
+%     - experiments for 20 languages
+
 
 \section{Investigating the influences on the tokenizer}
 
@@ -198,13 +167,13 @@ The resulting clusters and the corresponding per-cluster vocabulary sizes are fo
 
 From the high level, the \textsc{VoCap} method works by selecting the best vocabulary size for each language and then merging the monolingual vocabularies. The best vocabulary size is determined by maximizing the overall \textit{Average Log Probability} metric defined in \xxx{ref}. 
 
-To replicate the \textsc{VoCap} method, we first need to compute the \textsc{ALP} metric for each language and each vocabulary size. We therefore train monolingual tokenizers using Sentencepiece with default settings for all 20 languages with vocabulary sizes starting with 1k to 40k. We use 1M lines per language for training the monolingual tokenizers again, following \citet{zheng_allocating_2021}.\footnote{The more effective way, not discussed by \citet{zheng_allocating_2021}, would be to modify the Sentencepiece unigram trainer code to produce a tokenizer after each prune iteration. That way we would get series of tokenizers with decreasing vocabulary size in one go, instead of running the trainer 40 times. As the computational cost of training the tokenizers is not high, we have not implemented this improvement.}. Note that for Chinese the tokenizer vocabulary size starts at 5k due to the large number of unique logograms in the language. 
+To replicate the \textsc{VoCap} method, we first need to compute the \textsc{ALP} metric for each language and each vocabulary size. We therefore train monolingual tokenizers using Sentencepiece with default settings for all 20 languages with vocabulary sizes from 1k to 40k.\footnote{The more effective way, not discussed by \citet{zheng_allocating_2021}, would be to modify the Sentencepiece unigram trainer code to produce a tokenizer after each prune iteration. That way we would get series of tokenizers with decreasing vocabulary size in one go, instead of running the trainer 40 times. As the computational cost of training the tokenizers is not high, we have not implemented this improvement.} We use 1M lines per language for training the monolingual tokenizers again, following \citet{zheng_allocating_2021}. Note that for Chinese the tokenizer vocabulary size starts at 5k due to the large number of unique logograms in the language. 
 
 % reference for 1M lines: https://github.com/bozheng-hit/VoCapXLM/blob/main/train_mono_spm.py#L73
 
 We then load a sample of CC100 data for each language (100k lines per language) and tokenize each monolingual corpus with the respective tokenizers of increasing vocabulary sizes. We are then able to compute the $\mathrm{ALP}(l, V)$ \xxx{fix the formula so that it matches related work} for each language $l$ and each vocabulary size $V \in \{1000, 2000, ..., 40\,000\}$
 
-Now we can greedily select the best vocabulary sizes. We start with selecting the lowest vocabulary size for each language (1k for all languages except Chinese where we start with 5k) and merging the vocabularies of these tokenizers. Then in each iteration, we check which language would benefit the most from increasing the vocabulary size by 1000. Concretely, we check the increase in ALP for each language and increase the vocabulary size for that language by merging the bigger vocabulary with the total vocabulary. We repeat this process until the total vocabulary size reaches 120k tokens. Any tokens over the limit are removed from the vocabulary.
+Now we can greedily select the best vocabulary sizes. We start with selecting the lowest vocabulary size for each language (1k for all languages except Chinese where we start with 5k). We merge the selected vocabularies of the tokenizers. Then in each iteration, we check which language would benefit the most from increasing the vocabulary size by 1000. Concretely, we check the increase in ALP for each language and increase the vocabulary size for that language by merging the bigger vocabulary with the total vocabulary. We repeat this process until the total vocabulary size reaches 120k tokens. Any tokens over the limit are removed from the vocabulary.
 
 Contrary to \citet{zheng_allocating_2021}, we do not use the $\beta$ rescaling factor to account for the pretraining corpus size. By setting $\beta$ to 0, we want to achieve the best ALP for each language regardless of their corpus size. This is because we want to balance the low-resource languages, not necessarily achieve the best performance on the downstram tasks.
 
@@ -233,10 +202,39 @@ Additionally, we also experiment with optimizing the \textsc{CPT} metric instead
 %     - reaching the target size
 %         - train +10\%, +20\% of the target size and then prune
 
+For all reproduced methods, the last step is to take several UnigramLM tokenizers and merge them into the final, multilingual tokenizer. Now we will describe how do we merge tokenizers in our case. Unfortunately, the merging step is not described fully in any of the reproduced papers. In the case of the UnigramLM tokenizers, tokenizer $\tau$ consists of vocabulary (set of strings) $T^\tau \subset \Sigma^\star$ and the corresponding logits $L^\tau: \Sigma^\star \rightarrow \mathbb{R}$ so that $\sum_{t \in T^\tau} \exp(L^\tau(t)) = 1$. \xxx{maybe mention the logits in related work} The logits are used for finding the most probable segmentation of an input sentence. 
 
-\section{Proposed method}
+To create the merged vocabulary for input tokenizers $\tau_1, ... \tau_m$ we take the union over the vocabularies:
 
-\subsection{Clustering corpora on the document level}
+\begin{equation}
+    T^\tau \coloneqq \bigcup_{i=1}^m T^{\tau_i}
+\end{equation}
+
+We set the merged logits to the log of the average probability of the token in the input tokenizers:
+
+\begin{equation}
+    \forall t \in T^\tau: L^\tau(t) \coloneqq \log(\frac{1}{m} \sum_{i, t \in T^{\tau_i}} \exp(L^{\tau_i}))
+\end{equation}
+
+If the token $t$ is not present in some of the input tokenizers, we consider the probability of the token for that tokenizer to be zero. 
+
+In this way the sum of the probabilities of the tokens in the merged vocabulary is one and thus the merged tokenizer is a valid UnigramLM tokenizer. We can see this by the following derivation:
+
+\begin{equation}
+    \sum_{t \in T^\tau} \exp(L^\tau(t)) = \sum_{t \in T^\tau} \frac{1}{m} \sum_{i, t \in T^{\tau_i}} \exp(L^{\tau_i}) = \frac{1}{m} \sum_{i=1}^m \sum_{t \in T^{\tau_i}} \exp(L^{\tau_i}) = \frac{1}{m} \sum_{i=1}^m 1 = 1
+\end{equation}
+
+\xxx{the second equality should be maybe more explained}
+
+We argue that this is the most natural way to merge the tokenizers and so we assume this is probably the way the other authors did the merging. By observing the logits in the tokenizer released by \citet{liang_xlm-v_2023} though, we see that the authors do merge the logits in some way but the sum of the probabilities in the final tokenizer is $\approx 4.55$ (not counting the special tokens), which suggests some problems in the merging step.
+
+% urls for the tokenizers:
+% https://github.com/bozheng-hit/VoCapXLM/blob/main/VoCap_500k/sentencepiece.bpe.model
+% https://huggingface.co/facebook/xlm-v-base/blob/main/sentencepiece.bpe.model
+
+\section{Proposed methods}
+
+For comparison with 
 
 \section{Evaluation}
 
