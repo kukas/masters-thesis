@@ -52,6 +52,7 @@
 
 % add my additional packages
 \usepackage{mathtools}
+\usepackage{bbm}
 
 % load bibliography tools
 \usepackage[backend=bibtex,natbib,style=numeric,sorting=none]{biblatex}
@@ -136,6 +137,14 @@
 \section{Extrinsic evaluation}
 
 \chapter{Discussion}
+
+- our comparison is limited to 20 langs and small models
+    - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
+    - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.
+- alpha0 assumes that we have enough data for each language
+    - this might not be the case for some extremely-low-resource languages
+    - it seems that we need atleast 100k lines to get good tokenizer for that language which is available for most languages
+    - but this problem cannot be tackled by any method
 
 % \include{intro}
 % \include{ch1}
