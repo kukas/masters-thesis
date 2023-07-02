@@ -55,7 +55,7 @@ The exact choice of the language subset is motivated by the downstream evaluatio
 
 % This subset of CC100 is then used for further experiments with vocabulary creation that will be described in the following sections.
 \xxx{TODO: describe the resampling method, compare different alphas used in the literature}
-For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages. Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. The empirical probability of sampling a line from language $l$ is given by:
+For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages. Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. This is a standard practice followed by multiple independent authors \xxx{cite}. The empirical probability of sampling a line from language $l$ is given by:
 
 \begin{equation}
     p(l) = \frac{N_l}{\sum_{l' \in L} N_{l'}}
@@ -69,11 +69,213 @@ To ensure that the low-resource languages are not underrepresented in the traini
     p'(l) = \frac{p(l)^\alpha}{\sum_{l' \in L} p(l')^\alpha}
 \end{equation}
 
-For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha = 1$ we get the original distribution. For pretraining the language models, we use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}. For training the tokenizers, we specify the alpha as a parameter of the tokenizer training procedure. Usually we use $\alpha = 0.0$ and $\alpha = 0.3$.
+For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha = 1$ we get the original distribution. For pretraining the language models, we use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}. For training the tokenizers, we specify the alpha as a parameter of the tokenizer training procedure. Usually we use $\alpha = 0.0$ (1 milion lines per language, 20 milion in total) and $\alpha = 0.3$.
+
+We also sample uniformly from the rest of the CC100 dataset to create evaluation and test splits. Here we use $\alpha = 0.0$ to represent all languages equally.
 
 \section{Tokenizer metrics}
 
-\xxx{lets write the motivation here and maybe move it to the background section later}
+\xxx{lets write the motivation here and maybe move it to the background section later}  
+
+% - motivation: we want to evaluate the tokenizers before costly pretraining
+% - by comparing the tokenizers we can select the best one for pretraining
+% - we can also use the metrics to study the effect of the hyperparameters and other factors on the tokenizer
+% - We use the metrics throughout the thesis to measure the tokenizers
+% - We can measure how the tokenizer output differs between languages
+%     - Explain how to measure individual languages with the same tokenizer. Metric may be a function of the tokenizer and language coded hold out data
+
+% - Why do we want to measure the tokenizers?
+%     - we want to select the best tokenizer for pretraining
+%     - how do the tokenizers differ?
+%         - overlap between languages - can be beneficial for some tasks (ner) but detrimental for others (pos)
+%         - how much do they split words? (Rust)
+%         - how much do they split sentences? (Limisiewicz)
+%             - too much splitting - the model needs to learn to reconstruct words
+%             - too little splitting - there is not enough examples for the model to learn from (but maybe this is not a problem for masked LM, only for machine translation)
+%         - we can also measure the compatiblity of the segmentations (Maronikolakis)
+%         - vocabulary capacity per language
+%             - are the languages represented equally in the vocabulary?
+%             - this is hard because some languages need more tokens than others (Chinese vs English)
+
+% - how to measure tokenizers
+%     - we want to measure the per-language and cross-lingual phenomena
+%     - we therefore need to measure the tokenizers using language-coded data
+%     - the basis for measurement will be the tokenization of the language-coded data and the empirical distribution of the tokens
+
+%     - Average Rank - we want to measure how many tokens are used in the vocabulary - high frequency tokens are penalized because they move the average down
+%         - another motivation - AR is similar to "the number of tokens needed to cover x% of the data" but it is non-parametric and includes the information about the distribution of the tokens
+%     - Characters per Token - more characters = less ambiguity = better
+%         - similar to word fertility, equivalent to tokens per sentence
+%             - tokens per sentence used in Chung (they call it description length), Liang
+%         - usable also in the langugaes without spaces
+%     - of course both measures depend on the langugage
+
+%     - interesting: ALP === entropy * avg_sequence_length
+
+%     - overlap - what is the overlap between two languages
+%         - we can look at the number of tokens that are shared between the languages but this is not that informative because these tokens might be very rare
+%             - Wu and Dredze did this
+%         - better is to look at the distributions of the tokens in each language and measure the similarity
+%         - we can use the Jensen-Shannon divergence to measure the similarity of the distributions
+%         - Chung used the Wasserstein distance but this is a distance function defined between probability distributions on a given metric space. (probability measures). We do not see how to interpret the token distribution as a probability measure and Chung does not discuss this
+
+In this section we introduce the metrics that we use to evaluate the tokenizers. By measuring the tokenizers we would like to explore two questions. First, we would like to analyse how the tokenizers differ between each other. How granular is the segmentation given an example text? And how much are the tokens shared between the languages? Second, using the observed differences between tokenizers, we would like to analyse how they influence the multilingual language models, that are trained using the tokenizers. We will describe the methodology for measuring the influences in the following sections \xxx{ref}.
+
+When measuring the multilingual tokenizers, we also want to investigate the quality of tokenization for individual languages. This gives us a better understanding of the tokenizers and allows us to compare the tokenizers between each other given a target language. For this purpose, we will use samples of evaluation corpora for each language. The measures we define will be then a function of the tokenizer $\tau$ and the language corpus $C_l$. 
+
+For each metric we will provide motivation and comparison with similar metrics used in the literature. 
+
+\xxx{mention the vocabulary allocation and vocabulary overlap}
+
+\subsection{Characters per token}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{img/temp/cpt_example.png}
+    \caption{Example of CPT metric.}
+    \label{fig:cpt_example}
+\end{figure}
+
+The first metric we will use is the average number of characters per token (CPT). The motivation for this metric is that we want to measure how granular the tokenization is. If the tokenizer splits the words into many tokens, the average number of characters per token will be low. On the other hand, if the tokenizer does not split the words, the average number of characters per token will be high. We hypothesize, that longer tokens are better for the language models, because they potentially carry more meaning. The extreme case of this metric is the character-level tokenization, where the average number of characters per token is 1. In this case the model would need to learn to reconstruct the words from the characters.
+
+The metric is defined as follows. Given a tokenizer $\tau$ and a language corpus $C_l$, we first tokenize the corpus using the tokenizer $\tau$. Then we compute the average number of characters per token in the tokenized corpus:
+
+\begin{equation}
+    CPT(\tau, C_l) = \frac{\sum_{s \in C_l}|s|}{\sum_{s \in C_l}|\tau(s)|}
+\end{equation}
+
+where $|s|$ is the number of characters in the sentence $s \in C_l$ and $|\tau(s)|$ is the number of tokens in the tokenized sentence. The metric is illustrated in Figure \ref{fig:cpt_example}.
+
+The CPT metric is connected to the average tokenized length (description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. The average tokenized length is defined as the average number of tokens per sentence: 
+\begin{equation}
+    TL(\tau, C_l) = \frac{\sum_{s \in C_l}|\tau(s)|}{|C_l|}
+\end{equation}
+
+Which can be expressed as the product of the reciprocal of CPT metric and the average sentence length, which is language-specific and not dependent on the tokenizer:
+\begin{equation}
+    CPT(\tau, C_l)^{-1} \cdot \frac{\sum_{s \in C_l}|s|}{|C_l|} = \frac{\sum_{s \in C_l}|\tau(s)|}{\sum_{s \in C_l}|s|} \cdot \frac{\sum_{s \in C_l}|s|}{|C_l|} = \frac{\sum_{s \in C_l}|s|}{|C_l|}
+\end{equation}
+
+Even though the metrics are equivalent, we will use the CPT metric instead of the average tokenized length because we believe it is more intuitive (higher CPT is better) and it is easier to interpret thanks to the lower bound of 1.
+
+CPT is also similar to the word fertility metric used in \citet{rust_how_2021}. The word fertility is defined as the average number of tokens per word. The fertility metric has been shown to correlate with downstream performance and therefore seems to be a good metric. The downside of this metric is that it is not language-agnostic because it is not defined for languages without word delimiters such as Chinese or Thai. 
+
+\subsection{Average Rank}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{img/temp/ar_example.png}
+    \caption{Example of AR metric.}
+    \label{fig:ar_example}
+\end{figure}
+
+Another metric we use for comparing the tokenizers is Average Rank (AR). The motivation for this metric is that we want to measure how many tokens are used in the vocabulary for representing the corpus. Each language will have some amount of tokens dedicated to it in the vocabulary and our goal is to represent this allocation. Here one metric suggestion could be something along the lines of "number of token types from vocabulary of $\tau$ needed to cover the 95/98/100\% of the corpus". That metric would work but the downside is that we do not know how to set the threshold. Moreover we would like the metric to reflect the shape of the distribution of the token coverage. We prefer a distribution that is more balanced. High-frequency tokens might be too ambiguous and low-frequency tokens might not have enough training examples to learn from \cite{gowda_finding_2020}. Therefore we propose a different metric that reflects both the vocabulary allocation and the uniformity of the token distribution and is parameter-free.
+
+Given a tokenizer $\tau$ and a language corpus $C_l$, we first tokenize the corpus using the tokenizer $\tau$. Then we compute the empirical probability of the tokens in the tokenized corpus.
+
+\begin{equation}
+    \hat{p}_{\tau(C_l)}(t) = \frac{count(t, \tau(C_l))}{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))}
+\end{equation}
+
+We sort the tokens by their probability and assign them ranks from 1 to $|V_\tau|$. The average rank is then the weighted average of the ranks of the tokens, where the weights are the probabilites of the tokens:
+
+\begin{equation}
+    AR(\tau, C_l) = \sum_{t \in V_\tau} rank(t, \tau(C_l)) \cdot \hat{p}_{\tau(C_l)}(t)
+\end{equation}
+
+The metric is illustrated in Figure \ref{fig:ar_example}. Now, we would like to address how does this metric compare to different metrics used in the literature. 
+
+First we examine the ALP metric defined in \citet{zheng_allocating_2021}. This metric is proposed for the same purpose as our AR metric. It is also said to measure language-specific vocabulary capacity and the authors claim that it is "penalized by the subword units with low-frequency". Surprisingly, we can show that the ALP metric is equivalent to the product of negative entropy and average tokenized length.
+
+\xxx{todo fix the notation}
+The ALP metric is defined as follows. Given a monolingual corpus composed of sentences $C_l = {s_1, ..., s_{|C_l|}}$ from the language $l$ and tokenized with vocabulary $V_\tau$, the average log probability is defined as follows:
+
+\begin{align}
+ALP(\tau, C_l) &= \frac{1}{|C_l|} \sum_{j=1}^{|C_l|} \sum_{k=1}^{|s_j|} \log p_{uni}(s_{kj}) \\
+&= \frac{1}{|C_l|} \sum_{t \in V_\tau} count(t, \tau(C_l)) \log \hat{p}_{\tau(C_l)}(t) \\
+&= \frac{1}{|C_l|} \sum_{t \in V_\tau} \frac{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))}{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))} count(t, \tau(C_l)) \log \hat{p}_{\tau(C_l)}(t) \\
+&= \frac{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))}{|C_l|} \sum_{t \in V_\tau} \frac{count(t, \tau(C_l))}{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))} \log \hat{p}_{\tau(C_l)}(t) \\
+&= \frac{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))}{|C_l|} \sum_{t \in V_\tau} \hat{p}_{\tau(C_l)}(t) \log \hat{p}_{\tau(C_l)}(t) \\
+&= - TL(\tau, C_l) \cdot H(\hat{p}_{\tau(C_l)})
+\end{align}
+
+\xxx{the last derivation needs "lemma" that $\sum_{t' \in \tau(C_l)} count(t', \tau(C_l)) == \sum_{s \in C_l}|\tau(s)|$}
+
+By analysis of ALP we see that the metric is composed of two metrics that are already well defined. Strangely, the metrics are multiplied together even though the effects of the metrics go against each other. On one hand the lower the token length the better (lower tokenized sentence length means longer and more meaningful tokens), on the other hand arguably, the higher entropy the better (more uniform distribution is better than very unbalanced distribution). It is not clear why would we want to multiply these two metrics together. The authors do not provide this analysis and discussion. \xxx{now interpretaion occured to me: the best ALP is achieved when we have short tokens that are balanced. So actually it could be interesting. But still the authors do not provide this analysis.}
+
+Next we will compare the Average Rank and Entropy. The entropy of the tokenized corpus is defined as follows:
+
+\begin{equation}
+    H(\tau(C_l)) = - \sum_{t \in V_\tau} \hat{p}_{\tau(C_l)}(t) \log \hat{p}_{\tau(C_l)}(t)
+\end{equation}
+
+We see that entropy provides similar characteristics as AR in the sense that more uniform distributions result in higher entropy and more tokens dedicated to a language also result in higher entropy. As we can see, the formula for entropy and AR differ only in the sign and one of the multiplied terms. The sign is not important as we are only interested in the relative values of the metrics. The difference in the multiplied terms is that AR uses the rank of the token, while entropy uses the log-probability of the token. 
+
+To proceed with the analysis, we will assume that the tokens follow the Zipf's distribution. This is a reasonable assumption for natural language data and empirically it holds \xxx{add image}. The Zipf's distribution is defined as follows:
+
+\begin{equation}
+    p_{zipf}(t) = \frac{1}{rank(t) \cdot H_{|V_\tau|}}
+\end{equation}
+
+Where $H_{|V_\tau|}$ is the $|V_\tau|$-th harmonic number used as a normalization constant.
+
+Taking the logarithm of $p_{zipf}(t)$, we get:
+
+\begin{equation}
+    \log p_{zipf}(t) = - \log rank(t) - \log H_{|V_\tau|}
+\end{equation}
+
+Now if we plug in the log-probability of the token into the entropy formula and leave out the constant as we are interested only in the relative values with a fixed vocabulary size, we get:
+
+\begin{equation}
+    H(\tau(C_l)) = \sum_{t \in V_\tau} \hat{p}_{\tau(C_l)}(t) \log rank(t)
+\end{equation}
+
+We see that under the Zipfian assumption, the entropy may be viewed as a "Average Log Rank". This may be empirically observed in the Figure \ref{fig:ar_alr_entropy}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/temp/ar_alr_entropy.jpg}
+    \caption{Average Rank vs Average Log Rank vs Entropy}
+    \label{fig:ar_alr_entropy}
+\end{figure}
+
+This provides us with an intuitive understanding of the difference between the two metrics. AR and entropy can be viewed as being related, with the difference being in their sensitivity to the rank of the tokens. AR, being directly related to rank, is more sensitive to changes in probability in lower-frequency tokens. This is because the arithmetic mean used in AR is more affected by linear rank values than the logarithmic rank values used in entropy calculation.
+
+\subsection{Jensen-Shannon Divergence}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{img/temp/jsd_example.png}
+    \caption{Jensen-Shannon Divergence}
+    \label{fig:jsd_example}
+\end{figure}
+
+The Jensen-Shannon Divergence (JSD) is a metric that measures the similarity between two probability distributions. It is defined as follows:
+
+\begin{equation}
+    JSD(p, q) = \frac{1}{2} \cdot (KL(p||m) + KL(q||m))
+\end{equation}
+
+Where $m = \frac{1}{2} \cdot (p + q)$ is the midpoint distribution and $KL(p||q)$ is the Kullback-Leibler divergence. 
+
+\begin{equation}
+    KL(p||q) = \sum_{t \in V_\tau} p(t) \log \frac{p(t)}{q(t)}
+\end{equation}
+
+We will use JSD for the analysis of an overlap between two languages given a tokenizer. Tokenization of two monolingual corpora $C_{l_1}$ and $C_{l_2}$ with the same tokenizer $\tau$ will result in two probability distributions over the vocabulary $V_\tau$. We will denote these distributions as $\hat{p}_{\tau(C_{l_1})}$ and $\hat{p}_{\tau(C_{l_2})}$. 
+
+Computing the JSD between the two distributions will result in a metric that measures how much the two distributions overlap. The JSD is a symmetric metric that is bounded between 0 and 1. Low JSD means that the two distributions are similar, high JSD means that the two distributions are different. 
+
+Overlap in tokenization has been studied in \citet{wu_beto_2019}, although the metric used there was the absolute number of overlapping tokens. The benefit of JSD is that the metric takes into account the occurence of the shared tokens. This is important because some of the overlapping tokens may be for example infrequent emojis or other special tokens that do not carry much information about the language nor the actual overlap in more meaningful tokens.
+
+\citet{chung_improving_2020} uses the Wasserstein distance (or the "earth mover's distance") to measure the overlap between two languages. We believe this is a mistake as the Wasserstein distance is defined for probability measures (probability distributions on a given metric space). The tokenizer vocabulary has no metric structure and the authors of the article do not specify how they define the metric on the vocabulary.
+
+% Further, we will be mainly concerned with the tokenization of the training corpora $\tau(C_l)$ and the empirical distribution over the tokenizer vocabulary:
+
+% \xxx{fix the equation once I settle on the notation. The denominator is wrong here}
+
+
 
 % - test the tokenizer metrics, show correlation between CPT, AR and JSD -> downstream
 %     - define the metrics
@@ -87,8 +289,38 @@ For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha
 %     - experiments for 6 languages
 %     - experiments for 20 languages
 
+\section{Investigating the influence of the tokenizer on the language model}
 
 \section{Investigating the influences on the tokenizer}
+
+% - training the tokenizers
+%     - the choice of implementation
+%         - Huggingface vs Sentencepiece
+%             - in Limisiewicz we use Huggingface
+%             - in later experiments we use Sentencepiece
+%                 - it has its own limitations but the Huggingface implementation seems to produce suboptimal vocabularies
+%     - the choice of vocabulary size
+%         - we use 120k
+%         - this was used in mBERT
+%         - Chung uses 488k and 104 langs => 4.7k tokens per language
+%         - Zheng uses 500k and 86 langs => 5.8k tokens per language
+%         - Liang uses 900k and 104 langs => 8.7k tokens per language
+%         - XLM-R uses 250k and 104 languages, we use 20 languages
+%             - thus XLM-R has 2.4k tokens per language
+%             - we have 6k tokens per language
+
+%     - choice of model - BPE vs unigram
+%         - all my experiments are with unigram
+%         - all balancing methods use unigram so it makes sense to use unigram for the baseline
+%     - the choice of coverage parameter
+%         - for 120k multilingual unigram tokenizer
+%             - the coverage affects the alphabet size 
+%                 - max alphabet 13658, "recommended" alphabet 2678 (coverage 0.9995), 
+%                 - XLM-R reproduction alphabet 8226 (0.999995), XLM-R actual alphabet 13828
+%             - the coverage affects the CPT
+%                 - but the difference is small +- 0.05 cpt
+%                 - TODO: compute fair cpt and count unk as single characters
+
 
 \section{Reproducing the vocabulary capacity balancing methods}
 
@@ -165,6 +397,17 @@ The resulting clusters and the corresponding per-cluster vocabulary sizes are fo
 
 \subsection{Reproducing the \textsc{VoCap} method}
 
+%     - Zheng
+%         - train monolingual tokenizers for all 20 languages with vocab sizes 1k ... 40k
+%         - load a sample of CC100 data for each language (50k lines per language)
+%         - tokenize the data with all of the monolingual tokenizers
+%         - compute the ALP for each language and vocabulary size
+%         - select the best vocabulary size for each language greedily
+%         - we also experiment with optimizing CPT instead of ALP
+%         - we also experiment with computing the CPT improvement on each merge step instead of precomputing it for all vocab sizes
+
+%         - they have this suspicious plot with ALP with Joint250k, Joint500k and VoCap500k and the differences are too much
+
 From the high level, the \textsc{VoCap} method works by selecting the best vocabulary size for each language and then merging the monolingual vocabularies. The best vocabulary size is determined by maximizing the overall \textit{Average Log Probability} metric defined in \xxx{ref}. 
 
 To replicate the \textsc{VoCap} method, we first need to compute the \textsc{ALP} metric for each language and each vocabulary size. We therefore train monolingual tokenizers using Sentencepiece with default settings for all 20 languages with vocabulary sizes from 1k to 40k.\footnote{The more effective way, not discussed by \citet{zheng_allocating_2021}, would be to modify the Sentencepiece unigram trainer code to produce a tokenizer after each prune iteration. That way we would get series of tokenizers with decreasing vocabulary size in one go, instead of running the trainer 40 times. As the computational cost of training the tokenizers is not high, we have not implemented this improvement.} We use 1M lines per language for training the monolingual tokenizers again, following \citet{zheng_allocating_2021}. Note that for Chinese the tokenizer vocabulary size starts at 5k due to the large number of unique logograms in the language. 
@@ -180,17 +423,6 @@ Contrary to \citet{zheng_allocating_2021}, we do not use the $\beta$ rescaling f
 The final vocabulary sizes for each language are found in Table \xxx{todo add table}.
 
 Additionally, we also experiment with optimizing the \textsc{CPT} metric instead of \textsc{ALP}. We also experiment with computing the \textsc{CPT} improvement on each merge step instead of precomputing it for all vocab sizes, since the metric increase might be slightly different for the intermediate tokenizer. None of these modifications lead to substantially better results and so we stick to the original method. \xxx{rewrite this or remove it}
-
-%     - Zheng
-%         - train monolingual tokenizers for all 20 languages with vocab sizes 1k ... 40k
-%         - load a sample of CC100 data for each language (50k lines per language)
-%         - tokenize the data with all of the monolingual tokenizers
-%         - compute the ALP for each language and vocabulary size
-%         - select the best vocabulary size for each language greedily
-%         - we also experiment with optimizing CPT instead of ALP
-%         - we also experiment with computing the CPT improvement on each merge step instead of precomputing it for all vocab sizes
-
-%         - they have this suspicious plot with ALP with Joint250k, Joint500k and VoCap500k and the differences are too much
 
 \subsection{Merging the tokenizers}
 
@@ -235,6 +467,16 @@ We argue that this is the most natural way to merge the tokenizers and so we ass
 \section{Proposed methods}
 
 For comparison with 
+
+- motivation for word-balancing:
+    - we assume that there is a topic imbalance in the CC100 corpus
+        - assume there is 99% of news and 1% biology
+        - the name of the ministry of agriculture will be more common than the word "evolution"
+            - but it is more useful to cover the most common words in biology than the uncommon words in news
+        - by balancing the words we may achieve better coverage of the topics
+    - we assume it is better to split roots of words and not have many inflected forms of the same word
+        - if the word "evolution" occurs much more frequently than "evoluce", the model might learn "evolution" but will oversegment "evoluce"
+        - by balancing the words we may arrive at a better segmentation because it will be more useful to split "evolution" into evolu + tion and evoluce into evolu + ce
 
 \section{Evaluation}
 
