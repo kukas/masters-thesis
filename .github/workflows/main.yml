@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
   workflow_dispatch:
 
@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the thesis
-        run: latexmk thesis && latexmk abstract-cz && latexmk abstract-en
+        run: latexmk -pdf thesis && latexmk -pdf abstract-cz && latexmk -pdf abstract-en
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
