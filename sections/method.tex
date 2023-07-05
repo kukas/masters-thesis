@@ -9,22 +9,26 @@ In this chapter, we discuss the methodology of the thesis.
 
 \section{Methodology overview}
 
-- training the models
-    - we train with 10K steps, 8192 batch size, 128 sequence length
-    - on 2x A100
-- evaluation on downstream
-    - utilized Huggingface examples for the downstream tasks so that there are no mistakes
-    - on how to compute significance for the cross-lingual tasks
-        - we want to compare the average over languages
-        - we can use bootstrapping to compute the confidence intervals
-            - for each language select a random seed and compute the average over these seeds
-            - sample many times and compute the confidence intervals
-To be able to compare several tokenization methods we need to fix a training and evaluation procedure that we will use throught the thesis for each experiment, be it a replication of a previous work or our own novel method. In following sections we describe the training and evaluation procedure that we use in the thesis.
+% - training the models
+%     - we train with 10K steps, 8192 batch size, 128 sequence length
+%     - on 2x A100
+% - evaluation on downstream
+%     - utilized Huggingface examples for the downstream tasks so that there are no mistakes
+%     - on how to compute significance for the cross-lingual tasks
+%         - we want to compare the average over languages
+%         - we can use bootstrapping to compute the confidence intervals
+%             - for each language select a random seed and compute the average over these seeds
+%             - sample many times and compute the confidence intervals
+% To be able to compare several tokenization methods we need to fix a training and evaluation procedure that we will use throught the thesis for each experiment, be it a replication of a previous work or our own novel method. In following sections we describe the training and evaluation procedure that we use in the thesis.
 
-For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised_2020}. Using the data we create multilingual vocabularies with the same size of 120K unique tokens using different methods. We use intrinsic evaluation framework from \citet{limisiewicz_tokenization_2023} to evaluate the tokenizers. Then we use the tokenizers to train multilingual masked language models on the same data and evaluate them on the same set of downstream tasks. We compare the results of the intrinsic and extrinsic evaluation to see if the improvements in the intrinsic evaluation translate to improvements in the downstream tasks.
+% For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised_2020}. Using the data we create multilingual vocabularies with the same size of 120K unique tokens using different methods. We use intrinsic evaluation framework from \citet{limisiewicz_tokenization_2023} to evaluate the tokenizers. Then we use the tokenizers to train multilingual masked language models on the same data and evaluate them on the same set of downstream tasks. We compare the results of the intrinsic and extrinsic evaluation to see if the improvements in the intrinsic evaluation translate to improvements in the downstream tasks.
+
+In this thesis, we would like to investigate the effect of tokenizer properties on multilingual language models. We define metrics that measure the properties of the tokenizers and then we define the method by which we assess how these properties affect the performance of the language models. At the same time we want to improve the performance of the multilingual language model for the low-resource languages as this was shown to be a problem in previous work \cite{rust_how_2021}. Therefore we use the metrics we define to assess the methods proposed to solve this problem. Furthermore we propose y methods to improve the performance of the language models and evaluate them using the same metrics.
+
+
 
 \section{Data and scope}
-
+\label{sec:data_scope}
 % - prepare the pretraining/tokenizer training data
 %     - selecting the dataset
 %         - mBERT, Zheng - wikipedias
@@ -517,19 +521,15 @@ Specifically, both methods use the same Sentencepiece tokenizer implementation a
 
 With the tokenizers replicated and trained, we will train the language models to be able to assess the influence of the tokenization method on the language model performance.
 
-We use the Huggingface framework \cite{wolf2020} for pretraining the language model. We use the example script from the Huggingface repository to pretrain the language model with the Masked Language Model objective. The model architecture is based on a scaled-down version of XLM-R\textsubscript{Base} \cite{conneau_unsupervised_2020}. The size of embeddings is kept at 768, the number of attention layers is reduced from 12 to 8, the number of attention heads is reduced from 12 to 6. The maximum sequence length is set to 128 tokens. The vocabulary size is 120\,000. The total number of parameters is roughly two times smaller than the original XLM-R\textsubscript{Base}.
+We use the Huggingface framework \cite{wolf_transformers_2020} for pretraining the language model. We use the example script from the Huggingface repository to pretrain the language model with the Masked Language Model objective. The model architecture is based on a scaled-down version of XLM-R\textsubscript{Base} \cite{conneau_unsupervised_2020}. The size of embeddings is kept at 768, the number of attention layers is reduced from 12 to 8, the number of attention heads is reduced from 12 to 6. The maximum sequence length is set to 128 tokens. The vocabulary size is 120\,000. The total number of parameters is roughly two times smaller than the original XLM-R\textsubscript{Base}.
 
 The models are pretrained for 10k steps with batchsize 8192 achieved by using gradient checkpointing \xxx{do i need to explain this?}. This amounts to $\approx 1.6$ epochs over the training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$
 
 \section{Model finetuning and probing}
 
-For evaluating the language modeling capability of the models we compare, we use two techniques. For evaluating the performance of the model for various downstream tasks we finetune on the XTREME benchmark \cite{hu_xtreme_nodate}. Moreover, we also use probing For evaluating the language modeling capability of the models we use s
-First we finetune the language models on a crosslinugal benchmark XTREME 
+For evaluating the language modeling capability of the models we use two techniques. First, we want to evaluate the performance of the models using finetuning on language understanding tasks. This approach is taken by the related work and it is the standard way of multilingual model evaluation. We use part of the XTREME benchmark, namely the Natural language inference, Part of Speech tagging and Named entity recognition tasks. For each task we finetune on every language and measure the performance on the development set. We do not apply any hyperparameter search apart from choosing a satisfactory learning rate and batch size for each task by running few short experiments. 
 
-
-% Probes
-% - Analyzing the Mono- and Cross-Lingual Pretraining Dynamics of Multilingual Language Models
-% - Interpretability and Analysis in Neural NLP, Belinkov
+Second, we also use probing \cite{conneau_what_2018,belinkov_interpretability_2020,blevins_analyzing_2022} to evaluate the language modeling capability of the models. We use the same tasks from XTREME benchmark, but instead of finetuning we freeze the base model and train only simple linear classifiers on top of the base model. This approach allows us to evaluate the language modeling capability of the models without the influence of the finetuning procedure. 
 
 % Model
 % - mBERT - 120k vocabulary, 12-layer, 768-hidden, 12-heads, 110M parameters
