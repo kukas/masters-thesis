@@ -37,7 +37,7 @@ Firstly, we see that the default settings of the Huggingface tokenizers produce 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/temp/20l_metrics.png}
-    \caption{In the first batch of experiments, we compare the Huggingface tokenizers and our TokMix method based on merging Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores (CPT and AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap (lower JSD) between the languages for Unigram. This might be related to the low allocation as it is more likely that shorter tokens are shared between languages. The scores are macro averages over all languages.}
+    \caption{In the first batch of experiments, we compare the Huggingface tokenizers and our TokMix method based on merging Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores (CPT and AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap (lower JSD) between the languages for Unigram. This might be related to the low allocation as it is more likely that shorter tokens are shared between languages. The scores are macro averages over all languages, computed over a holdout portion of the CC100 corpus. We sample 10k lines from each language which we have empirically found to be enough to get representative results.}
     \label{fig:20l_metrics}
 \end{figure}
 
@@ -74,8 +74,8 @@ Firstly, we see that the default settings of the Huggingface tokenizers produce 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/results/cpt_vs_alpha.pdf}
-    \caption{fefefef.}
-    \label{fig:num_lines_per_language_vs_cpt}
+    \caption{We examine the impact of the language imbalance on the Sentencepiece Unigram tokenizer training. We train five tokenizers with an increasing language imbalance controlled by the $\alpha$ parameter. Then we look at the effect on the vocabulary allocation metrics per language. We center the results using the most unbalanced tokenizer with $\alpha=1.0$. As expected, the more balanced tokenizers have higher vocabulary allocation scores for low resource languages and lower scores for high resource languages. Interestingly, the effect varies across languages. For example the vocabulary allocation of high-resource Vietnamese or French is not as affected by the decrease in training data as English or Russian. \xxx{We also observe that the imbalance negatively affects the low resource languages more than it positively affects the high resource languages. This suggests that the marginal benefit of adding more data to the high resource languages is lower than the marginal cost of removing data from the low resource languages. <- is this a good interpretation?}}
+    \label{fig:data_balance_vs_allocation_per_lang}
 \end{figure}
 
 \subsubsection{Data size}
@@ -94,43 +94,44 @@ Firstly, we see that the default settings of the Huggingface tokenizers produce 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/all_tokenizers_AR_vs_CPT.pdf}
-    \caption{all tokenizers AR vs CPT}
+    \caption{We visualize the overall vocabulary allocation metrics for all tokenizers from Table \ref{tab:all_tokenizers_metrics}. We observe that the vocabulary allocation scores are related --- higher AR usually means higher CPT. Nevertheless, we also have tokenizers with low AR and high CPT but never the other way around. Our intuition is that it is not possible to construct a tokenizer with high number of useful tokens which are all very short. We also observe that Huggingface Unigram is a clear outlier, although combination of separate, monolingual Huggingface Unigrams (TokMix) approaches the performance of the Sentencepiece Unigram with the corresponding data imbalance ($\alpha=0.3$). We again see, that the balancing methods, especially Chung and Zheng overperform the unbalanced baselines ($\alpha=0.7$, $\alpha=0.5$) but perform similarly or worse to the simple case of running the Sentencepiece Unigram trainer on a balanced set $\alpha=0.0$.}
     \label{fig:all_tokenizers_AR_vs_CPT}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/all_tokenizers_AR_vs_JSD.pdf}
-    \caption{all tokenizers AR vs JSD}
+    \caption{We visualize the tokenizers from Table \ref{tab:all_tokenizers_metrics} in terms of Average Rank and Jensen-Shannon Divergence. Here we can see that all methods based on Sentencepiece result in similar overlap independent of the allocation. This is interesting because the replicated balancing methods (Chung, Zheng, Liang) work by splitting the data and training separate tokenizers. Nevertheless, after merging the separate subtokenizers they all seem to end up with similar vocabulary overlaps. The highest vocabulary isolation is surprisingly achieved by the Huggingface Unigram tokenizer, which is contrary to the hypothesis stated by \citet{chung_improving_2020,zheng_allocating_2021} that the tokenizers trained on the concatenation of all data tend to select subwords shared across all languages.}
     \label{fig:all_tokenizers_AR_vs_JSD}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/zheng_vs_alphas.pdf}
-    \caption{fefefef.}
+    \caption{We zoom into the results of the Zheng method and compare the vocabulary allocation across the individual languages represented by this tokenizer against the backdrop of the vanilla Unigram tokenizers trained with different data imbalances from \ref{fig:data_balance_vs_allocation_per_lang}. We observe a striking similarity between the vocabulary allocation of the Zheng tokenizer and the Unigram tokenizer with $\alpha=0.0$, especially in terms of characters per token. This comes as a large surprise because the Zheng method works by training a separate tokenizer for each language and then merging them together. Despite the different method of obtaining the vocabulary, the resulting tokenizers are very similar across the languages.}
     \label{fig:zheng_vs_alphas}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/zheng_vs_alphas_alp.pdf}
-    \caption{fefefef.}
+    \caption{Intrigued by the similarity between the Zheng tokenizer and the Unigram tokenizer with $\alpha=0.0$ from Figure \ref{fig:zheng_vs_alphas} we also look at the ALP metric which is used for the selection of vocabulary sizes in the Zheng method. Here we see that the greedy optimization of ALP across languages indeed results in a similar vocabulary allocation as the Unigram tokenizer with $\alpha=0.0$.}
     \label{fig:zheng_vs_alphas_alp}
 \end{figure}
+
 
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/chung_vs_alphas.pdf}
-    \caption{fefefef.}
+    \caption{Here we inspect the language-level vocabulary allocation of the Chung method. Similarly to the Zheng method, the Chung method also performs similarly to the Unigram tokenizer with $\alpha=0.0$. Unfortunately, we believe this is an artifact of the choice of our training data for the Chung method. We use the a balanced dataset ($\alpha=0.0$) for training the cluster-specific tokenizers and so the balance of the data seems to be more important than the clustering step. After merging the cluster-specific tokenizers, the resulting tokenizer is very similar to the Unigram tokenizer with $\alpha=0.0$.}
     \label{fig:chung_vs_alphas}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/liang_vs_alphas.pdf}
-    \caption{fefefef.}
+    \caption{Interestingly, the Liang method seems to yield the most distinct results despite the fact it is trained with balanced data and uses the greedy allocations from the Zheng method. \xxx{TODO: explain why}}
     \label{fig:liang_vs_alphas}
 \end{figure}
 
@@ -138,50 +139,69 @@ Firstly, we see that the default settings of the Huggingface tokenizers produce 
 \section{Comparison of balancing methods on downstream tasks}
 
 
-\begin{figure}[H]
+\begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage.png}
-    \caption{probe overall inlanguage}
-    \label{fig:probe_overall_inlanguage}
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/temp/probe_overall_inlanguage.png}
+      \caption{In-language results}
+      \label{fig:probe_overall_inlanguage}
+    \end{subfigure}%
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/temp/probe_overall_crosslanguage.png}
+      \caption{Cross-language results}
+      \label{fig:probe_overall_crosslanguage}
+    \end{subfigure}
+    \caption{We select the best performing balancing method by \citet{chung_improving_2020} from our replications based on our tokenizer metrics and compare it with the vanilla Unigram tokenizers. We choose the unbalanced Unigram tokenizer with $\alpha=1.0$ and then two stronger baselines with $\alpha=0.0$ and $\alpha=0.3$. We then compare the performance of these tokenizers on the downstream tasks. We test two settings --- in-language performance, where the model is trained on each of the available languages and then evaluated on the same language, and cross-language performance, where the model is also trained on each language but evaluated on all \textit{but} the training language. We observe that for word-level tasks all balanced tokenizers (where $\alpha\neq1.0$) perform significantly better than the unbalanced Unigram. Moreover we see that the differences between the individual balancing methods seem to be minimal. For sentence-level NLI, we do not observe any systematic effects.
+    The results are averaged over 3 runs with different random seeds. The error bars represent one standard deviation computed with bootstrapping by randomly sampling seeds for each language. Note that even though the finetuning is done with three different random seeds, the model pretraining was done only once and so the variance between pretraining runs is not visible and the error bars are almost certainly underestimated.}
+    \label{fig:probe_overall}
 \end{figure}
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage.png}
+%     \caption{probe overall inlanguage}
+%     \label{fig:probe_overall_inlanguage}
+% \end{figure}
 
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage_over_baseline.png}
-    \caption{probe overall inlanguage over baseline}
+    \caption{We zoom in on the in-language results from Figure \ref{fig:probe_overall_inlanguage} and compare the performance of the balanced tokenizers against the unbalanced Unigram tokenizer with $\alpha=1.0$ over all tested languages for the tasks. For the word-level tasks especially in the case of named entity recognition, we observe a clear trend in line with our tokenizer investigations in \ref{fig:chung_vs_alphas}. The balancing methods improve the language representations for the word-level tasks. For the sentence-level tasks, we do not observe any systematic effects. This might be in part due to the fact that the NLI task does not include 4 of our low-resource languages.}
     \label{fig:probe_overall_inlanguage_over_baseline}
 \end{figure}
 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage_scattermatrix.png}
-    \caption{probe overall inlanguage scattermatrix}
-    \label{fig:probe_overall_inlanguage_scattermatrix}
-\end{figure}
-
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{img/temp/probe_overall_crosslanguage.png}
-    \caption{probe overall crosslanguage}
-    \label{fig:probe_overall_crosslanguage}
-\end{figure}
-
-
-\begin{figure}[H]
-    \centering
     \includegraphics[width=\textwidth]{img/temp/probe_overall_crosslanguage_over_baseline.png}
-    \caption{probe overall crosslanguage over baseline}
+    \caption{Here we investigate in detail the cross-lingual results from Figure \ref{fig:probe_overall_crosslanguage} with comparison to the unbalanced Unigram tokenizer with $\alpha=1.0$. We observe that word-level task trasfers behave in line with the tokenizer investigations in \ref{fig:chung_vs_alphas}. Moreover it seems that both high-resource and low-resource languages benefit from the balancing methods, although the change is most clear at the low-resource side. For the sentence-level tasks, we do not observe any systematic effects.}
     \label{fig:probe_overall_crosslanguage_over_baseline}
 \end{figure}
 
 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage_scattermatrix.png}
+    \caption{We visualize the in-language results from Figure \ref{fig:probe_overall_inlanguage} in a scatter matrix. We center the results for each language and then plot the differences from mean performance against the differences in our tokenizer metrics. We see significant spearman correlations for the NER and POS tasks, although for POS the correlation is low. For the NLI task, we do not observe any significant correlations.}
+    \label{fig:probe_overall_inlanguage_scattermatrix}
+\end{figure}
+
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{img/temp/probe_overall_crosslanguage.png}
+%     \caption{probe overall crosslanguage}
+%     \label{fig:probe_overall_crosslanguage}
+% \end{figure}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/temp/probe_overall_crosslanguage_scattermatrix.png}
-    \caption{probe overall crosslanguage scattermatrix}
+    \caption{We visualize the cross-language results from Figure \ref{fig:probe_overall_crosslanguage} in a scatter matrix. We center the results for each language and then plot the differences from mean performance against the differences in the vocabulary overlap metric (JSD). We see significant, very low negative correlation for the NER and POS tasks. This might suggest that the word-level tasks benefit only very slightly from an increase in overlap (decrease in JSD). For the NLI task, we do not observe any significant correlations.}
     \label{fig:probe_overall_crosslanguage_scattermatrix}
 \end{figure}
 
