@@ -1,0 +1,21 @@
+\begin{table*}
+\centering
+\begin{tabular}{lcccccc}
+\toprule
+ & \bf{V. Overlap} & \multicolumn{2}{c}{\bf{V. Allocation SRC}}  & \multicolumn{2}{c}{\bf{V. Allocation TGT}} \\ 
+ & (JSD) &  (AR)  &  (CPT) & (AR) & (CPT) \\ \midrule
+% NER     &  \bf{-0.371} &         0.081 &    0.154 &         0.098 &     0.12 \\
+% POS     &      0.06 &        0.193 &  \bf{0.314} &       \bf{0.262} &  \bf{0.345} \\
+% Dep l.  &     0.054 &         0.073 &    0.156 &         0.098 &    0.165 \\
+% NLI    &   \bf{-0.54} &       \bf{0.393} &   0.182 &       \bf{0.278} &    0.087 \\
+% Retrieval &  \bf{-0.494} &         0.155 &    0.065 &         0.143 &    0.053 \\
+NER     &    -0.111 &       \bf{0.249} &  \bf{ 0.33} &        0.209 &   \bf{0.28} \\
+POS     &   \bf{0.395} &       \bf{0.365} &  \bf{0.547} &       \bf{0.489} &  \bf{0.653} \\
+Dep l.  &   \bf{0.463} &         0.19 &  \bf{0.425} &       \bf{0.249} &   \bf{0.44} \\
+NLI    &  \bf{-0.516} &       \bf{0.421} &   0.203 &       \bf{0.297} &    0.103 \\
+Retrieval &  \bf{-0.648} &       \bf{0.235} &    0.082 &       \bf{0.238} &    0.085 \\
+\bottomrule
+\end{tabular}
+\caption{Spearman correlations between cross-lingual transfer results and tokenization measures. \vo~is measured by JSD, we also measure the correlation with \va s of source and target language of the transfer directions. Statistically significant correlations ($p<0.01$) are bolded. Computed for six languages.}
+\label{tab:corr_x_lang_6l}
+\end{table*}

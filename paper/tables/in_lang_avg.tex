@@ -1,0 +1,17 @@
+\begin{table}
+\centering
+\caption{Results of evaluation for in language properties and tasks averaged six diverse languages.We observe significant changes for different tokenization methods.}
+\label{tab:in_lang_avg}
+\small
+\begin{tabular}{llllllll}
+\toprule
+metric & Avg. Rank &   CPT &   MRR &               NER &               POS &                UD &              XNLI \\
+tokenizer &           &       &       &                   &                   &                   &                   \\
+\midrule
+Unigram   &      2042 &  3.17 &  42.0 &  62.8 $_{\pm0.1}$ &  57.1 $_{\pm0.2}$ &  48.1 $_{\pm0.4}$ &  53.4 $_{\pm0.5}$ \\
+BPE       &      2193 &  4.47 &  35.6 &  70.4 $_{\pm0.1}$ &  68.9 $_{\pm0.2}$ &  58.7 $_{\pm0.4}$ &  53.3 $_{\pm0.3}$ \\
+NoOverlap &      1829 &  3.16 &  42.7 &  69.4 $_{\pm0.1}$ &  69.2 $_{\pm0.2}$ &  58.8 $_{\pm0.3}$ &  53.0 $_{\pm0.4}$ \\
+TokMix    &      2198 &  3.34 &  38.7 &  70.2 $_{\pm0.1}$ &  67.3 $_{\pm0.1}$ &  57.3 $_{\pm0.4}$ &  53.3 $_{\pm0.4}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
