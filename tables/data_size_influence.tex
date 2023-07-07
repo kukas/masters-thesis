@@ -1,6 +1,6 @@
 \begin{table}
 \centering
-\caption{The influence of tokenizer training data size on the properties of the tokenizer.                           We observe that after training on 100\,000 lines, the properties of the tokenizer                             are converging.}
+\caption{We measure how much data is generally needed for the tokenizer training. We train handful of Sentencepiece Unigram tokenizers on different amounts of balanced multilingual data. We observe that after 100k-1M lines per language, the tokenizers converge to similar vocabulary allocation and overlap scores. The significance of this experiment is that we find out experimentally how much data is needed for the tokenizer training and we can use this information to make sure that we provide enough data for each language for the further experiments.}
 \label{tab:data_size_influence}
 \begin{tabular}{rrrrrr}
 \toprule
