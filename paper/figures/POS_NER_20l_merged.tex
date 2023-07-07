@@ -1,0 +1,30 @@
+\pdfoutput=1
+
+\begin{figure*}[tb!]
+    \centering
+    \begin{subfigure}[b]{0.97\textwidth}
+        \centering
+        \includegraphics[width=0.97\linewidth]{figures/POS_F1_transfer_20l_.pdf}
+    
+        \caption{Part of Speech Tagging}
+        \label{fig:pos_transfer_20l}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.97\textwidth}
+
+    \centering
+    \includegraphics[width=1.\linewidth]{figures/NER_F1_transfer_20L.pdf}
+
+    \caption{Named Entity Recognition}
+    \label{fig:ner_transfer_20l}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.97\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/UD_F1_transfer_20l_.pdf}
+    
+        \caption{Dependency labeling}
+        \label{fig:ud_transfer_20l}
+    \end{subfigure}
+    \caption{Cross-lingual transfer for the token-level tasks on 20 languages. The absolute values are presented for the Unigram tokenizer. For other tokenization methods, we show  the difference from the unigram algorithm.}
+
+\end{figure*}

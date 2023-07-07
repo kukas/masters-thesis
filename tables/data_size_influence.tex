@@ -1,0 +1,17 @@
+\begin{table}
+\centering
+\caption{The influence of tokenizer training data size on the properties of the tokenizer.                           We observe that after training on 100\,000 lines, the properties of the tokenizer                             are converging.}
+\label{tab:data_size_influence}
+\begin{tabular}{rrrrrr}
+\toprule
+ Lines per language &  Alphabet size &  Number of UNKs &      CPT &          AR &      JSD \\
+\midrule
+               1000 &           3598 &          520.35 & 3.301636 &  958.414048 & 0.765687 \\
+              10000 &           4725 &          117.75 & 3.597563 & 1089.112498 & 0.765236 \\
+             100000 &           5041 &           65.55 & 3.695797 & 1192.201089 & 0.767133 \\
+            1000000 &           5079 &           62.60 & 3.702038 & 1204.659073 & 0.767357 \\
+            1500000 &           5176 &           55.90 & 3.705119 & 1210.664835 & 0.767348 \\
+            2000000 &           5180 &           56.35 & 3.705109 & 1212.489940 & 0.767327 \\
+\bottomrule
+\end{tabular}
+\end{table}

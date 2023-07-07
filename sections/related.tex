@@ -275,7 +275,7 @@ After the languages are clustered, the cluster-specific vocabularies are trained
 The final vocabulary is then compared to the standard recipe of training a Unigram LM vocabulary on a joint corpus\footnote{The authors do not define what they mean by following the "standard recipe". Based on the related work the authors replicate closely (mBERT and XLM-R) and compare themselves to, we assume that the standard recipe is training a Unigram LM tokenizer on the pretraining data after the exponential subsampling described in \ref{sec:data_scope}. The authors do mention using the sampling factor $\alpha=0.7$ for the pretraining data in the Appendix.}. Because the proposed clustering method does not have a way of controlling the size of the final vocabulary as taking the union inadvertently leads to some tokens being merged, the authors compare the vocabularies by first following the clustering method and arriving at a 488k subword vocabulary. Then the standard method is followed to train a vocabulary of the same size.
 
 The authors evaluate the vocabularies intrinsically - by examining the average number of tokens per sentence, out-of-vocabulary rate and vocabulary overlap using the Wasserstein-1 distance.
-By computing the average number of tokens per sentence for the whole corpus and for each language separately, the authors show that their method leads to a smaller average number of tokens per sentence for the whole corpus and further show that the improvements are more prominent for the low-resource languages. The authors also show that the out-of-vocabulary rate is lower for the language-clustered vocabulary, again the largest reduction in the OOV rate are in the low-resource and rare-script languages. Finally, the authors show that the language-clustered vocabulary leads to a smaller Wasserstein-1 distance between the similar languages and at the same time larger distance between the linguistically different languages.
+By computing the average number of tokens per sentence for the whole corpus and for each language separately, the authors show that their method leads to a smaller average number of tokens per sentence for the whole corpus and further show that the improvements are more prominent for the low-resource languages. The authors also show that the out-of-vocabulary rate is lower for the language-clustered vocabulary, again the largest reduction in the OOV rate are in the low-resource and rare-script languages. Finally, the authors show on four hand-picked languages that the language-clustered vocabulary leads to a smaller Wasserstein-1 distance between two similar languages and at the same time larger distance between two linguistically different languages.
 
 The clustered vocabulary is then used to train a smaller and bigger multilingual masked language model and evaluated on three distinct, multilingual tasks (question answering, natural language inference and named entity recognition). The baselines selected are the original mBERT model, XLM-R model and a smaller reproduction of XLM-R with an increased vocabulary size to match the parameter size of the introduced model. The authors show improvements for the smaller model on all three tasks over their baseline reproduction. Then they show the improvements in QA and NER tasks for the bigger model over the XLM-R and mBERT baselines. 
 
@@ -389,10 +389,19 @@ To validate these results, the authors then pretrain masked language models usin
 
 \subsection{Combination of methods for scaling the vocabulary size}
 
-In the paper \Citetitle{liang_xlm-v_2023}, \citeauthor{liang_xlm-v_2023} propose a method for combining the two methods described above. 
+In the paper \textit{XLM-V: Overcoming the Vocabulary Bottleneck in Multilingual Masked Language Models}, \citeauthor{liang_xlm-v_2023} propose a method for combining the two methods described above with the aim to scale to even larger vocabulary sizes. 
+
+The authors motivate their method by stating that two core principles will be upheld: (1) the vocabularies can be improved by de-emphasizing token sharing between lexically different languages and (2) proper allocation of vocabulary capacity for individual languages. These two points refer to the clustering of the vocabulary and the vocabulary allocation methods described above.
+
+The method 
+
 
 \subsection{Other approaches}
 
 - extending the vocabulary with new tokens
 - multiview tokenization
 - etc, go through my notes
+
+% identify the gaps in the current research
+% - No systematic comparison of the metrics
+% - There are more simple baselines to try

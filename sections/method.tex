@@ -57,6 +57,45 @@ The exact choice of the language subset is motivated by the downstream evaluatio
 
 \todo{add table with the languages with a summary of some of the properties (which languages share script, which are typologically related, which use spaces and which don't, which are low-resource)}
 
+\begin{table}
+    % uncomment the following line if you use the fitted top captions for tables
+    % (see the \floatsetup[table] comments in `macros.tex`.
+    %\floatbox{table}[\FBwidth]{
+    \centering\footnotesize\sf
+    \begin{tabular}{llrl}
+    \toprule
+    Language & Language code & Script \\
+    \midrule
+    English & en & Latin \\
+    Vietnamese & vi & Latin \\
+    Russian & ru & Cyrillic \\
+    French & fr & Latin \\
+    German & de & Latin \\
+    Spanish & es & Latin \\
+    Thai & th & Thai \\
+    Bulgarian & bg & Cyrillic \\
+    Hebrew & he & Hebrew \\
+    Chinese-simplified & zh-Hans & Chinese \\
+    Greek & el & Greek \\
+    Turkish & tr & Latin \\
+    Arabic & ar & Arabic \\
+    Hindi & hi & Devanagari \\
+    Tamil & ta & Tamil \\
+    Georgian & ka & Georgian \\
+    Urdu & ur & Arabic \\
+    Telugu & te & Telugu \\
+    Marathi & mr & Devanagari \\
+    Swahili & sw & Latin \\
+    % \addlinespace % a nice non-intrusive separator of data groups (or final table sums)
+    \bottomrule
+    \end{tabular}
+    %}{  % uncomment if you use the \floatbox (as above), erase otherwise
+    \caption{\xxx{caption}}
+    %}  % uncomment if you use the \floatbox
+    \label{tab:languages}
+\end{table}
+    
+
 % This subset of CC100 is then used for further experiments with vocabulary creation that will be described in the following sections.
 \xxx{TODO: describe the resampling method, compare different alphas used in the literature}
 For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages. Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. This is a standard practice followed by multiple independent authors \xxx{cite}. The empirical probability of sampling a line from language $l$ is given by:
@@ -309,7 +348,7 @@ Overlap in tokenization has been studied in \citet{wu_beto_2019}, although the m
 
 % \section{Investigating the influence of the tokenizer on the language model}
 
-\section{Investigating the influences on the tokenizer}
+\section{Choice of the experimental parameters}
 
 % - training the tokenizers
 %     - the choice of implementation
@@ -318,6 +357,8 @@ Overlap in tokenization has been studied in \citet{wu_beto_2019}, although the m
 %             - in later experiments we use Sentencepiece
 %                 - it has its own limitations but the Huggingface implementation seems to produce suboptimal vocabularies
 %     - the choice of vocabulary size
+%         - we know from Conneau and all balancing methods that improving performance through increasing the vocabulary size is possible
+%         - therefore we know that choosing at least the same size as the vocabulary size of the balancing methods is a good idea
 %         - we use 120k
 %         - this was used in mBERT
 %         - Chung uses 488k and 104 langs => 4.7k tokens per language
@@ -330,6 +371,7 @@ Overlap in tokenization has been studied in \citet{wu_beto_2019}, although the m
 %     - choice of model - BPE vs unigram
 %         - all my experiments are with unigram
 %         - all balancing methods use unigram so it makes sense to use unigram for the baseline
+%         - there are again differences in implementation, huggingface has a better BPE
 %     - the choice of coverage parameter
 %         - for 120k multilingual unigram tokenizer
 %             - the coverage affects the alphabet size 
@@ -487,6 +529,8 @@ In this way the sum of the probabilities of the tokens in the merged vocabulary 
 \xxx{the second equality should be maybe more explained}
 
 We argue that this is the most natural way to merge the tokenizers and so we assume this is probably the way the other authors did the merging. By observing the logits in the tokenizer released by \citet{liang_xlm-v_2023} though, we see that the authors do merge the logits in some way but the sum of the probabilities in the final tokenizer is $\approx 4.55$ (not counting the special tokens), which suggests some problems in the merging step.
+
+\xxx{We have also checked empirically, that the individual tokenizers perform similarly to the merged tokenizer and so the merging procedure seems to preserve the properties of the merged tokenizers.}
 
 % urls for the tokenizers:
 % https://github.com/bozheng-hit/VoCapXLM/blob/main/VoCap_500k/sentencepiece.bpe.model

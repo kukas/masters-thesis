@@ -1,0 +1,43 @@
+\begin{table}
+
+\centering
+\caption{Results of evaluation for cros-languages overlaps and transfers for six diverse languages.We observe significant changes for different tokenization methods.}
+\label{tab:X_lang}
+\small
+\begin{tabular}{lllll}
+\toprule
+        &        &       diff-script &       same-script &               all \\
+metric & tokenizer &                   &                   &                   \\
+\midrule
+\multirow{4}{*}{JSD} & Unigram &              0.77 &              0.62 &              0.74 \\
+        & BPE &              0.83 &              0.68 &               0.8 \\
+        & NoOverlap &               1.0 &               1.0 &               1.0 \\
+        & TokMix &               0.8 &              0.65 &              0.77 \\
+\cline{1-5}
+\multirow{4}{*}{NER} & Unigram &  31.3 $_{\pm0.4}$ &  55.4 $_{\pm0.2}$ &  36.1 $_{\pm0.4}$ \\
+        & BPE &  33.5 $_{\pm0.5}$ &  59.9 $_{\pm0.2}$ &  38.7 $_{\pm0.4}$ \\
+        & NoOverlap &  32.0 $_{\pm0.5}$ &  48.6 $_{\pm0.4}$ &  35.3 $_{\pm0.5}$ \\
+        & TokMix &  31.8 $_{\pm0.4}$ &  58.0 $_{\pm0.3}$ &  37.0 $_{\pm0.4}$ \\
+\cline{1-5}
+\multirow{4}{*}{POS} & Unigram &  18.1 $_{\pm0.4}$ &  38.3 $_{\pm0.4}$ &  22.2 $_{\pm0.4}$ \\
+        & BPE &  25.8 $_{\pm0.5}$ &  40.8 $_{\pm0.4}$ &  28.8 $_{\pm0.5}$ \\
+        & NoOverlap &  20.1 $_{\pm0.5}$ &  41.9 $_{\pm0.5}$ &  24.5 $_{\pm0.5}$ \\
+        & TokMix &  21.9 $_{\pm0.4}$ &  40.4 $_{\pm0.3}$ &  25.6 $_{\pm0.4}$ \\
+\cline{1-5}
+\multirow{4}{*}{UD} & Unigram &  11.1 $_{\pm0.3}$ &  25.5 $_{\pm0.3}$ &  14.0 $_{\pm0.3}$ \\
+        & BPE &  15.9 $_{\pm0.4}$ &  27.0 $_{\pm0.4}$ &  18.1 $_{\pm0.4}$ \\
+        & NoOverlap &  12.8 $_{\pm0.4}$ &  27.8 $_{\pm0.5}$ &  15.8 $_{\pm0.4}$ \\
+        & TokMix &  12.6 $_{\pm0.5}$ &  26.1 $_{\pm0.3}$ &  15.3 $_{\pm0.5}$ \\
+\cline{1-5}
+\multirow{4}{*}{XNLI} & Unigram &  42.2 $_{\pm0.7}$ &  43.7 $_{\pm0.7}$ &  42.5 $_{\pm0.7}$ \\
+        & BPE &  42.4 $_{\pm0.7}$ &  45.2 $_{\pm0.8}$ &  43.0 $_{\pm0.7}$ \\
+        & NoOverlap &  37.3 $_{\pm0.6}$ &  37.1 $_{\pm0.5}$ &  37.2 $_{\pm0.6}$ \\
+        & TokMix &  41.2 $_{\pm0.7}$ &  42.7 $_{\pm0.5}$ &  41.5 $_{\pm0.7}$ \\
+\cline{1-5}
+\multirow{4}{*}{Tatoeba} & Unigram &              21.0 &              43.9 &              25.6 \\
+        & BPE &              20.9 &              40.7 &              24.9 \\
+        & NoOverlap &              12.3 &              28.0 &              15.4 \\
+        & TokMix &              23.0 &              43.4 &              27.1 \\
+\bottomrule
+\end{tabular}
+\end{table}

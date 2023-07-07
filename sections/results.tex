@@ -1,27 +1,218 @@
-
 \chapter{Results}
-\section{Preliminary experiments}
-\subsection{The importance of training data size}
-\subsection{Differences in tokenizer implementations}
 
-\section{Reproduction of baselines}
-\section{Document-level clustering method}
-\section{Extrinsic evaluation}
+% What I want to say
+%     - we see that there are differences between tokenizers on the metrics
+%         - tokenizer method influences vocabulary allocation
+%              - algorithm, and even implementation
+%              - definitely compare my unigram / huggingface unigram to show the difference
+%         - alpha factor influences vocabulary allocation
+%         - data size influences vocabulary allocation but converges
+%         - tokenizer influences vocabulary overlap but 
+%         - data size influences vocabulary overlap but also converges
+%     - 
+% now with the knowledge of differences, lets compare the Limi unigram, Limi bpe and tokmix
+% we see that the metrics correlate with the downstream tasks. Although there are task-specific differences
+% - therefore cpt, ar, jsd are good metrics for comparing tokenizers
+
+% - we can see that all balancing methods do influence the quality of the tokenizers on languages
+% - we observe that all balancing methods produce similar improvements on lowresource
+% - we check this by comparing the balancing methods on downstream and we do not see any significant differences between them. We do see improvements over the strong baseline in some cases.
+% - therefore we can conclude that balancing does influence NER and POS tagging although with the comparison to alpha0.3, the improvements are very small
 
 
-- replication of the previous work
-    - Chung
-        - reproductions in Overlap-based Vocabulary Generation Improves Cross-lingual Transfer Among Related Languages
+\section{The effects that influence the tokenizers quality}
 
-    - Liang
-        - they use 900k vocab, they compare their model to XLM-R which is not fair!
-            - they discuss it in section 6.4
-        - reproductions: https://github.com/stefan-it/xlm-v-experiments
-            - For XQuAD they did not reproduce the improvements
-            - For MasakhaNER they reproduced the improvements
-            - TODO: could use bootstrapping to show whether the improvements are significant
 
-replications of Chung, Liang
-https://github.com/stefan-it/xlm-v-experiments
+\subsection{Vocabulary allocation of tokenizers}
+\subsubsection{Tokenizer methods and vocabulary allocation}
 
-- our beta experiments point to the randomness of the output - the smooth sweep across the beta values seems to produce quite noisy outpus
+% \subsubsection{Data size and vocabulary overlap}
+% this is included in the data_size_influence table
+
+\section{The influence of vocabulary allocation and overlap on the language representation quality}
+
+Firstly, we see that the default settings of the Huggingface tokenizers produce very different alphabet sizes and in turn affect the UNK rate. As we will see later, this does not affect the metrics significantly.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/20l_metrics.png}
+    \caption{In the first batch of experiments, we compare the Huggingface tokenizers and our TokMix method based on merging Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores (CPT and AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap (lower JSD) between the languages for Unigram. This might be related to the low allocation as it is more likely that shorter tokens are shared between languages. The scores are macro averages over all languages.}
+    \label{fig:20l_metrics}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{paper/figures/pair_analysis_20L.pdf}
+    \caption{We compare the tokenizer metrics against the downstream task results. For each tokenizer we pretrain a masked language model and finetune it on each of the available languages. We observe high spearman correlation between CPT and the word-level tasks (NER, POS, UD) and high correlation between AR and the sentence-level task XNLI. This suggests that our vocabulary allocation metrics are good indicators of the tokenizers quality and higher vocabulary allocation leads to better downstream performance. Each data point corresponds to an average result over three seeds of finetuning and evaluating on one of the languages. The results for each language are centered around the mean to account for the differences between languages.}
+    \label{fig:pair_analysis_20L}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/X_pair_analysis_20L.png}
+    \caption{We compare the tokenizer metrics against the cross-lingual performance of the models. For each tokenizer we pretrain a masked language model and finetune it on each of the available languages. Then we evaluate the models on all languages it has \textbf{not} been finetuned on, assessing the cross-lingual properties of the model. Here we observe high correlation between JSD and the word-level tasks, especially the POS and UD. This suggests that less overlap (higher divergence) between the vocabularies of the languages leads to better cross-lingual performance.
+    \xxx{remove the ar and cpt metrics?}}
+    \label{fig:X_pair_analysis_20L}
+\end{figure}
+
+\input{paper/tables/corr_in_lang_20l_camread.tex}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/corr_x_lang_20l.png}
+    \caption{Correlations between task cross-lingual transfer results and tokenization measures."Stars denote statistical significance: (* coresponeds to $p<0.05$ and ** to $p<0.01$).\xxx{remove the ar and cpt metrics? Merge with the previous correlation table?}}
+    \label{fig:corr_x_lang_20l}
+\end{figure}
+
+% ---------
+
+
+\subsubsection{Data balance and vocabulary allocation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/results/cpt_vs_alpha.pdf}
+    \caption{fefefef.}
+    \label{fig:num_lines_per_language_vs_cpt}
+\end{figure}
+
+\subsubsection{Data size}
+
+\input{tables/data_size_influence.tex}
+
+\subsubsection{Character coverage}
+
+\input{tables/coverage_influence.tex}
+
+\section{Comparison of balancing methods}
+\subsection{Balancing methods and vocabulary allocation}
+
+\input{tables/all_tokenizers_metrics.tex}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/all_tokenizers_AR_vs_CPT.pdf}
+    \caption{all tokenizers AR vs CPT}
+    \label{fig:all_tokenizers_AR_vs_CPT}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/all_tokenizers_AR_vs_JSD.pdf}
+    \caption{all tokenizers AR vs JSD}
+    \label{fig:all_tokenizers_AR_vs_JSD}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/zheng_vs_alphas.pdf}
+    \caption{fefefef.}
+    \label{fig:zheng_vs_alphas}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/zheng_vs_alphas_alp.pdf}
+    \caption{fefefef.}
+    \label{fig:zheng_vs_alphas_alp}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/chung_vs_alphas.pdf}
+    \caption{fefefef.}
+    \label{fig:chung_vs_alphas}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/liang_vs_alphas.pdf}
+    \caption{fefefef.}
+    \label{fig:liang_vs_alphas}
+\end{figure}
+
+\subsection{Balancing methods and vocabulary overlap}
+\section{Comparison of balancing methods on downstream tasks}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage.png}
+    \caption{probe overall inlanguage}
+    \label{fig:probe_overall_inlanguage}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage_over_baseline.png}
+    \caption{probe overall inlanguage over baseline}
+    \label{fig:probe_overall_inlanguage_over_baseline}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/probe_overall_inlanguage_scattermatrix.png}
+    \caption{probe overall inlanguage scattermatrix}
+    \label{fig:probe_overall_inlanguage_scattermatrix}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/probe_overall_crosslanguage.png}
+    \caption{probe overall crosslanguage}
+    \label{fig:probe_overall_crosslanguage}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/probe_overall_crosslanguage_over_baseline.png}
+    \caption{probe overall crosslanguage over baseline}
+    \label{fig:probe_overall_crosslanguage_over_baseline}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/temp/probe_overall_crosslanguage_scattermatrix.png}
+    \caption{probe overall crosslanguage scattermatrix}
+    \label{fig:probe_overall_crosslanguage_scattermatrix}
+\end{figure}
+
+% visualization idea:
+
+% - visualization of tokenizer balance difference is too noisy to see the differences between methods
+%     - smoothing num_lines_per_language vs cpt
+%     - or fitting a line
+%     - something that highlights if one balancing method is better than another
+
+% \section{Preliminary experiments}
+% \subsection{The importance of training data size}
+% \subsection{Differences in tokenizer implementations}
+% \section{Reproduction of baselines}
+% \section{Document-level clustering method}
+% \section{Extrinsic evaluation}
+
+
+% - replication of the previous work
+%     - Chung
+%         - reproductions in Overlap-based Vocabulary Generation Improves Cross-lingual Transfer Among Related Languages
+
+%     - Liang
+%         - they use 900k vocab, they compare their model to XLM-R which is not fair!
+%             - they discuss it in section 6.4
+%         - reproductions: https://github.com/stefan-it/xlm-v-experiments
+%             - For XQuAD they did not reproduce the improvements
+%             - For MasakhaNER they reproduced the improvements
+%             - TODO: could use bootstrapping to show whether the improvements are significant
+
+% replications of Chung, Liang
+% https://github.com/stefan-it/xlm-v-experiments
+
+% - our beta experiments point to the randomness of the output - the smooth sweep across the beta values seems to produce quite noisy outpus

@@ -1,0 +1,87 @@
+\begin{table*}[!htb]
+\centering
+\footnotesize
+
+\begin{subtable}[t]{.55\linewidth}
+    \begin{tabular}[t]{llcccc}
+        \toprule
+                &        &       Different &       Same &               All \\
+        Metric & Tokenizer &       script       &     script         &     transfers          \\
+        \midrule
+        \multirowcell{4}[0pt][l]{\textbf{Overlap} \\ (JSD)} & Unigram &              \bf{\underline{0.77}} &             \bf{\underline{0.62}} &             \bf{\underline{0.74}} \\
+                & BPE &              0.83 &              0.68 &               0.8 \\
+                & NoOverlap &               1.0 &               1.0 &               1.0 \\
+                & TokMix &               0.8 &              0.65 &              0.77 \\
+        \midrule
+        \multirowcell{4}[0pt][l]{\textbf{NER} \\ (F1)} & Unigram &  31.3 $_{\pm0.4}$ &  55.4 $_{\pm0.2}$ &  36.1 $_{\pm0.4}$ \\
+                & BPE &  \bf{\underline{33.5}} $_{\pm0.5}$ &  \bf{\underline{59.9}}$_{\pm0.2}$ &  \bf{\underline{38.7}} $_{\pm0.4}$ \\
+                & NoOverlap &  32.0 $_{\pm0.5}$ &  48.6 $_{\pm0.4}$ &  35.3 $_{\pm0.5}$ \\
+                & TokMix &  31.8 $_{\pm0.4}$ &  58.0 $_{\pm0.3}$ &  37.0 $_{\pm0.4}$ \\
+        \cline{1-5}
+        \multirowcell{4}[0pt][l]{\textbf{POS} \\ (F1)} & Unigram &  18.1 $_{\pm0.4}$ &  38.3 $_{\pm0.4}$ &  22.2 $_{\pm0.4}$ \\
+                & BPE &  \bf{\underline{25.8}} $_{\pm0.5}$ &  \bf{40.8} $_{\pm0.4}$ &  \bf{\underline{28.8}} $_{\pm0.5}$ \\
+                & NoOverlap &  20.1 $_{\pm0.5}$ &  \bf{\underline{41.9}} $_{\pm0.5}$ &  24.5 $_{\pm0.5}$ \\
+                & TokMix &  21.9 $_{\pm0.4}$ &  40.4 $_{\pm0.3}$ &  25.6 $_{\pm0.4}$ \\
+        \cline{1-5}
+        \multirowcell{4}[0pt][l]{\textbf{Dep. labeling}\\ (F1)} & Unigram &  11.1 $_{\pm0.3}$ &  25.5 $_{\pm0.3}$ &  14.0 $_{\pm0.3}$ \\
+                & BPE &  \bf{\underline{15.9}} $_{\pm0.4}$ &  \bf{27.0} $_{\pm0.4}$ &  \bf{\underline{18.1}} $_{\pm0.4}$ \\
+                & NoOverlap &  12.8 $_{\pm0.4}$ &  \bf{\underline{27.8}} $_{\pm0.5}$ &  15.8 $_{\pm0.4}$ \\
+                & TokMix &  12.6 $_{\pm0.5}$ &  26.1 $_{\pm0.3}$ &  15.3 $_{\pm0.5}$ \\
+        \midrule
+        \multirowcell{4}[0pt][l]{\textbf{NLI} \\ (Acc)} & Unigram &  \bf{42.2} $_{\pm0.7}$ &  \bf{43.7} $_{\pm0.7}$ &  \bf{42.5} $_{\pm0.7}$ \\
+                & BPE &  \bf{\underline{42.4}} $_{\pm0.7}$ &  \bf{\underline{45.2}} $_{\pm0.8}$ &  \bf{\underline{43.0}}$_{\pm0.7}$ \\
+                & NoOverlap &  37.3 $_{\pm0.6}$ &  37.1 $_{\pm0.5}$ &  37.2 $_{\pm0.6}$ \\
+                & TokMix &  \bf{41.2} $_{\pm0.7}$ &  \bf{42.7} $_{\pm0.5}$ &  \bf{41.5} $_{\pm0.7}$ \\
+        \cline{1-5}
+        \multirowcell{4}[0pt][l]{\textbf{Retrieval} \\ (Acc)} & Unigram &              21.0 &              \bf{\underline{43.9}} &              25.6 \\
+                & BPE &              20.9 &              40.7 &              24.9 \\
+                & NoOverlap &              12.3 &              28.0 &              15.4 \\
+                & TokMix &              \bf{\underline{23.0}} &              43.4 &              \bf{\underline{27.1}} \\
+        \bottomrule
+    \end{tabular}
+    \caption{6 languages}
+    \label{tab:X_lang}
+\end{subtable}
+\hspace{.02\linewidth}
+\begin{subtable}[t]{.42\linewidth}
+    \begin{tabular}[t]{lcccc}
+    \toprule
+               &       Different &       Same &               All \\
+     Tokenizer &       script    &       script         &         transf       \\
+    \midrule
+    Unigram &              \bf{\underline{0.75}} &              \bf{\underline{0.58}} &              \bf{\underline{0.73}} \\
+            BPE &              0.83 &              0.67 &              0.81 \\ \\
+         TokMix &               0.8 &              0.64 &              0.78 \\
+    \midrule
+    Unigram &  33.2 $_{\pm0.5}$ &  50.7 $_{\pm0.6}$ &  35.4 $_{\pm0.5}$ \\
+            BPE &  \bf{\underline{36.6}} $_{\pm0.6}$ &  \bf{\underline{54.3}} $_{\pm0.3}$ &  \bf{\underline{38.8}} $_{\pm0.5}$ \\ \\
+            TokMix &  \bf{36.5} $_{\pm0.6}$ &  \bf{53.7} $_{\pm0.5}$ &  \bf{38.7} $_{\pm0.6}$ \\ 
+    \cline{1-4}
+    Unigram &  23.4 $_{\pm0.5}$ &  32.9 $_{\pm0.3}$ &  24.6 $_{\pm0.5}$ \\
+            BPE &  \bf{\underline{30.5}} $_{\pm0.6}$ &  \bf{\underline{40.7}} $_{\pm0.4}$ &  \bf{\underline{31.8}} $_{\pm0.6}$ \\ \\
+            TokMix &  \bf{29.2} $_{\pm0.5}$ &  \bf{40.4} $_{\pm0.3}$ &  \bf{30.7} $_{\pm0.5}$ \\ 
+    \cline{1-4}
+    Unigram &  13.0 $_{\pm0.6}$ &  15.6 $_{\pm0.5}$ &  13.4 $_{\pm0.6}$ \\
+            BPE &  \bf{\underline{16.5}} $_{\pm0.6}$ &  \bf{19.2} $_{\pm0.5}$ &  \bf{\underline{16.9}} $_{\pm0.5}$ \\ \\
+            TokMix &  \bf{16.0} $_{\pm0.5}$ &  \bf{\underline{19.4}} $_{\pm0.4}$ &  \bf{16.5} $_{\pm0.5}$ \\
+    \midrule
+    Unigram &  \bf{37.3} $_{\pm0.5}$ &  37.5 $_{\pm0.4}$ &  37.4 $_{\pm0.5}$ \\
+            BPE &  36.2 $_{\pm0.5}$ &  \bf{38.7} $_{\pm0.5}$ &  \bf{36.7} $_{\pm0.5}$ \\ \\
+            TokMix &  \bf{\underline{37.8}} $_{\pm0.5}$ &  \bf{\underline{39.2}} $_{\pm0.5}$ &  \bf{\underline{38.1}} $_{\pm0.5}$ \\
+    \cline{1-4}
+    Unigram &              \bf{\underline{44.1}} &              44.4 &              44.2 \\
+            BPE &              \bf{\underline{44.1}} &              \bf{\underline{49.1}} &              \bf{\underline{45.1}} \\ \\
+            TokMix &              42.8 &              46.9 &              43.6 \\
+    \bottomrule
+    \end{tabular}
+    \caption{20 languages}
+    \label{tab:X_lang_20L}
+\end{subtable}
+\caption{Averaged results of the evaluation for cross-language overlaps and transfers.  Each probing result is an average of 5 random seeds (for 6 languages) and 3 random seeds (for 20 languages). The best value in each metric is underlined, and bolded results are closer than the sum of standard deviations from the optimal value. }
+\end{table*}
+
+
+
+
+
+

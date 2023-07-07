@@ -1,0 +1,20 @@
+\begin{table}[!tb]
+\tiny
+\begin{tabular}{@{}llll@{}}
+\toprule
+ &
+  English &
+  Turkish &
+  Greek \\ \midrule
+Unigram &
+  \begin{tabular}[c]{@{}l@{}}s, ing, ed, \\ ly, d, If\end{tabular} &
+  \begin{tabular}[c]{@{}l@{}}n, a, e, \\ k, s, i\end{tabular} &
+  \begin{tabular}[c]{@{}l@{}}\textgreek{η, ς, ο},\\ \textgreek{α, ή, ει}\end{tabular} \\ \hline
+BPE &
+  \begin{tabular}[c]{@{}l@{}}▁the, ▁to, ▁of, \\ ▁and, ▁If,▁a\end{tabular} &
+  \begin{tabular}[c]{@{}l@{}}▁o, ▁veyaim, im\\ inin, ası, esi\end{tabular} &
+  \begin{tabular}[c]{@{}l@{}}\textgreek{▁η, ▁ο, ▁και,} \\ \textgreek{▁ή, ▁να, ▁στον}\end{tabular} \\ \bottomrule
+\end{tabular}
+\caption{List of units from Unigram and BPE vocabulary with the highest difference in frequency between tokenizers. The first row shows the tokens that appear more frequently in the corpus tokenized by Unigram and the second by the BPE tokenizer. We excluded punctuation marks and special characters from the list.}
+\label{tab:learned_vocab_comparison}
+\end{table}

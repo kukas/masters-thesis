@@ -1,0 +1,21 @@
+\pdfoutput=1
+\begin{figure*}[tb!]
+    \centering
+
+    \begin{subfigure}[b]{0.97\linewidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/XNLI_Acc_transfer_20L.pdf}
+    
+        \caption{Natural Language Inference}
+        \label{fig:xnli_transfer_20l}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.97\linewidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/Tatoeba_Acc_transfer_20L.pdf}
+    
+        \caption{Sentence Retrieval}
+        \label{fig:tatoeba_transfer_20l}
+    \end{subfigure}
+    
+    \caption{Cross-lingual transfer for the sentence-level tasks for 20 languages. The absolute values are presented for the Unigram tokenizer. For other tokenization methods, we show  the difference from the unigram algorithm.}
+\end{figure*}
