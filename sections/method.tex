@@ -5,7 +5,7 @@
 
 % In this chapter, we discuss the methodology of the thesis. We motivate and specify the research question, state the hypothesis and the specify how we test it.
 
-In this chapter, we discuss the methodology of the thesis. 
+In this chapter, we \tomaszrep{discuss the methodology of the thesis. }{introduce the methodology for experiments conducted in this thesis}
 
 \section{Methodology overview}
 
@@ -23,7 +23,7 @@ In this chapter, we discuss the methodology of the thesis.
 
 % For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised_2020}. Using the data we create multilingual vocabularies with the same size of 120K unique tokens using different methods. We use intrinsic evaluation framework from \citet{limisiewicz_tokenization_2023} to evaluate the tokenizers. Then we use the tokenizers to train multilingual masked language models on the same data and evaluate them on the same set of downstream tasks. We compare the results of the intrinsic and extrinsic evaluation to see if the improvements in the intrinsic evaluation translate to improvements in the downstream tasks.
 
-In this thesis, we would like to investigate the effect of tokenizer properties on multilingual language models. We define metrics that measure the properties of the tokenizers and then we define the method by which we assess how these properties affect the performance of the language models. At the same time we want to improve the performance of the multilingual language model for the low-resource languages as this was shown to be a problem in previous work \cite{rust_how_2021}. Therefore we use the metrics we define to assess the methods proposed to solve this problem. Furthermore we propose y methods to improve the performance of the language models and evaluate them using the same metrics.
+In this thesis, we would like to investigate the effect of tokenizer properties on multilingual language models. We define metrics that measure the properties of the tokenizers and then we define the method by which we assess how these properties affect the performance of the language models. At the same time we want to improve the performance of the multilingual language model for the low-resource languages as this was shown to be a problem in previous work \cite{rust_how_2021}. Therefore we use the metrics we define to assess the methods proposed to solve this problem. Furthermore we propose \tomasz{I understand "y" should be a number?} to improve the performance of the language models and evaluate them using the same metrics.
 
 
 
@@ -164,7 +164,7 @@ We also sample uniformly from the rest of the CC100 dataset to create evaluation
 
 In this section we introduce the metrics that we use to evaluate the tokenizers. By measuring the tokenizers we would like to explore two questions. First, we would like to analyse how the tokenizers differ between each other. How granular is the segmentation given an example text? And how much are the tokens shared between the languages? Second, using the observed differences between tokenizers, we would like to analyse how they influence the multilingual language models, that are trained using the tokenizers. We will describe the methodology for measuring the influences in the following sections \xxx{ref}.
 
-When measuring the multilingual tokenizers, we also want to focus not only on the overall properties but also investigate the quality of tokenization for the individual languages. This gives us a better understanding of the tokenizers and allows us to compare the tokenizers between each other given a target language. For this purpose, we will use samples of evaluation corpora for each language. The metrics we define will be therefore functions of the tokenizer $\tau$ and the corpus $C_l$ with the selected language $l$. 
+When \tomaszrep{measuring}{assesing} the multilingual tokenizers, we also want to focus not only on the overall properties but also investigate the quality of tokenization for the individual languages. This gives us a better understanding of the tokenizers and allows us to compare the tokenizers between each other given a target language. For this purpose, we will use samples of evaluation corpora for each language. The metrics we define will be therefore functions of the tokenizer $\tau$ and the corpus $C_l$ with the selected language $l$. 
 
 For each metric we will provide motivation and comparison with similar metrics used in the literature. 
 
@@ -190,7 +190,7 @@ The metric is defined as follows. Given a tokenizer $\tau$ and a language corpus
 
 where $|s|$ is the number of characters in the sentence $s \in C_l$ and $|\tau(s)|$ is the number of tokens in the tokenized sentence. The metric is illustrated in Figure \ref{fig:cpt_example}.
 
-The CPT metric is connected to the average tokenized length (description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. The authors suggest using the metric to compare, whether one tokenizer "overtokenizes" a selected low-resource language compared to another tokenizer. The average tokenized length is defined as the average number of tokens per sentence: 
+The CPT metric is connected to the average tokenized length (description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. The authors suggest using the metric to compare, whether one tokenizer "overtokenizes"\tomasz{maybe: overly splits} a selected low-resource language compared to another tokenizer. The average tokenized length is defined as the average number of tokens per sentence: 
 \begin{equation}
     TL(\tau, C_l) = \frac{\sum_{s \in C_l}|\tau(s)|}{|C_l|}
 \end{equation}
@@ -213,7 +213,9 @@ CPT is also similar to another metric used in the literature --- the word fertil
     \label{fig:ar_example}
 \end{figure}
 
-Another metric we use for comparing the tokenizers is Average Rank (AR). The motivation for this metric is that we want to measure how many tokens are used in the vocabulary for representing the corpus. Each language will have some amount of tokens dedicated to it in the vocabulary and our goal is to measure this allocation. Here one metric suggestion could be something along the lines of "number of tokens from vocabulary of $\tau$ needed to cover the 95/98/100\% of the corpus". That metric would work but the downside is that we do not know how to set the threshold. Moreover we would like the metric to reflect the shape of the distribution of the token coverage. We prefer a distribution that is more balanced. High-frequency tokens might be too ambiguous and low-frequency tokens might not have enough training examples to learn from \cite{gowda_finding_2020}. Therefore we propose a different metric that reflects both the vocabulary allocation and the uniformity of the token distribution. On top of that it is parameter-free.
+Another metric we use for comparing the tokenizers is Average Rank (AR). The motivation for this metric is that we want to measure how many tokens are \tomasz{effectively} used in the vocabulary for representing the corpus. Each language will have some amount of tokens dedicated to it in the vocabulary and our goal is to measure this allocation. Here one metric suggestion could be something along the lines of "number of tokens from vocabulary of $\tau$ needed to cover the 95/98/100\% of the corpus".
+\tomasz{I don't understand this sentence. Maybe refer to "percentile average metric" refered also by Vilda in the paper we discussed together.}
+That metric would work \tomasz{wdym by metric working} but the downside is that we do not know how to set the threshold. Moreover we would like the metric to reflect the shape of the distribution of the token coverage. We prefer a distribution that is more balanced. High-frequency tokens might be too ambiguous and low-frequency tokens might not have enough training examples to learn from \cite{gowda_finding_2020}. Therefore we propose a different metric that reflects both the vocabulary allocation and the uniformity of the token distribution. On top of that it is parameter-free.
 
 Given a tokenizer $\tau$ and a language corpus $C_l$, we first tokenize the corpus using the tokenizer $\tau$. Then we compute the empirical probability of the tokens in the tokenized corpus.
 
@@ -230,10 +232,10 @@ We sort the tokens by their probability and assign them ranks from 1 to $|V_\tau
 The metric is illustrated in Figure \ref{fig:ar_example}. Higher AR signals that the vocabulary contains higher number of tokens used for tokenizing given language. Moreover with high AR we can expect that the tokens are distributed more uniformly.
  Now, we would like to address how does this metric compare to different metrics used in the literature. 
 
-First we examine the average log probability (ALP) metric defined in \citet{zheng_allocating_2021}. This metric is proposed for the same purpose as our AR metric. It is also said to measure language-specific vocabulary capacity and the authors claim that it is "penalized by the subword units with low-frequency". Surprisingly, we can show that the ALP metric is equivalent to the product of negative entropy and average tokenized length.
+First we examine the average log probability (ALP) \tomaszrep{metric}{} defined in \citet{zheng_allocating_2021}. This metric is proposed for the same purpose as our AR metric. It is also said to measure language-specific vocabulary capacity and the authors claim that it is "penalized by the subword units with low-frequency". Surprisingly, we can show that the ALP metric is equivalent to the product of negative entropy and average tokenized length.
 
 \xxx{todo fix the notation}
-The ALP metric is defined as follows. Given a monolingual corpus composed of sentences $C_l = {s_1, ..., s_{|C_l|}}$ from the language $l$ and tokenized with vocabulary $V_\tau$, the average log probability is defined as follows:
+The ALP \tomaszrep{metric}{} is defined as follows. Given a monolingual corpus composed of sentences $C_l = {s_1, ..., s_{|C_l|}}$ from the language $l$ and tokenized with vocabulary $V_\tau$, the average log probability is defined as follows:
 
 \begin{equation}
     ALP(\tau, C_l) = \frac{1}{|C_l|} \sum_{j=1}^{|C_l|} \sum_{k=1}^{|s_j|} \log p_{uni}(s_{kj})
@@ -260,6 +262,7 @@ ALP(\tau, C_l) &= \frac{1}{|C_l|} \sum_{t \in V_\tau} count(t, \tau(C_l)) \log \
 
 By analysis of ALP we see that the metric is composed of two metrics that are already well defined. Strangely, the metrics are multiplied together even though the effects of the metrics go against each other. On one hand the lower the token length the better (lower tokenized sentence length means longer and more meaningful tokens), on the other hand arguably, the higher entropy the better (more uniform distribution is better than very unbalanced distribution). It is not clear why would we want to multiply these two metrics together. The authors do not provide this analysis and discussion. \xxx{now interpretaion occured to me: the best ALP is achieved when we have short tokens that are balanced. So actually it could be interesting. But still the authors do not provide this analysis.}
 
+\tomasz{IMO, the following text would rather fit results section. It's a theoretical result.}
 Next we will compare the Average Rank and Entropy. The entropy of the tokenized corpus is defined as follows:
 
 \begin{equation}
@@ -288,7 +291,9 @@ Now if we plug in the log-probability of the token into the entropy formula and 
     H(\tau(C_l)) = \sum_{t \in V_\tau} \hat{p}_{\tau(C_l)}(t) \log rank(t)
 \end{equation}
 
-We see that under the Zipfian assumption, the entropy may be viewed as a "Average Log Rank". This may be empirically observed in the Figure \ref{fig:ar_alr_entropy}.
+We see that under the Zipfian assumption, the entropy may be viewed as a "Average Log Rank" \tomasz{``\emph{Average Log Rank}''}.
+\tomasz{Reformulate it as a lemma with assumptions and proof. It's a nice theorethical observation.}
+This may be empirically observed in the Figure \ref{fig:ar_alr_entropy}.
 
 \begin{figure}
     \centering
@@ -348,7 +353,21 @@ Overlap in tokenization has been studied in \citet{wu_beto_2019}, although the m
 
 % \section{Investigating the influence of the tokenizer on the language model}
 
+
+\tomasz{Here, I would write section Extrinsic Evaluation. 
+With general description assesing tokenizer influnce on downstream tasks.
+Details should be provided in the next chapter: Experiments...}
+
 \section{Choice of the experimental parameters}
+
+\tomasz{I suggest to start a new chapter here: Experiments
+With structure:
+- Reproducing previous balanced tokenization methos;
+- New tokenization method;
+- Intristic Evaluation: metrics introduced in the methodology
+- extrinsic Evaluation: model training, fine-tuning, evaluation tasks;
+- Implementation details/ experimental setup: with all details about implemnetation. 
+}
 
 % - training the tokenizers
 %     - the choice of implementation
@@ -422,6 +441,8 @@ The methods of \citet{chung_improving_2020} and \citet{liang_xlm-v_2023} follow 
 As we can see the methods share the last merging step and differ in the clustering approaches. We therefore describe the clustering approaches first, then we describe the Zheng method and finally we describe the merging step common for all methods.
 
 \subsection{Reproducing the clustering methods}
+\tomasz{General remark: It's better to keep experiments definition (i.e. hypothesis statement and experiment overview.) separated from implementation details.
+The later are important bu shouldn't steal attention of the reader from the story.}
 
 The first step for the Chung and Liang methods is to train monolingual Unigram LM tokenizers for each language $l$ from the set of 20 languages $L$. As specified in \citet{chung_improving_2020}, we use the default Sentencepiece settings. Namely, we use the Unigram LM model, character coverage of 0.9995, number of seed sentencepieces is 1M. \xxx{add all parameters to appendix}. We use 1M lines for each language which we have shown to be enough in preliminary experiments \xxx{add ref}. This choice also corresponds to the \citet{zheng_allocating_2021} method, which uses 1M lines for each language. The vocabulary size differs between Chung and Liang and so we train two sets of monolingual tokenizers, with 8k and 30k vocabulary size respectively.
 
@@ -536,7 +557,8 @@ We argue that this is the most natural way to merge the tokenizers and so we ass
 % https://github.com/bozheng-hit/VoCapXLM/blob/main/VoCap_500k/sentencepiece.bpe.model
 % https://huggingface.co/facebook/xlm-v-base/blob/main/sentencepiece.bpe.model
 
-\section{On the baseline selection}
+\section{\tomaszrep{On the b}{B}aseline selection}
+\tomasz{This section would fit rather to Discussion}
 
 All three papers introduced in the previous section utilize two types of baselines to show the improvements of their proposed methods. The first type of baseline is a direct comparison to the existing multilingual language model from which their experiments originate. For all papers it is the original XLM-R model from \citet{conneau_unsupervised_2020}, \citet{chung_improving_2020} additionaly compares their model to mBERT \cite{devlin_bert_2019}. The second type of baseline is obtained by retraining the original XLM-R model with the same training procedures as the proposed methods to control for variables that may influence the results, other than the tokenizer training method. In particular, \citet{chung_improving_2020} specifies that they control for the hyperparameters, number of pretraining languages and number of parameters of the model which as they point out is strongly correlated with the performance of the multilingual model. \cite{conneau_unsupervised_2020}
 
@@ -567,7 +589,7 @@ With the tokenizers replicated and trained, we will train the language models to
 
 We use the Huggingface framework \cite{wolf_transformers_2020} for pretraining the language model. We use the example script from the Huggingface repository to pretrain the language model with the Masked Language Model objective. The model architecture is based on a scaled-down version of XLM-R\textsubscript{Base} \cite{conneau_unsupervised_2020}. The size of embeddings is kept at 768, the number of attention layers is reduced from 12 to 8, the number of attention heads is reduced from 12 to 6. The maximum sequence length is set to 128 tokens. The vocabulary size is 120\,000. The total number of parameters is roughly two times smaller than the original XLM-R\textsubscript{Base}.
 
-The models are pretrained for 10k steps with batchsize 8192 achieved by using gradient checkpointing \xxx{do i need to explain this?}. This amounts to $\approx 1.6$ epochs over the training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$
+The models are pretrained for 10k steps with batchsize 8192 achieved by using gradient checkpointing \xxx{do i need to explain this?}\tomasz{no}. This amounts to $\approx 1.6$ epochs over the training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$
 
 \section{Model finetuning and probing}
 
@@ -583,6 +605,7 @@ Second, we also use probing \cite{conneau_what_2018,belinkov_interpretability_20
 Here we present the downstream tasks we use in our paper \cite{limisiewicz_tokenization_2023}. For the language balancing experiments we use a subset of these tasks that we found to have different responses to the changes in the CPT, AR and JSD metrics.
 
 \xxx{here I copy the text from the paper, is it ok?}
+\tomasz{Yes}
 
 \subsection{POS}
 
