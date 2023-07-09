@@ -19,29 +19,42 @@
 % - we check this by comparing the balancing methods on downstream and we do not see any significant differences between them. We do see improvements over the strong baseline in some cases.
 % - therefore we can conclude that balancing does influence NER and POS tagging although with the comparison to alpha0.3, the improvements are very small
 
-In this chapter, we present the results of our experiments. First we validate the usefulness of our proposed vocabulary allocation and vocabulary overlap metrics. We do this by training three tokenizers using the Huggingface Tokenizers library and assessing whether they differ in the metrics we propose. We see that there are significant differences between the three tokenizers. Then we look at how these differences manifest, when we use these tokenizers to train otherwise identical multilingual models. We observe that the differences in tokenizers are reflected in the learned representations of the models. Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank) and when there is less overlap between the languages (high Jensen-Shannon divergence).
+In this chapter, we present \xxx{theoretical findings} and the results of our experiments. First we validate the usefulness of our proposed vocabulary allocation and vocabulary overlap metrics. \xxx{We do this on a theoretical level by analytically contrasting our metrics to existing metrics used in the literature. Then, } We do this by training three tokenizers using the Huggingface Tokenizers library and assessing whether they differ in the metrics we propose. We see that there are significant differences between the three tokenizers. Then we look at how these differences manifest, when we use these tokenizers to train otherwise identical multilingual models. We observe that the differences in tokenizers are reflected in the learned representations of the models. Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank) and when there is less overlap between the languages (high Jensen-Shannon divergence).
 
 Then we switch to the original Sentencepiece library, which is used in the related work we replicate \cite{conneau_unsupervised_2020,chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023}. We see that there are differences in the implementation of the Unigram and BPE algorithms between the two libraries and that the Huggingface library yields subpar Unigram tokenizers. We further assess other factors that influence the tokenizers quality, such as the total training data size, the language imbalance and size of the alphabet. We observe that we need around 100k-1M lines per language to train a good, multilingual tokenizer. The language imbalance does influence the per-language metrics heavily and the alphabet size does affect the number of UNK tokens but does not have a significant influence on the rest of the metrics if we stay in the range of 1000-5000 characters. We do this assessment to be better able to choose and fix the best parameters for the final set of experiments.
 
 Finally, we replicate the works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} and create several variations of their tokenizers that aim to improve the text segmentations especially for the low-resource languages. We carefully compare these replicated tokenizers with the traditional method of training Sentencepiece Unigram tokenizers on a joint, multilingual corpus. 
 
-While the beforementioned authors do compare their methods to the standard tokenizer training, the crucial difference in our methodology is that we also compare their replicated language-balancing methods with the vanilla Sentencepiece tokenizer trained on a \textbf{balanced} multilingual dataset. We find that when compared to this stronger, yet simple baseline, the balancing approaches do not yield significant improvements on our proposed tokenizer metrics per-language nor in overall.
+While the beforementioned authors do compare their methods to the standard tokenizer training, the crucial difference in our methodology is that we compare their replicated language-balancing methods with the vanilla Sentencepiece tokenizer trained on a \textbf{balanced} multilingual dataset. We find that when compared to this stronger, yet simple baseline, the balancing approaches do not yield significant improvements on our proposed tokenizer metrics per-language nor in overall.
 
 We then validate our findings by training a second batch of masked language models that differ only in the tokenizer used. We choose the best performing balancing method of \citet{chung_improving_2020} and compare it with Sentencepiece Unigram tokenizers trained on balanced and unbalanced data. We observe that both the Chung method and balanced Unigram improve the language modeling capabilities over the unbalanced baseline on the word-level tasks while having no impact in the sentence-level task. On the other hand, we do not observe significant differences between the Chung method and the simple baseline of training the tokenizer on a balanced set which is in line with our previous assessment using only the tokenizer metrics. Our findings suggest that in our scaled down setting of 20 languages and 120k vocabulary size, the simpler method of training a tokenizer on a joint, balanced corpus is sufficient to create a good multilingual vocabulary that represents all languages well.
 
-\section{The influence of vocabulary allocation and overlap on the language representation quality}
+\section{Analytical comparison of the metrics}
 
-We train 
+\xxx{- move the comparison of the metrics here}
+
+\section{The influence of vocabulary allocation and overlap on the language representation quality}
+\label{sec:influence_of_metrics}
+
+In this section, we present some of the results from \citet{limisiewicz_tokenization_2023}. We empirically establish that the metrics we propose are useful for assessing the differences between tokenizers. We also show that the differences in tokenizers are reflected in the learned representations of the models. 
+
+% We train three distinct tokenizers --- Huggingface Unigram, Huggingface BPE and TokMix using the Huggingface Tokenizers library. The training data is the CC100 corpus sampled with the smoothing factor $\alpha=0.25$ which corresponds to the XLM-R tokenizer (there $\alpha=0.3$). For all tokenizers we choose the default  In the \ref{tab:20l_metrics} we see the overall macro average metrics for the three tokenizers. 
+
+\input{tables/20l_metrics.tex}
+
+In the \autoref{tab:20l_metrics} we see that the choice of the tokenization method largely influences the vocabulary allocation and overlap metrics. The Huggingface BPE tokenizer produces the most uniform allocation of tokens and the least overlap between languages. On the other hand, the Huggingface Unigram segments the text into shorter tokens and the average vocabulary overlap between all languages is much higher. The high overlap might be related to the low allocation as it is more likely that shorter tokens are shared between languages. Because we use the default Huggingface settings for the tokenizer training, the resulting tokenizers differ also in the vocabulary size. As we will discuss in \xxx{ref}, this difference is not sufficient to explain the difference between the tokenizers. Nevertheless the difference in alphabet size has an influence on the Chinese language. As we discuss in \citet{limisiewicz_tokenization_2023}, on the language level, the Unigram Tokenizer allocates more tokens to Chinese (as measured by the Average Rank metric) compared to the other methods. This is probably related to the alphabet size, where the majority of the low-occurence tokens might come from the less frequent logograms of the Chinese dictionary.
+
+Next, we use the tokenizers from \autoref{tab:20l_metrics} and pretrain three masked language models with otherwise identical configuration and training data. We then evaluate the quality of the output representations of these models by probing the contextualized vectors against several tasks (XNLI, UD, POS, NER). We test the in-language and cross-lingual settings. The in-language setting are shown in \autoref{fig:pair_analysis_20L}.e show the relationship between our metrics and the downstream tasks. The probe performance is largely dependent on the tested language, to assess only the differences yielded by the use of different tokenizers, we center the per-language results on the mean across the three models. This way we can see only the improvements and deteriorations of the models compared to the mean. The metrics are centered in the same way. We can see that the differences between tokenizers are reflected in the representation quality. High CPT and AR metrics are correlated with better probe performance especially on the word-level tasks such as Part of speech tagging, Named entity recognition and Dependency labeling. Moreover the cross-lingual performance is also correlated with the JSD metric as shown in \autoref{fig:X_pair_analysis_20L}.
+
+\xxx{maybe I can actually get rid of the scatterplots and just show the correlation tables from the paper. The problem is the mixing of 6 langs and 20 langs which I do not explain here.}
+
+All correlations are summarized in \autoref{tab:corr_in_lang_20l} and \autoref{fig:corr_x_lang_20l}. The length of the tokens has a strong positive influence on POS, dependency labeling, and NER results ($r > 0.65$), while it does not significantly affect NLI results. The correlation between the average rank NER scores is weaker but still significant. Moreover, it is significantly correlated with XNLI accuracy with a medium coefficient $r = 0.56$. 
+
+\xxx{what to do with JSD, in paper we present the 6 lang experiments. Here I wanted to keep things simple and focus on the 20 lang experiments. But it seems that for 20 langs the influence of JSD is actually positive for NER and there is $\approx 0$ influence on XNLI. }
+
+Note that in this results section we have included only a part of the experiments from our paper \citet{limisiewicz_tokenization_2023}. Namely we focus only on the experiments that are based on the same 20 languages as the rest of the thesis. For our purposes we focus only on the more general conclusions. We refer the reader to the original paper for the full set of experiments, where we additionaly discuss in more detail which tasks are more affected by which properties of the tokenizers.
 
 % Firstly, we see that the default settings of the Huggingface tokenizers produce very different alphabet sizes and in turn affect the UNK rate. As we will see later, this does not affect the metrics significantly.
-
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{img/temp/20l_metrics.png}
-    \caption{In the first batch of experiments, we compare the Huggingface Unigram, Huggingface BPE, and our TokMix method based on merging Huggingface Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores ($-0.4$ CPT and $-153$ AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap (JSD decrease by $-0.03$) between the languages for Unigram. This might be related to the low allocation as it is more likely that shorter tokens are shared between languages. The scores are macro averages over all languages, computed over a holdout portion of the CC100 corpus. We sample 10k lines from each language which we have empirically found to be enough to get representative results.}
-    \label{fig:20l_metrics}
-\end{figure}
 
 
 \begin{figure}[H]
@@ -70,17 +83,29 @@ We train
 
 % ---------
 
-\section{The effects that influence the tokenizers quality}
+\section{The choices that influence the tokenizers quality}
 
+\subsection{Implementation}
 
-\subsection{Vocabulary allocation of tokenizers}
-\subsubsection{Tokenizer methods and vocabulary allocation}
+\input{tables/hugg_vs_sentpiece.tex}
 
-% \subsubsection{Data size and vocabulary overlap}
-% this is included in the data_size_influence table
+As shown in the previous \autoref{sec:influence_of_metrics}, we observe that the Huggingface Unigram tokenizer leads to significantly worse metrics than the other tokenizers. We investigate this difference by turning to the original Sentencepiece implementation of the algorithm and running a comparable experiment with the different library. For comparison, we also train a comparable BPE tokenizer using the Sentencepiece. 
 
+The results are presented in \autoref{tab:hugg_vs_sentpiece}. We see that the implementation has an effect on the tokenization and that the Sentencepiece Unigram tokenizers performs on par with the Huggingface BPE tokenizer. For this reason, we use the Sentencepiece implementation for the rest of the experiments.
 
-\subsubsection{Data balance and vocabulary allocation}
+\subsection{Data size}
+
+\input{tables/data_size_influence.tex}
+
+We are interested in how much data is needed for the tokenizer training. For this experiment, we sample the same number of lines (1e3, 1e4, 1e5, 1e6, 1.5e6, 2e6 per language) for each language from the CC100 corpus. Then we train the Sentencepiece Unigram tokenizers on different amounts of data and compare the results in \autoref{tab:data_size_influence}. We see that the metrics improve with the amount of data, but the improvement is not substantial after 100k-1M lines per language. We use these results as a rule of thumb for the rest of the experiments and where possible, we use at least 100k but preferrably 1M lines per language for the rest of the experiments.
+
+\subsection{Character coverage}
+
+\input{tables/coverage_influence.tex}
+
+Because we observe the large difference in the alphabet size between Huggingface tokenizers (implied by the use of the default trainer settings of the library), we investigate the influence of this parameter on our tokenizer metrics. We train the Sentencepiece Unigram tokenizers with different character coverage (98\%, 99.5\%, 99.95\%, 99.995\%, 99.9995\%, 99.99995\% and 100.0\%) on balanced data sampled from CC100 with $\alpha=0.0$. and compare the results in \autoref{tab:coverage_influence}. The character coverage parameter determines, how many distinct Unicode characters are included in the vocabulary of the tokenizer. As expected, we see that there is a direct relationship between the character coverage, alphabet size and the number of unknown tokens in the validation set. We also see that our metrics are not largely affected by the alphabet size, as the alphabet accounts for at most 10\% of the whole vocabulary size 120\,000. The lowest vocabulary allocation metrics are on the extremes of the character coverage, where the alphabet size is either very small or very large. We assume that the small alphabet size leads to a large number of unknown tokens and the tokenizer is forced to segment words containing characters outside of the alphabet, as these unknown tokens might even be characters with diacritics. In the range of 1000-5000 alphabet size, we see that the metrics are not largely affected by the alphabet size. On the other extreme, the large alphabet size starts to take up a large portion of the vocabulary and the tokenizer might not have enough capacity to learn longer tokens. For later experiments, we use the Sentencepiece default character coverage of 99.95\%. When comparing tokenizers with different alphabet sizes, we are aware of the fact that the metrics might be affected by the alphabet size and we take this into account when interpreting the results.
+
+\section{Tokenizer training with data imbalance}
 
 \begin{figure}[H]
     \centering
@@ -89,13 +114,6 @@ We train
     \label{fig:data_balance_vs_allocation_per_lang}
 \end{figure}
 
-\subsubsection{Data size}
-
-\input{tables/data_size_influence.tex}
-
-\subsubsection{Character coverage}
-
-\input{tables/coverage_influence.tex}
 
 \section{Comparison of balancing methods}
 \subsection{Balancing methods and vocabulary allocation}

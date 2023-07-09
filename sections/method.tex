@@ -567,7 +567,7 @@ With the tokenizers replicated and trained, we will train the language models to
 
 We use the Huggingface framework \cite{wolf_transformers_2020} for pretraining the language model. We use the example script from the Huggingface repository to pretrain the language model with the Masked Language Model objective. The model architecture is based on a scaled-down version of XLM-R\textsubscript{Base} \cite{conneau_unsupervised_2020}. The size of embeddings is kept at 768, the number of attention layers is reduced from 12 to 8, the number of attention heads is reduced from 12 to 6. The maximum sequence length is set to 128 tokens. The vocabulary size is 120\,000. The total number of parameters is roughly two times smaller than the original XLM-R\textsubscript{Base}.
 
-The models are pretrained for 10k steps with batchsize 8192 achieved by using gradient checkpointing \xxx{do i need to explain this?}. This amounts to $\approx 1.6$ epochs over the training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$
+The models are pretrained for 10k steps with batchsize 8192 achieved by using gradient accumulation. This amounts to $\approx 1.6$ epochs over the training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$
 
 \section{Model finetuning and probing}
 
