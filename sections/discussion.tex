@@ -4,6 +4,7 @@
 - our comparison is limited to 20 langs and small models
     - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
     - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.
+- we also focus heavily on Sentencepiece Unigram as it is the most popular method. From our experiments it seems that Huggingface BPE is a good alternative to Sentencepiece Unigram and it would be interesting to compare it to the other methods
 
 - alpha0 assumes that we have enough data for each language
     - this might not be the case for some extremely-low-resource languages
