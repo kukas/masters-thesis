@@ -19,25 +19,27 @@
 % - we check this by comparing the balancing methods on downstream and we do not see any significant differences between them. We do see improvements over the strong baseline in some cases.
 % - therefore we can conclude that balancing does influence NER and POS tagging although with the comparison to alpha0.3, the improvements are very small
 
+In this chapter, we present the results of our experiments. First we validate the usefulness of our proposed vocabulary allocation and vocabulary overlap metrics. We do this by training three tokenizers using the Huggingface Tokenizers library and assessing whether they differ in the metrics we propose. We see that there are significant differences between the three tokenizers. Then we look at how these differences manifest, when we use these tokenizers to train otherwise identical multilingual models. We observe that the differences in tokenizers are reflected in the learned representations of the models. Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank) and when there is less overlap between the languages (high Jensen-Shannon divergence).
 
-\section{The effects that influence the tokenizers quality}
+Then we switch to the original Sentencepiece library, which is used in the related work we replicate \cite{conneau_unsupervised_2020,chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023}. We see that there are differences in the implementation of the Unigram and BPE algorithms between the two libraries and that the Huggingface library yields subpar Unigram tokenizers. We further assess other factors that influence the tokenizers quality, such as the total training data size, the language imbalance and size of the alphabet. We observe that we need around 100k-1M lines per language to train a good, multilingual tokenizer. The language imbalance does influence the per-language metrics heavily and the alphabet size does not have a significant influence if we stay in the range of 1000-5000 characters. We do this assessment to be better able to choose and fix the best parameters for the final set of experiments.
 
+Finally, we replicate the works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} and create several variations of their tokenizers that aim to improve the text segmentations especially for the low-resource languages. We carefully compare these replicated tokenizers with the traditional method of training Sentencepiece Unigram tokenizers on a joint, multilingual corpus. 
 
-\subsection{Vocabulary allocation of tokenizers}
-\subsubsection{Tokenizer methods and vocabulary allocation}
+While the beforementioned authors do compare their methods to the standard tokenizer training, the crucial difference in our methodology is that we also compare their replicated language-balancing methods with the vanilla Sentencepiece tokenizer trained on a \textbf{balanced} multilingual dataset. We find that when compared to this stronger, yet simple baseline, the balancing approaches do not yield significant improvements on our proposed tokenizer metrics per-language nor in overall.
 
-% \subsubsection{Data size and vocabulary overlap}
-% this is included in the data_size_influence table
+We then validate our findings by training a second batch of masked language models that differ only in the tokenizer used. We choose the best performing balancing method of \citet{chung_improving_2020} and compare it with Sentencepiece Unigram tokenizers trained on balanced and unbalanced data. We observe that both the Chung method and balanced Unigram improve the language modeling capabilities over the unbalanced baseline on the word-level tasks while having no impact in the sentence-level task. On the other hand, we do not observe significant differences between the Chung method and the simple baseline of training the tokenizer on a balanced set. Our findings suggest that in our scaled down setting of 20 languages and 120k vocabulary size, the simpler method of training a tokenizer on a joint, balanced corpus is sufficient to achieve good results.
 
 \section{The influence of vocabulary allocation and overlap on the language representation quality}
 
-Firstly, we see that the default settings of the Huggingface tokenizers produce very different alphabet sizes and in turn affect the UNK rate. As we will see later, this does not affect the metrics significantly.
+We train 
+
+% Firstly, we see that the default settings of the Huggingface tokenizers produce very different alphabet sizes and in turn affect the UNK rate. As we will see later, this does not affect the metrics significantly.
 
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/temp/20l_metrics.png}
-    \caption{In the first batch of experiments, we compare the Huggingface tokenizers and our TokMix method based on merging Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores (CPT and AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap (lower JSD) between the languages for Unigram. This might be related to the low allocation as it is more likely that shorter tokens are shared between languages. The scores are macro averages over all languages, computed over a holdout portion of the CC100 corpus. We sample 10k lines from each language which we have empirically found to be enough to get representative results.}
+    \caption{In the first batch of experiments, we compare the Huggingface Unigram, Huggingface BPE, and our TokMix method based on merging Huggingface Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores (CPT and AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap (lower JSD) between the languages for Unigram. This might be related to the low allocation as it is more likely that shorter tokens are shared between languages. The scores are macro averages over all languages, computed over a holdout portion of the CC100 corpus. We sample 10k lines from each language which we have empirically found to be enough to get representative results.}
     \label{fig:20l_metrics}
 \end{figure}
 
@@ -67,6 +69,15 @@ Firstly, we see that the default settings of the Huggingface tokenizers produce 
 \end{figure}
 
 % ---------
+
+\section{The effects that influence the tokenizers quality}
+
+
+\subsection{Vocabulary allocation of tokenizers}
+\subsubsection{Tokenizer methods and vocabulary allocation}
+
+% \subsubsection{Data size and vocabulary overlap}
+% this is included in the data_size_influence table
 
 
 \subsubsection{Data balance and vocabulary allocation}
@@ -101,7 +112,7 @@ Firstly, we see that the default settings of the Huggingface tokenizers produce 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/all_tokenizers_AR_vs_JSD.pdf}
-    \caption{We visualize the tokenizers from Table \ref{tab:all_tokenizers_metrics} in terms of Average Rank and Jensen-Shannon Divergence. Here we can see that all methods based on Sentencepiece result in similar overlap independent of the allocation. This is interesting because the replicated balancing methods (Chung, Zheng, Liang) work by splitting the data and training separate tokenizers. Nevertheless, after merging the separate subtokenizers they all seem to end up with similar vocabulary overlaps. The highest vocabulary isolation is surprisingly achieved by the Huggingface Unigram tokenizer, which is contrary to the hypothesis stated by \citet{chung_improving_2020,zheng_allocating_2021} that the tokenizers trained on the concatenation of all data tend to select subwords shared across all languages.}
+    \caption{We visualize the tokenizers from Table \ref{tab:all_tokenizers_metrics} in terms of Average Rank and Jensen-Shannon Divergence. Here we can see that all methods based on Sentencepiece result in similar overlap independent of the allocation. This is interesting because the replicated balancing methods (Chung, Zheng, Liang) work by splitting the data and training separate tokenizers. Nevertheless, after merging the separate subtokenizers they all seem to end up with similar vocabulary overlaps. The highest vocabulary isolation is surprisingly achieved by the Huggingface BPE tokenizer, which is contrary to the hypothesis stated by \citet{chung_improving_2020,zheng_allocating_2021} that the tokenizers trained on the concatenation of all data tend to select subwords shared across all languages.}
     \label{fig:all_tokenizers_AR_vs_JSD}
 \end{figure}
 

@@ -53,6 +53,9 @@ terms I use later that need explaination:
 - model size
 - masked language models
 
+QA, NER, NLI, POS
+paraphrase identification
+
 \section{Multilingual pretrained models}
 
 \xxx{TODO}
@@ -209,18 +212,17 @@ The methods these models use to tokenize the input text are the same as the ones
 
 As we have pointed out previously, the pretraining data is not evenly distributed across languages. High resource languages such as English or Indonesian may have hundreds times the amount of training data than low resource languages such as Swahili or Amharic. To account for the discrepancy in the number of training examples per language, the training data is usually subsampled with a bias towards low-resource languages. This subsampling is performed both for the model pretraining and the tokenizer training \cite{devlin_bert_2019,lample_cross-lingual_2019}. \xxx{cite maybe the mBERT github page rather than bert paper. But I don't know how to cite it pls help}
 
-We describe the subsampling method in detail in Section \ref{sec:data_scope}. In a nutshell, the subsampling is done by adjusting the probability of sampling a line $p(l)$ from a language $l$. The probabilities are exponentiated with a factor $\alpha$ and renormalized to sum to 1. With $\alpha=0.0$, the subsampling is uniform across languages. With $\alpha=1.0$, the smoothing has no effect. The usual values chosen for this factor $\alpha$ are 0.7 \cite{devlin_bert_2019}. 0.5 \cite{lample_cross-lingual_2019} and 0.3 \cite{conneau_unsupervised_2020}.
+We describe the subsampling method in detail in Section \ref{sec:data_scope}. In a nutshell, the subsampling is done by adjusting the probability of sampling a line $p(l)$ from a language $l$. The probabilities are exponentiated with a factor $\alpha$ and renormalized to sum to 1. With $\alpha=0.0$, the subsampling is uniform across languages. With $\alpha=1.0$, the smoothing has no effect. The usual values chosen for this factor $\alpha$ are 0.7 \cite{devlin_bert_2019}. 0.5 \cite{lample_cross-lingual_2019} and 0.3 \cite{conneau_unsupervised_2020}. Throughout this thesis, we will refer to this subsampling method and the factor $\alpha$ often. When we refer to the factor $\alpha$, we mean the factor used for the tokenizer training.
 
 \subsection{Bias towards high-resource languages}
 
-As \citet{rust_how_2021} have shown, the bias towards high-resource however still persists. \citet{rust_how_2021} compare the performance of the multilingual model mBERT and language specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different langugaes, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. 
+As \citet{rust_how_2021} have shown, the bias towards high-resource languages however still persists. \citet{rust_how_2021} compare the performance of the multilingual model mBERT and language specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different langugaes, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. 
 
 They show that the performance of mBERT can be improved for a specific language by switching to a monolingual vocabulary and retraining only the embedding layer of mBERT. The model with a dedicated vocabulary outperforms the vanilla mBERT on a variety of tasks, which indicates that the multilignual vocabulary of mBERT is not optimal. 
 
 But what changes when we switch to a monolingual vocabulary and why does it improve the multilingual model to the point it approaches the performance of the dedicated monolingual model? \citet{rust_how_2021} propose to look at how often the tokenizer segments words. They show that for some languages, the multilingual tokenizer splits words into subwords drastically more often than the monolingual tokenizer. By changing the tokenizer, we improve the tokenization of the input text and thus the model performance.
 
 For measuring this, \citet{rust_how_2021} use a metric called \textit{fertility} \cite{acs_exploring_2019}. It is defined as the average number of subwords per word. They show that the fertility of the multilingual tokenizer is higher than the fertility of the monolingual tokenizer, especially for low-resource languages that are underrepresented in the training data. By measuring the correlation between the improvement in performance of the modified models and improvement in fertility, they show that there is a statistically significant relationship between the two.
-% They also show that the downstream task performance is negatively affected by how often the tokenizer splits single words into several subwords. For this they use a metric called \textit{fertility} \cite{acs_exploring_2019}. It is defined as the average number of subwords per word.
 
 % By comparing the fertility metric \citet{rust_how_2021} has shown that oversegmentation oversegmentation of low-resource languages leads to longer sequence lengths and more frequent splitting of words. Thus the multilingual model must learn to compose the subwords back into semantic units and also learn to attend to correct subwords over longer distances \cite{chung_improving_2020}. Moreover, mismatched segmentation granularity might lead to incompatible representations for subwords across languages. \citet{maronikolakis_wine_2021} have shown that tokenization compatibility can have a significant impact on multilingual performance.
 
@@ -236,9 +238,34 @@ In the following subsections, we will describe these three methods. First, we de
 
 % There have been several attempts to mitigate the language bias in multilingual language models. We will now describe the most prominent ones.
 
-\xxx{add simple explanation of the methods}
-
 \subsection{Language-Clustered Vocabularies}
+
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[
+      block/.style={rectangle, draw, fill=blue!20, text width=5.5em, text centered, rounded corners, minimum height=4em},
+      line/.style={draw, -latex}
+    ]
+    
+    \node [block] (start) {Monolingual Corpora};
+    \node [block, right of=start, node distance=3.5cm] (vocab) {Train Individual Vocabularies};
+    \node [block, right of=vocab, node distance=3.5cm] (merge) {Create Merged Vocabulary};
+    \node [block, right of=merge, node distance=3.5cm] (vectors) {Create Language Vectors};
+    \node [block, below of=vectors, node distance=2.5cm] (cluster) {Cluster Languages using K-means};
+    \node [block, left of=cluster, node distance=3.5cm] (train) {Train Cluster-Specific Vocabularies};
+    \node [block, left of=train, node distance=3.5cm] (final) {Create Final Vocabulary};
+    
+    \path [line] (start) -- (vocab);
+    \path [line] (vocab) -- (merge);
+    \path [line] (merge) -- (vectors);
+    \path [line] (vectors) -- (cluster);
+    \path [line] (cluster) -- (train);
+    \path [line] (train) -- (final);
+    
+    \end{tikzpicture}
+    \caption{Flowchart of the \citet{chung_improving_2020} method.}
+    \label{fig:tokenization}
+\end{figure}
 
 In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \citeauthor{chung_improving_2020} propose a method to effectively increase the vocabulary size while mitigating the the language bias by using language-clustered vocabularies. They construct an improved vocabulary by merging together several smaller vocabularies that were trained on subsets of the whole, multilingual training corpus. These smaller vocabularies are constructed by clustering the monolingual corpora based on their similarity and then training a separate vocabulary for each cluster. The authors show that the language-clustered vocabularies lead to improved performance on low-resource languages.
 
@@ -250,7 +277,7 @@ In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \ci
     \label{fig:chung_vectors}
 \end{figure}
 
-Their method works by clustering the languages and then merging the cluster-level vocabularies. To cluster the languages using the k-means algorithm, it is necessary to define an euclidean vector space with each language having a representative vector (\autoref{fig:chung_vectors}). To this end, the authors first train equally sized vocabularies $V^l$ for each language separately using the Unigram LM method. Then they create a merged vocabulary $V^L$ by taking the union of the vocabularies $V^l$. Then, to produce a language vector $\vec{v}^l$ for each language $l$, the presence of each subword $V^L_i$ is checked in the language-specific $V^l$ and the value is set to 1 if the subword is present and 0 otherwise.
+Their method works by clustering the similar languages together and then merging the cluster-level vocabularies. To cluster the languages using the k-means algorithm, it is necessary to define an euclidean vector space with each language having a representative vector (\autoref{fig:chung_vectors}). To this end, the authors first train equally sized vocabularies $V^l$ for each language separately using the Unigram LM method. Then they create a merged vocabulary $V^L$ by taking the union of the vocabularies $V^l$. Then, to produce a language vector $\vec{v}^l$ for each language $l$, the presence of each subword $V^L_i$ is checked in the language-specific $V^l$ and the value is set to 1 if the subword is present and 0 otherwise. \xxx{this seems to be overly compicated explanation}
 
 \begin{equation}
     \vec{v}^l_i = \begin{cases}
@@ -299,7 +326,7 @@ The clustered vocabulary is then used to train a smaller and bigger multilingual
 
 \subsection{Determining vocabulary capacity for each language}
 
-In the paper \Citetitle{zheng_allocating_2021}, \citeauthor{zheng_allocating_2021} propose a method for determining the optimal vocabulary capacity for each language in a multilingual model. Then they propose a method for constructing a multilingual vocabulary by combining monolingual vocabularies so that the optimal capacity is achieved for each language. In the second part of the paper, the authors propose a method for accelerating the training of the model with the increased vocabulary size, which is out of the scope of this thesis.
+In the paper \Citetitle{zheng_allocating_2021}, \citeauthor{zheng_allocating_2021} propose a method for determining the optimal vocabulary capacity for each language in a multilingual model. Further they propose a method for constructing a multilingual vocabulary by combining monolingual vocabularies so that the optimal capacity is achieved for each language. In the second part of the paper, the authors propose a method for accelerating the training of the model with the increased vocabulary size, which is out of the scope of this thesis.
 
 % % - they observe that multilignual models do have a larger vocabulary than monolingual models (30k to 60k vs 250k). Still it is 2.5k per language on average in xlm-r
 % - they consider each language separately and calculate the optimal vocabulary size for each language
@@ -346,7 +373,7 @@ Although the authors report that the vocabulary size itself is also a good predi
 % - but also for their usecase maximizing pearson is better because they then greedily select the vocab sizes based on ALP and then they want the metric to be linear with the downstream performance - so that the greedy selection is optimal
 
 
-To efficiently allocate the tokenizer vocabulary, the authors hypothesize that the pretraining size of the corpora must be also taken into account. The reason is that for low-resource languages, it is better to allocate less tokens as the language model does not have enough data to learn robust representations for the low-frequency tokens. This observation is in line with the research in machine translation \cite{gowda_finding_2020}. In the end the authors propose a greedy vocabulary allocation algorithm \textsc{VoCap} that maximizes the following objective:
+To efficiently allocate the tokenizer vocabulary, the authors hypothesize that the pretraining size of the corpora must be also taken into account. The reason is that for low-resource languages, it is better to allocate less tokens as the language model does not have enough data to learn robust representations for the low-frequency tokens. This observation is in line with the research in machine translation \cite{gowda_finding_2020}. \xxx{maybe move this somewhere else and discuss the relevance for the MLMs, where we have much more training data than for the supervised MT} In the end the authors propose a greedy vocabulary allocation algorithm \textsc{VoCap} that maximizes the following objective:
 
 $$
 \underset{t_1, \ldots, t_N}{\operatorname{argmax}} \sum_{i=1}^N q_i^\beta \operatorname{ALP}\left(D_i, V_{t_i}^i\right) \text { s.t. }\left|\bigcup_{i=1}^N V_{t_i}^i\right|=T
@@ -354,7 +381,7 @@ $$
 
 Where $N$ is the number of languages, $q_i$ is the probability of sampling training instances from i-th language during pre-training (we describe the per-language sampling in \ref{sec:data_scope}), $\beta$ is a hyperparameter that controls the importance of the corpus size and $T$ is the total vocabulary capacity. 
 
-The \textsc{VoCap} algorithm works by precomputing a series of tokenizer vocabularies with vocabulary sizes from 1\,000 to 50\,000 and computing the ALP metric for each of them. Then it iteratively builds the final vocabulary by:
+The \textsc{VoCap} algorithm works by precomputing a series of tokenizer vocabularies with vocabulary sizes from 1\,000 to 50\,000 for every language and computing the ALP metric for each of them. Then it iteratively builds the final vocabulary by:
 
 \begin{enumerate}
     \item Selecting the language with the highest potential ALP increase compared to the previous selected size.
@@ -371,9 +398,9 @@ After reaching the target size, the algorithm halts and returns the vocabulary c
     \label{alg:vocab_allocation}
 \end{figure}
 
-With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with vocabulary sizes 250\,000 and 500\,000 on a multilingual corpus with 86 languages. They compare the performance of the \textsc{VoCap} tokenizers with tokenizers trained directly on the multilingual corpus. The multilingual corpus is again subsampled before the standard tokenizer training following \citet{devlin_bert_2019,lample_cross-lingual_2019} with an exponential smoothing factor of $0.7$.
+With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with vocabulary sizes 250\,000 and 500\,000 on a multilingual corpus with 86 languages. The authors compare the performance of the \textsc{VoCap} tokenizers with baseline tokenizers trained directly on the multilingual corpus. The multilingual corpus is again subsampled before the standard tokenizer training following \citet{devlin_bert_2019,lample_cross-lingual_2019} with an exponential smoothing factor of $\alpha=0.7$.
 
-The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. The authors show that the \textsc{VoCap} tokenizers improve the ALP metric for the 500\,000 vocabulary size over the baseline across all languages. The improvement is more prominent for low-resource and mid-resource languages compared to the high-resource languages. At the same time the difference between the standard tokenizers with vocabulary sizes 250\,000 and 500\,000 is not significant. The results are shown in \autoref{fig:alp_improvement}.
+The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. The results are shown in \autoref{fig:alp_improvement}. The authors show that the \textsc{VoCap} tokenizers improve the ALP metric for the 500\,000 vocabulary size over the baseline across all languages. The improvement is more prominent for low-resource and mid-resource languages compared to the high-resource languages. At the same time the difference between the standard tokenizers with vocabulary sizes 250\,000 and 500\,000 is negligible.
 
 \begin{figure}
     \centering
