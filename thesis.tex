@@ -6,8 +6,6 @@
 \usepackage[a-2u]{pdfx}
 
 \ifEN\else\usepackage[czech,shorthands=off]{babel}\fi
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 
 % See https://en.wikipedia.org/wiki/Canons_of_page_construction before
 % modifying the size of printable area. LaTeX defaults are great.
@@ -27,13 +25,14 @@
 % that it does not directly support small caps (\textsc) and requires lualatex:
 %\usepackage[usefilenames,RM={Scale=0.88},SS={Scale=0.88},SScon={Scale=0.88},TT={Scale=0.88},DefaultFeatures={Ligatures=Common}]{plex-otf}
 
-% Optionally choose a custom sans-serif fonts (e.g. for figures and tables).
+% Optionally, choose a custom sans-serif fonts (e.g. for figures and tables).
 % Default sans-serif font is usually Latin Modern Sans. Some font packages
 % (e.g. libertinus) replace that with a better matching sans-serif font.
 %\usepackage{tgheros} % recommended and very readable (Helvetica-like)
 %\usepackage{FiraSans} % looks great
 % DO NOT typeset the main text in sans-serif font!
 % The serifs make the text easily readable on the paper.
+
 
 % IMPORTANT FONT NOTE: Some fonts require additional PDF/A conversion using
 % the pdfa.sh script. These currently include only 'tgpagella'; but various

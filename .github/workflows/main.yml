@@ -15,7 +15,7 @@ jobs:
     container: { image: 'aergus/latex' }
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build the thesis
         run: latexmk -pdf thesis && latexmk -pdf abstract-cz && latexmk -pdf abstract-en
       - name: Upload artifacts
