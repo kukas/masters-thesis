@@ -5,11 +5,12 @@
 - co dělat s rozdílnou interpretací vocab overlap mezi 6 lang and 20 lang
 - je v pohodě prezentovat jen alpha=0.0 a vyhodit word-balancing?
 
-## Otázka pro Ondru Duška
-- jak psát captions k obrázkům? Tomáš mi řekl že neví
+## Otázka pro Ondru Duška?
+- jak psát captions k obrázkům?
 
 ## Experimenty
 
+- run new chung / zheng finetunings
 - big chung, big zheng
 
 ## INTRODUCTION
@@ -36,18 +37,30 @@
 
 - ? do první sekce přidat Macro CPT/AR/JSD vs F1 NER, F1 POS, Acc NLI
     - jakože přidat scatterplot, ve kterém je na ose x Macro CPT a na ose y F1 NER
+- explain bootstrapping
 
 ## RESULTS
 - !! napsat veškerý text do sections
+- !! zmínit unigram\_alpha0.25\_alphabet
+- napsat že jsem přetrénoval alpha0.0 a alpha0.3 na víc datech
+
+
+- míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
+
+### reproductions
+- ! kouknout na overlap mezi jazyky sdílejícími stejné písmo
+- možná bych mohl rozdělit UNK-zh a UNK-ostatní jazyky protože čínština je specifická
+
+
+### probings
 
 - ! rozmyslet jestli nedává smysl udělat scatterplot matrix s baseline alpha1.0 místo průměru, když teda chceme "debiasovat"
 
-- možná bych mohl rozdělit UNK-zh a UNK-ostatní jazyky protože čínština je specifická
+- DONE přidat (tgt_cpt+src_cpt)/2 do scatterplot matrix pro crosslingual transfer
 
-- i have more experiments comparing Huggingface and Sentencepiece but is it worth including
-
-- přidat (tgt_cpt+src_cpt)/2 do scatterplot matrix pro crosslingual transfer
 - nápad: udělat ukázat kompatibilitu CPT mezi source a target pomocí heatmapy=
+
+
 
 ## DISCUSSION
 

@@ -1,32 +1,30 @@
-As we can see that except for the Huggingface tokenizers, the alphabet sizes for all tokenizers stay in the stable range of 1000-5000. This corresponds to a comparable number number of UNKs in the holdout data.
-
-
 \begin{table}
 \caption{In this summary table, we present all tokenizers used in this chapter. Along with the Huggingface tokenizers from table \ref{fig:20l_metrics} and Sentencepiece Unigram tokenizers from \ref{fig:data_balance_vs_allocation_per_lang}, we include the tokenizers obtained by replicating the papers \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} in our setting. As we can see, the Huggingface Unigram tokenizer is a clear outlier in terms of all metrics even after taking account the higher alphabet size as explored in \ref{tab:coverage_influence}. Further we can see that the proposed balancing methods are improving over the baselines the authors used (\textit{unigram\_alpha0.5} and \textit{unigram\_alpha0.7}). On the other hand we see that using more balanced data for training the Sentencepiece Unigram (\textit{unigram\_alpha0.0}) does lead to similar overall performance as the replicated methods.
-The rows are sorted by the CPT score.}
+The rows are sorted by the CPT score. \xxx{As we can see that except for the Huggingface tokenizers, the alphabet sizes for all tokenizers stay in the stable range of 1000-5000. This corresponds to a comparable number number of UNKs in the holdout data.
+}}
 \label{tab:all_tokenizers_metrics}
-\begin{tabular}{rlrrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-index & Tokenizer & Alphabet & \# UNKs & CPT & AR & JSD \\
+Tokenizer & Alphabet & \# UNKs & CPT & AR & JSD \\
 \midrule
-0 & Chung\_16clusters & 3699 & 436.8 & 3.719 & 1136.4 & 0.766 \\
-3 & Chung\_8clusters & 4554 & 417.6 & 3.716 & 1160.5 & 0.767 \\
-2 & Chung\_4clusters & 3032 & 550.6 & 3.715 & 1197.4 & 0.768 \\
-11 & huggingface\_bpe\_alpha0.25 & 1000 & 14040.1 & 3.713 & 1253.7 & 0.783 \\
-13 & unigram\_alpha0.0 & 2975 & 617.1 & 3.712 & 1212.9 & 0.767 \\
-1 & Chung\_20clusters & 3855 & 357.0 & 3.711 & 1107.0 & 0.766 \\
-14 & unigram\_alpha0.3 & 2666 & 923.5 & 3.702 & 1190.7 & 0.768 \\
-8 & TokMix\_alpha0.25 & 2497 & 1203.2 & 3.691 & 1163.4 & 0.773 \\
-9 & Zheng\_20langs & 4854 & 245.7 & 3.673 & 1094.5 & 0.765 \\
-10 & bpe\_alpha0.25 & 1215 & 7235.6 & 3.666 & 1212.9 & 0.774 \\
-6 & Liang\_4clusters & 3444 & 466.6 & 3.655 & 1126.8 & 0.770 \\
-15 & unigram\_alpha0.5 & 2859 & 729.0 & 3.618 & 1143.8 & 0.769 \\
-7 & Liang\_8clusters & 4530 & 386.2 & 3.578 & 1044.8 & 0.769 \\
-16 & unigram\_alpha0.7 & 2733 & 883.2 & 3.556 & 1107.1 & 0.770 \\
-4 & Liang\_16clusters & 3935 & 333.2 & 3.541 & 1038.4 & 0.770 \\
-5 & Liang\_20clusters & 3997 & 300.1 & 3.511 & 1001.7 & 0.770 \\
-17 & unigram\_alpha1.0 & 2476 & 1286.3 & 3.442 & 1041.8 & 0.772 \\
-12 & huggingface\_unigram\_alpha0.25 & 12616 & 4.5 & 3.204 & 1010.5 & 0.745 \\
+huggingface\_bpe\_alpha0.25 & 1000 & 14040.1 & 3.713 & 1253.7 & 0.783 \\
+unigram\_alpha0.0 & 2975 & 617.1 & 3.712 & 1212.9 & 0.767 \\
+Chung\_20clusters & 4123 & 270.3 & 3.702 & 1098.7 & 0.766 \\
+unigram\_alpha0.3 & 2666 & 923.5 & 3.702 & 1190.7 & 0.768 \\
+TokMix\_alpha0.25 & 2497 & 1203.2 & 3.691 & 1163.4 & 0.773 \\
+Chung\_16clusters & 3933 & 387.1 & 3.677 & 1102.2 & 0.767 \\
+Liang\_20clusters & 3709 & 341.4 & 3.676 & 1103.2 & 0.765 \\
+Zheng\_20langs & 4854 & 245.7 & 3.673 & 1094.5 & 0.765 \\
+Liang\_16clusters & 3655 & 416.8 & 3.669 & 1106.2 & 0.767 \\
+bpe\_alpha0.25 & 1215 & 7235.6 & 3.666 & 1212.9 & 0.774 \\
+unigram\_alpha0.5 & 2859 & 729.0 & 3.618 & 1143.8 & 0.769 \\
+Chung\_8clusters & 4870 & 684.4 & 3.575 & 1061.1 & 0.770 \\
+unigram\_alpha0.7 & 2733 & 883.2 & 3.556 & 1107.1 & 0.770 \\
+Chung\_4clusters & 3253 & 648.6 & 3.546 & 1071.9 & 0.768 \\
+Liang\_8clusters & 4283 & 568.2 & 3.544 & 1081.6 & 0.767 \\
+Liang\_4clusters & 3698 & 419.2 & 3.512 & 1082.5 & 0.769 \\
+unigram\_alpha1.0 & 2476 & 1286.3 & 3.442 & 1041.8 & 0.772 \\
+huggingface\_unigram\_alpha0.25 & 12616 & 4.5 & 3.204 & 1010.5 & 0.745 \\
 \bottomrule
 \end{tabular}
 \end{table}
