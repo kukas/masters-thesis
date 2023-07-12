@@ -1,5 +1,5 @@
 \begin{table}
-\caption{In this table, we compare the Huggingface and Sentencepiece implementations of the Unigram and BPE algorithms. As shown, the Huggingface Unigram tokenizer is a clear outlier in terms of all metrics. We can see that this is a problem in the implementation as the corresponding Sentencepiece \textit{unigram\_alpha0.3} scores much higher. As we will explore in \ref{tab:coverage_influence}, the different alphabet size does not influence the metrics enough to explain the difference. \xxx{here I can add an experiment with the same alphabet size, to be able to skip the reference} Interestingly, we found that the BPE implementation (\textit{huggingface\_bpe\_alpha0.25}) is better in Huggingface than in Sentencepiece (\textit{bpe\_alpha0.25}).}
+\caption{In this table, we compare the Huggingface and Sentencepiece implementations of the Unigram and BPE algorithms. The Huggingface Unigram tokenizer is a clear outlier in terms of all metrics. We can see that this is a problem in the implementation as the corresponding Sentencepiece tokenizer \textit{unigram\_alpha0.25\_alphabet} scores much higher. Interestingly, we found that the BPE implementation (\textit{huggingface\_bpe\_alpha0.25}) is better in Huggingface than in Sentencepiece (\textit{bpe\_alpha0.25}).}
 \label{tab:hugg_vs_sentpiece}
 \begin{tabular}{lrrrrr}
 \toprule
