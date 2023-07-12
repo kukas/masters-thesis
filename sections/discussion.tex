@@ -1,6 +1,18 @@
 
 \chapter{Discussion}
 
+
+
+\section{On the baseline selection}
+
+All three papers introduced in the previous section utilize two types of baselines to show the improvements of their proposed methods. The first type of baseline is a direct comparison to the existing multilingual language model from which their experiments originate. For all papers it is the original XLM-R model from \citet{conneau_unsupervised_2020}, \citet{chung_improving_2020} additionaly compares their model to mBERT \cite{devlin_bert_2019}. The second type of baseline is obtained by retraining the original XLM-R model with the same training procedures as the proposed methods to control for variables that may influence the results, other than the tokenizer training method. In particular, \citet{chung_improving_2020} specifies that they control for the hyperparameters, number of pretraining languages and number of parameters of the model which as they point out is strongly correlated with the performance of the multilingual model. \cite{conneau_unsupervised_2020}
+
+One difference that the three papers have in common is that they use a higher $\alpha$ scaling factor for the language balance than the original XLM-R paper for the baseline recreation. \citet{zheng_allocating_2021} uses $\alpha=0.7$ while \citet{chung_improving_2020,liang_xlm-v_2023} use $\alpha=0.5$ for their reproduction of XLM-R. This makes the data used for training the model and crucially the tokenizer more biased towards the high-resource languages compared to the original paper, where the factor $\alpha=0.3$ is selected. This choice may affect the balance of the languages in the tokenizer and in turn affect the multilingual performance of the model.
+
+We propose to compare the reproduced methods with the original method from \citet{conneau_unsupervised_2020} by setting the scaling factor $\alpha=0.3$. Moreover, we also propose a second baseline, where we simply use the balancing factor $\alpha=0.0$, which leads to the tokenizer that should be even less biased towards any language. 
+
+
+
 - our comparison is limited to 20 langs and small models
     - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
     - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.

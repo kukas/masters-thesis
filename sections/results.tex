@@ -19,21 +19,121 @@
 % - we check this by comparing the balancing methods on downstream and we do not see any significant differences between them. We do see improvements over the strong baseline in some cases.
 % - therefore we can conclude that balancing does influence NER and POS tagging although with the comparison to alpha0.3, the improvements are very small
 
-In this chapter, we present \xxx{our theoretical findings} and the results of our experiments. First we validate the usefulness of our proposed vocabulary allocation and vocabulary overlap metrics. \xxx{We do this on a theoretical level by analytically contrasting our metrics to existing metrics used in the literature. Then, } We do this by training three tokenizers using the Huggingface Tokenizers library and assessing whether they differ in the metrics we propose. We see that there are significant differences between the three tokenizers. Then we look at how these differences manifest, when we use these tokenizers to train otherwise identical multilingual models. We observe that the differences in tokenizers are reflected in the learned representations of the models. Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank) and when there is less overlap between the languages (high Jensen-Shannon divergence).
+In this chapter, we present \xxx{our theoretical findings} and the results of our experiments. First we validate the usefulness of our proposed vocabulary allocation and vocabulary overlap metrics. \xxx{We do this on a theoretical level by analytically contrasting our metrics to existing metrics used in the literature. Then, } train three tokenizers using the Huggingface Tokenizers library and assess whether they differ in the metrics we propose. We see that there are significant differences between the three tokenizers. Then we look at how these differences manifest, when we use these tokenizers to train otherwise identical multilingual models. We observe that the differences in tokenizers are reflected in the learned representations of the models. Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank) and when there is less overlap between the languages (high Jensen-Shannon divergence).
 
-Then we switch to the original Sentencepiece library, which is used in the related work we replicate \cite{conneau_unsupervised_2020,chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023}. We see that there are differences in the implementation of the Unigram and BPE algorithms between the two libraries and that the Huggingface library yields subpar Unigram tokenizers. We further assess other factors that influence the tokenizers quality, such as the total training data size, the size of the alphabet and most importantly the language imbalance. We observe that we need around 100k-1M lines per language to train a good, multilingual tokenizer. The alphabet size does affect the number of UNK tokens but does not have a significant influence on the rest of the metrics if we stay in the range of 1000-5000 characters. As for the language imbalance, we observe that it does influence the per-language metrics heavily and that it lowers the tokenization quality for the low-resource languages more than it improves it for the high-resource. The last batch of experiment becomes the main baseline we use for comparing the next experiments.
+Then we switch to the original Sentencepiece library, which is used in the related work we replicate \cite{conneau_unsupervised_2020,chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023}. We see that there are differences in the implementation of the Unigram and BPE algorithms between the two libraries and that the Huggingface library yields subpar Unigram tokenizers. We further assess other factors that influence the tokenizers quality, such as the total training data size, the size of the alphabet and most importantly the language imbalance in the training dataset. We observe that we need around 100k-1M lines per language to train a good, multilingual tokenizer. The alphabet size does affect the number of UNK tokens but does not have a significant influence on the rest of the metrics if we stay in the range of 1000-5000 alphabet size. As for the language imbalance, we observe that it does influence the per-language metrics heavily and that it lowers the tokenization quality for the low-resource languages more than it improves it for the high-resource. The last batch of experiment becomes the main baseline we use for comparing the next experiments.
 
 Finally, we replicate the works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} and create several variations of their tokenizers that aim to improve the text segmentations especially for the low-resource languages. We carefully compare these replicated tokenizers with the traditional method of training Sentencepiece Unigram tokenizers on a joint, multilingual corpus. 
 
 While the beforementioned authors do compare their methods to the standard tokenizer training, the crucial difference in our methodology is that we compare their replicated language-balancing methods with the vanilla Sentencepiece tokenizer trained on a \textbf{balanced} multilingual dataset. We find that when compared to this stronger, yet simple baseline, the balancing approaches do not yield significant improvements on our proposed tokenizer metrics per-language nor in overall.
 
-\xxx{rewrite the previous two paragraphs, it is a bit confusing}
+\xxx{maybe rewrite the previous two paragraphs, it is a bit confusing? Now on the second read it doesnt seem so bad}
 
-We then validate our findings by training a second batch of masked language models that differ only in the tokenizer used. We choose the best performing balancing method of \citet{chung_improving_2020} and compare it with Sentencepiece Unigram tokenizers trained on balanced and unbalanced data. We observe that both the Chung method and balanced Unigram improve the language modeling capabilities over the unbalanced baseline on the word-level tasks while having no impact in the sentence-level task. On the other hand, we do not observe significant differences between the Chung method and the simple baseline of training the tokenizer on a balanced set which is in line with our previous assessment using only the tokenizer metrics. Our findings suggest that in our scaled down setting of 20 languages and 120k vocabulary size, the simpler method of training a tokenizer on a joint, balanced corpus is sufficient to create a good multilingual vocabulary that represents all languages well.
+We then validate our findings by training a second batch of masked language models that differ only in the tokenizer used. We choose the clustering method of \citet{chung_improving_2020} and allocation method of \citet{zheng_allocating_2021} and compare them with Sentencepiece Unigram tokenizers trained on balanced and unbalanced data. We observe that methods of Chung, Zheng and balanced Unigram improve the language modeling capabilities over the unbalanced baseline on the word-level tasks while having no impact in the sentence-level task. On the other hand, we do not observe significant differences between the replicated methods and the simple baseline of training the tokenizer on a balanced set which is in line with our previous assessment using only the tokenizer metrics. Our findings suggest that in our scaled down setting of 20 languages and 120k vocabulary size, the simpler method of training a tokenizer on a joint, balanced corpus is sufficient to create a good multilingual vocabulary that represents all languages well.
 
 \section{Analytical comparison of the metrics}
 
-\xxx{- move the comparison of the metrics here}
+In this section we compare the metrics we propose to the metrics used in the literature. We focus on each of our proposed metrics and draw connections to the metrics used in the literature.
+% compare the average tokenized length \cite{chung_improving_2020,liang_xlm-v_2023}, average log probability \cite{zheng_allocating_2021} and we also draw comparison between our average rank and standard information entropy.
+
+\subsection{Characters per token}
+
+The CPT metric is connected to the average tokenized length (description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. The authors suggest using the metric to compare whether one tokenizer splits a selected low-resource language into more tokens compared to another tokenizer. The average tokenized length is defined as the average number of tokens per sentence: 
+\begin{equation}
+    TL(\tau, C_l) = \frac{\sum_{s \in C_l}|\tau(s)|}{|C_l|}
+\end{equation}
+
+Which can be expressed as the product of the reciprocal of CPT metric and the average sentence length, which is language-specific and not dependent on the tokenizer:
+\begin{equation}
+    CPT(\tau, C_l)^{-1} \cdot \frac{\sum_{s \in C_l}|s|}{|C_l|} = \frac{\sum_{s \in C_l}|\tau(s)|}{\sum_{s \in C_l}|s|} \cdot \frac{\sum_{s \in C_l}|s|}{|C_l|} = \frac{\sum_{s \in C_l}|s|}{|C_l|} = TL(\tau, C_l)
+\end{equation}
+
+Even though the metrics are equivalent \xxx{is this the word?}, we will use the CPT metric instead of the average tokenized length because we believe it is more intuitive (higher CPT is better) and it is easier to interpret thanks to the lower bound of 1.
+
+CPT is also similar to another metric used in the literature --- the word fertility metric used in \citet{rust_how_2021}. The word fertility is defined as the average number of tokens per word. The fertility metric has been shown to correlate with downstream performance and therefore seems to be a good metric. The downside of this metric is that it is not language-agnostic because it is not defined for languages without word delimiters such as Chinese or Thai. 
+
+\subsection{Average rank}
+
+Now, we would like to address how does our \textit{average rank} compare to different metrics used in the literature. 
+
+First we examine the \textit{average log probability} (ALP) defined in \citet{zheng_allocating_2021}. This metric is proposed for the same purpose as our AR metric. It is also said to measure language-specific vocabulary capacity and the authors claim that it is "penalized by the subword units with low-frequency". Surprisingly, we can show that the ALP metric is equivalent to the product of negative entropy and average tokenized length.
+
+\xxx{todo fix the notation}
+The ALP is defined as follows. Given a monolingual corpus composed of sentences $C_l = {s_1, ..., s_{|C_l|}}$ from the language $l$ and tokenized with vocabulary $V_\tau$, the average log probability is defined as follows:
+
+\begin{equation}
+    ALP(\tau, C_l) = \frac{1}{|C_l|} \sum_{j=1}^{|C_l|} \sum_{k=1}^{|s_j|} \log p_{uni}(s_{kj})
+\end{equation}
+
+We can simplify the formula by observation that the sum over the log token probabilities over the tokens of the corpus can be expressed as the sum over the unique tokens in the tokenizer vocabulary, provided we have the counts of the tokens in the corpus. We can then express the ALP metric as follows: \xxx{the equation is ugly and i guess the count definition is not needed}
+
+\begin{align}
+    ALP(\tau, C_l) &= \frac{1}{|C_l|} \sum_{t \in V_\tau} count(t, \tau(C_l)) \log \hat{p}_{\tau(C_l)}(t) \\
+    \text{where}~count(t, \tau(C_l)) &= \sum_{j=1}^{|C_l} \sum_{k=1}^{|s_j|} \mathbbm{1}[s_{kj} == t]
+\end{align}
+
+From here we introduce the total number of tokens in the corpus $|C_l|$ and we can rewrite the ALP metric as follows:
+
+\begin{align}
+ALP(\tau, C_l) &= \frac{1}{|C_l|} \sum_{t \in V_\tau} count(t, \tau(C_l)) \log \hat{p}_{\tau(C_l)}(t) \\
+&= \frac{1}{|C_l|} \sum_{t \in V_\tau} \frac{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))}{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))} count(t, \tau(C_l)) \log \hat{p}_{\tau(C_l)}(t) \\
+&= \frac{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))}{|C_l|} \sum_{t \in V_\tau} \frac{count(t, \tau(C_l))}{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))} \log \hat{p}_{\tau(C_l)}(t) \\
+&= \frac{\sum_{t' \in \tau(C_l)} count(t', \tau(C_l))}{|C_l|} \sum_{t \in V_\tau} \hat{p}_{\tau(C_l)}(t) \log \hat{p}_{\tau(C_l)}(t) \\
+&= - TL(\tau, C_l) \cdot H(\hat{p}_{\tau(C_l)})
+\end{align}
+
+\xxx{the last derivation needs "lemma" that $\sum_{t' \in \tau(C_l)} count(t', \tau(C_l)) == \sum_{s \in C_l}|\tau(s)|$}
+
+By analysis of ALP we see that the metric is composed of two metrics that are already well defined. Strangely, the metrics are multiplied together even though the effects of the metrics go against each other. On one hand the lower the token length the better (lower tokenized sentence length means longer and more meaningful tokens), on the other hand arguably, the higher entropy the better (more uniform distribution is better than very unbalanced distribution). It is not clear why would we want to multiply these two metrics together. The authors do not provide this analysis and discussion. \xxx{now interpretaion occured to me: the best ALP is achieved when we have short tokens that are balanced. So actually it could be interesting. But still the authors do not provide this analysis.}
+
+\subsection{Average rank and entropy}
+
+Next we will compare the Average Rank and information entropy. The entropy of the tokenized corpus is defined as follows:
+
+\begin{equation}
+    H(\tau(C_l)) = - \sum_{t \in V_\tau} \hat{p}_{\tau(C_l)}(t) \log \hat{p}_{\tau(C_l)}(t)
+\end{equation}
+
+We see that entropy provides similar characteristics as AR in the sense that more uniform distributions result in higher entropy and more tokens dedicated to a language also result in higher entropy. As we can see, the formula for entropy and AR differ only in the sign and one of the multiplied terms. The sign is not important as we are only interested in the relative values of the metrics. The difference in the multiplied terms is that AR uses the rank of the token, while entropy uses the log-probability of the token. 
+
+To proceed with the analysis, we will assume that the tokens follow the Zipf's distribution. This is a reasonable assumption for natural language data and empirically it holds \xxx{add image}. The Zipf's distribution is defined as follows:
+
+\begin{equation}
+    p_{zipf}(t) = \frac{1}{rank(t) \cdot H_{|V_\tau|}}
+\end{equation}
+
+Where $H_{|V_\tau|}$ is the $|V_\tau|$-th harmonic number used as a normalization constant.
+
+Taking the logarithm of $p_{zipf}(t)$, we get:
+
+\begin{equation}
+    \log p_{zipf}(t) = - \log rank(t) - \log H_{|V_\tau|}
+\end{equation}
+
+Now if we plug in the log-probability of the token into the entropy formula and leave out the constant as we are interested only in the relative values with a fixed vocabulary size, we get:
+
+\begin{equation}
+    H(\tau(C_l)) = \sum_{t \in V_\tau} \hat{p}_{\tau(C_l)}(t) \log rank(t)
+\end{equation}
+
+We see that under the Zipfian assumption, the entropy may be viewed as a "Average Log Rank". This may be empirically observed in the Figure \ref{fig:ar_alr_entropy}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/temp/ar_alr_entropy.jpg}
+    \caption{Average Rank vs Average Log Rank vs Entropy}
+    \label{fig:ar_alr_entropy}
+\end{figure}
+
+This provides us with an intuitive understanding of the difference between the two metrics. AR and entropy can be viewed as being related, with the difference being in their sensitivity to the rank of the tokens. AR, being directly related to rank, is more sensitive to changes in probability in lower-frequency tokens. This is because the weighted mean used in AR is more affected by linear rank values than the logarithmic rank values used in entropy calculation.
+
+\subsection{Jensen-Shannon divergence}
+
+
+Overlap in tokenization has been studied in \citet{wu_beto_2019}, although the metric used there was the absolute number of overlapping tokens. The benefit of JSD is that the metric takes into account the occurence of the shared tokens. This is important because some of the overlapping tokens may be for example infrequent emojis or other special tokens that do not carry much information about the language nor the actual overlap in more meaningful tokens.
+
+\citet{chung_improving_2020} uses the Wasserstein distance (or the "earth mover's distance") to measure the overlap between two languages. We believe this is a mistake as the Wasserstein distance is defined for probability measures (probability distributions on a given metric space). The tokenizer vocabulary has no metric structure and the authors of the article do not specify how they define the metric on the vocabulary.
+
 
 \section{The influence of tokenizer metrics on the language representation quality}
 \label{sec:influence_of_metrics}
