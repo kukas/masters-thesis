@@ -1,18 +1,16 @@
 \begin{table}
-\centering
 \caption{We check the tradeoff of including a large alphabet size. We train Sentencepiece Unigram tokenizers with a different target character coverage and observe the resulting alphabet size, number of UNKs and tokenizer metrics. We observe that the alphabet size grows with the coverage and the number of UNKs decreases, as expected. We observe that at both extremes of the character coverage parameter, the vocabulary allocation decreases. The results indicate that the alphabet size between 1000 and 5000 provides a good tradeoff between the number of UNKs and the allocation metrics, while including all characters in the alphabet does not come with a significant decrease in the allocation metrics (-0.05 CPT).}
 \label{tab:coverage_influence}
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
- coverage &    vocab &  alphabet &      unk &      cpt &          ar &      jsd \\
-    98.0\% & 120000.0 &     539.0 & 17386.50 & 3.631156 & 1115.250107 & 0.748642 \\
+Coverage & Alphabet & \# UNKs & CPT & AR & JSD \\
 \midrule
-    99.5\% & 120000.0 &    1136.0 &  7786.95 & 3.701585 & 1173.092070 & 0.764939 \\
-   99.95\% & 120000.0 &    2678.0 &   910.65 & 3.705273 & 1196.714334 & 0.768465 \\
-  99.995\% & 120000.0 &    4813.0 &    82.95 & 3.695392 & 1188.724073 & 0.768683 \\
- 99.9995\% & 120000.0 &    8226.0 &    10.20 & 3.678148 & 1164.241707 & 0.768564 \\
-99.99995\% & 120000.0 &   12362.0 &     2.30 & 3.656834 & 1133.239755 & 0.768358 \\
-   100.0\% & 120000.0 &   13658.0 &     1.95 & 3.650257 & 1124.126335 & 0.768328 \\
+98.0\% & 539 & 17386.5 & 3.631 & 1115.3 & 0.749 \\
+99.5\% & 1136 & 7786.9 & 3.702 & 1173.1 & 0.765 \\
+99.95\% & 2678 & 910.6 & 3.705 & 1196.7 & 0.768 \\
+99.995\% & 4813 & 83.0 & 3.695 & 1188.7 & 0.769 \\
+99.9995\% & 8226 & 10.2 & 3.678 & 1164.2 & 0.769 \\
+100.0\% & 13658 & 1.9 & 3.650 & 1124.1 & 0.768 \\
 \bottomrule
 \end{tabular}
 \end{table}

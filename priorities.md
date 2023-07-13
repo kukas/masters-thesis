@@ -24,12 +24,22 @@
     - alternative tokenization approaches
     - subword regularization
 
+-vysvětlit UNK tokens
+
 ## METHOD
+- vysvětlit TokMix!!!
 - !! do data hodně vysvětlit, že u toknizerů používáme různá alpha ale u pretrainingu ne.
 - ! vysvětlit, že všechny experimenty jsou probing
 - k AR metrice: je to samozřejmě závislý na vocab size, ale měl bych to poznamenat
+- k JSD metrice: není zřejmé jestli chceme vyšší overlap nebo nižší
 - obecně naše metriky předpokládají nějaký předem daný vocabulary budget, který chceme spravedlivě rozdělit
+
+- vysvětlit UNK tokens, alphabet size
 - taky se zaměřit na OOV and overlap
+
+- vysvětlit in-language and crosslingual probing
+
+- výhoda AR oproti CPT - u čínštiny započítává jednotlivé znaky, což by u CPT nebylo vidět
 
 ## EXPERIMENTS
 - masked token ratio 15%
@@ -46,6 +56,9 @@
 
 
 - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
+
+- opravit grafy language level cpt tak, aby se nemačkaly jazyky v ose x
+    - něco jako každý druhý jazyk posunout trochu dolů
 
 ### reproductions
 - ! kouknout na overlap mezi jazyky sdílejícími stejné písmo
@@ -65,6 +78,8 @@
 ## DISCUSSION
 
 - na konci ukázat jak to funguje na 100 jazycích (se 200k na jazyk můžu natrénovat 100 jazyků)
+
+- from the second batch of experiments it seems that there is some strong correspondence between AR and CPT
 
 ## APPENDIX
 

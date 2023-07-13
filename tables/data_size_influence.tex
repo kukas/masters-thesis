@@ -1,17 +1,16 @@
 \begin{table}
-\centering
-\caption{We measure how much data is generally needed for the tokenizer training. We train handful of Sentencepiece Unigram tokenizers on different amounts of balanced multilingual data. We observe that after 100k-1M lines per language, the tokenizers converge to similar vocabulary allocation and overlap scores.} %The significance of this experiment is that we find out experimentally how much data is needed for the tokenizer training and we can use this information to make sure that we provide enough data for each language for the further experiments.}
+\caption{We measure how much data is generally needed for the tokenizer training. We train handful of Sentencepiece Unigram tokenizers on different amounts of balanced multilingual data. We observe that after 100k-1M lines per language, the tokenizers converge to similar vocabulary allocation and overlap scores.}
 \label{tab:data_size_influence}
 \begin{tabular}{rrrrrr}
 \toprule
- Lines per language &  Alphabet size &  Number of UNKs &      CPT &          AR &      JSD \\
+Lines per lang. & Alphabet & \# UNKs & CPT & AR & JSD \\
 \midrule
-               1000 &           3598 &          520.35 & 3.301636 &  958.414048 & 0.765687 \\
-              10000 &           4725 &          117.75 & 3.597563 & 1089.112498 & 0.765236 \\
-             100000 &           5041 &           65.55 & 3.695797 & 1192.201089 & 0.767133 \\
-            1000000 &           5079 &           62.60 & 3.702038 & 1204.659073 & 0.767357 \\
-            1500000 &           5176 &           55.90 & 3.705119 & 1210.664835 & 0.767348 \\
-            2000000 &           5180 &           56.35 & 3.705109 & 1212.489940 & 0.767327 \\
+1\,000 & 3598 & 520.4 & 3.302 & 958.4 & 0.766 \\
+10\,000 & 4725 & 117.8 & 3.598 & 1089.1 & 0.765 \\
+100\,000 & 5041 & 65.5 & 3.696 & 1192.2 & 0.767 \\
+1\,000\,000 & 5079 & 62.6 & 3.702 & 1204.7 & 0.767 \\
+1\,500\,000 & 5176 & 55.9 & 3.705 & 1210.7 & 0.767 \\
+2\,000\,000 & 5180 & 56.4 & 3.705 & 1212.5 & 0.767 \\
 \bottomrule
 \end{tabular}
 \end{table}

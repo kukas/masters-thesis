@@ -27,3 +27,7 @@ We propose to compare the reproduced methods with the original method from \cite
 
 - Chung has the problem that if low-resource language is assigned to a cluster with high resource, it gets squished
 - Zheng seems nice but the downside is training a large amount of tokenizers to be able to measure ALP - this could be overcome with editing the Sentencepiece implementation
+
+- Chung runs the preliminary expeirment over different cluster numbers and finds the 8 to be best. We see that the best tokenizer is yielded with higher number of clusters ? The reason might be that their method doesnt fix the vocabluary size and higher number of clusters means smaller vocabulary size
+
+- strangely, we see that alpha=0.7/0.5 which are the baselines for chung and liang are quite close to our replications with low number of clusters. Low number of clusters is selected in CHung/linag so whats going on there?
