@@ -60,6 +60,8 @@
 - opravit grafy language level cpt tak, aby se nemačkaly jazyky v ose x
     - něco jako každý druhý jazyk posunout trochu dolů
 
+- opravit pořadí jazyků mezi downstream per language a tokenizer metrics per language
+
 ### reproductions
 - ! kouknout na overlap mezi jazyky sdílejícími stejné písmo
 - možná bych mohl rozdělit UNK-zh a UNK-ostatní jazyky protože čínština je specifická
