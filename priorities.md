@@ -50,10 +50,8 @@
 - explain bootstrapping
 
 ## RESULTS
-- !! napsat veškerý text do sections
-- !! zmínit unigram\_alpha0.25\_alphabet
-- napsat že jsem přetrénoval alpha0.0 a alpha0.3 na víc datech
 
+- porovnat CPT and AR, protipříklad že nejsou stejný: přidání logogramů do čínštiny zvyšuje AR ale ne CPT
 
 - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
 
@@ -71,7 +69,6 @@
 
 - ! rozmyslet jestli nedává smysl udělat scatterplot matrix s baseline alpha1.0 místo průměru, když teda chceme "debiasovat"
 
-- DONE přidat (tgt_cpt+src_cpt)/2 do scatterplot matrix pro crosslingual transfer
 
 - nápad: udělat ukázat kompatibilitu CPT mezi source a target pomocí heatmapy=
 
