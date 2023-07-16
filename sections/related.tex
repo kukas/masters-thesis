@@ -482,7 +482,15 @@ After the preliminary run, they fully train the final model with the 1M vocabula
 % The authors motivate their method by stating that two core principles will be upheld: (1) the vocabularies can be improved by de-emphasizing token sharing between lexically different languages and (2) proper allocation of vocabulary capacity for individual languages. These two points refer to the clustering of the vocabulary and the vocabulary allocation methods described above.
 
 
-% \subsection{Other approaches}
+\subsection{Other approaches}
+
+Several other works propose different methods for tokenization. In the thesis, we focus on methods that propose novel tokenization methods. There are however different approaches for text representation that aim to improve the performance of multilingual language models. We briefly describe some of them in this section.
+
+Instead of costly pretraining of new models, \citet{wang_improving_2019} propose to extend the vocabulary of mBERT with new tokens. By adding new tokens, they lower the out-of-vocabulary rate for selected languages and in turn, improve performance on a variety of tasks. 
+
+One possible avenue for mitigating problems of tokenization is to get rid of tokenization altogether. \citet{clark_canine_2022,tay_charformer_2022,xue_byt5_2022} propose different methods for skipping the input tokenization step and modifying the Transformer architecture to effectively process byte sequences. As \citet{mielke_between_2021} notes, however, these methods come with their own sets of biases and limitations such as lower performance or higher computational demands. 
+
+Another direction of research is focusing on the visual representation of characters and subwords \cite{rust_language_2023,salesky_robust_2021,mansimov_towards_2020}. For example, logographic languages encode semantics in the shapes of the logograms, which is a source of additional information not present in the Unicode representation of the characters. The visual text representation models are also more robust to spelling errors and other artifacts.
 
 % - extending the vocabulary with new tokens
 % - multiview tokenization
