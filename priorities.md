@@ -1,4 +1,26 @@
-# Priorities
+# Final priorities
+
+- DONE large language models
+- DONE napsat related work - liang
+- dopsat discussion
+
+- popsat tokmix
+
+- zkompletovat kód
+
+- vyhodit choice of experimental parameters
+
+- vyhodit finetuning v metodologii
+
+- přidat tabulky s clusteringy do experiments
+
+- vyhodit: 2Here we have departed slightly from the recipe in the papers and used 1M lines per language
+    - popsat doopravdy jak jsem to udělal (opravené)
+
+- projít citace
+- přepsat konec introduction
+
+# Ideas
 
 ## Otázky pro Tomáše
 
@@ -50,6 +72,9 @@
 - explain bootstrapping
 
 ## RESULTS
+
+- !! fix the paper results
+    - consult with Tomasz
 
 - porovnat CPT and AR, protipříklad že nejsou stejný: přidání logogramů do čínštiny zvyšuje AR ale ne CPT
 

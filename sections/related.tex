@@ -25,49 +25,74 @@
 
 % In order to organize Chapter Two, you will first start with an introduction about the general problem and your topic. Then you will provide an advance organizer, which indicates what will be covered in the literature review.
 
-In this thesis we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end we first introduce the reader to the recent field of pretrained language models and cross-lingual models. We explain the concept of subword tokenization and the most common subword tokenization methods. Lastly, we show what problems arise when using pretrained models in multilingual settings and what methods have been proposed to mitigate these problems.
+In this thesis, we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end, we first introduce multilingual language models. Then, we explain the concept of subword tokenization and the most common subword tokenization methods. Lastly, we show what problems arise when using pretrained models in multilingual settings and what methods have been proposed to mitigate these problems.
 
 \tomasz{Rewrite the intro: Be more clear and sepecific}
 \tomasz{Genearal remark: you may create separate section summarizing the metrics of allocation (e.g. fertility, ALP) ala overlap (e.g. Wasserstein)}
 
-\section{Language representation models}
+\section{Multilingual language models}
 
-In recent years we have seen a dramatic rise in the use of neural language models. The premise of these models is the ability to learn effectively from large amounts of unlabeled data. 
+In recent years we have seen a dramatic rise in the use of neural language models. The premise of these models is the ability to learn unsupervised from large amounts of unlabeled data. 
 
-\xxx{TODO}
+We focus on studying the properties of \textbf{multilingual} language models following \citet{devlin_bert_2019} (mBERT) and \citet{conneau_unsupervised_2020} (XLM-R). In these works, a Transformer \cite{vaswani_attention_nodate} based multilingual masked language model is pretrained on sentences sampled from a multilingual corpus of around 100 languages. This allows for cross-lingual transfer, which the authors show on a variety of language understanding tasks.
 
-Language modeling is a task where we predict the next word given the previous words. \cite{manning_foundations_1999} More formally, given a sequence of words $w_1, w_2, \dots, w_{m-1}$, the language model computes the probability of the next word $w_{m}$:
+The multilingual models such as mBERT or XLM-R are composed of the tokenizer, which splits the input text into tokens, the embedding matrix, which encodes the tokens into a sequence of word embeddings, and the Transformer encoder, which transforms the sequence of word embeddings into a sequence of so-called contextualized embeddings. The contextualized embeddings are then fed into a task-specific output layer --- usually a linear layer with a softmax activation. The pretraining is done using the masked language modeling task, where some of the input tokens are stochastically masked out and the model is trained to predict the masked tokens \cite{devlin_bert_2019}.
 
-\begin{equation}
-    P(w_{m} | w_1, w_2, \dots, w_{m-1})
-\end{equation}
+In the case of XLM-R \cite{conneau_unsupervised_2020}, the pretraining is performed on data from 100 languages. The tokenization uses a joint vocabulary for all languages and the model is trained to predict the masked tokens in all languages at once. Even without any supervision, the model is shown to perform well on a variety of cross-lingual tasks.
 
-One method to compute this probability is to use n-gram language models. These models simplify the problem by making a Markov assumption --- the probability of the next word is conditioned only on the previous $n-1$ words:
+The tasks that are usually used to evaluate the performance of the pretrained models are the following \cite{ruder_xtreme-r_2021}:
 
-\begin{equation}
-    P(w_{m} | w_1, w_2, \dots, w_{m-1}) \approx P(w_{m} | w_{m-n+1}, w_{m-n+2}, \dots, w_{m-1})
-\end{equation}
+\begin{itemize}
+    
+    \item \textbf{Question Answering (QA):} This task involves predicting an answer to a question given a context. The context usually consists of a paragraph of text and the model must locate and return the correct answer from this text.
+    \item \textbf{Natural Language Inference (NLI):} In this task, the model is given a pair of sentences and it has to determine the relationship between them: whether they contradict each other, they are logically consistent, or they are unrelated.
+    \item \textbf{Part-of-Speech Tagging (POS):} This is a classic task in NLP where each word in a sentence is assigned a tag that represents its syntactic role (e.g., noun, verb, adjective, etc.).
+    \item \textbf{Named Entity Recognition (NER):} NER involves identifying and classifying named entities in text into predefined categories such as person names, organizations or locations.
+    \item \textbf{Cross-lingual Sentence Retrieval:} In this task, the model is given a query sentence in one language and a collection of candidate sentences in a different language. The goal is to retrieve the sentences from the candidate pool that are the translation of the query.
+\end{itemize}
+    
+These tasks cover a broad spectrum of capabilities, testing basic linguistic understanding and complex reasoning skills. The performance of the pretrained model on these tasks provides a comprehensive measure of its cross-lingual abilities.
 
-\xxx{TODO}
 
-terms I use later that need explaination:
-- embedding layer of mBERT, embedding matrix
-- model size
-- masked language models
-- freezing a model
+% In this thesis, we are interested in the effect of tokenization on the pretrained models. The tokenization step is the first step in the preprocessing pipeline of the pretrained models. It is the step where the input text is split into tokens, which are then used as the input to the neural model. The tokenization step is important because it can affect the performance of the model. For example, if the tokenization method splits a word into two tokens, the model will not be able to learn the meaning of the word as a whole.
 
-QA, NER, NLI, POS
-paraphrase identification
+% At the inference step, the masked language models work by first tokenizing the input sentence, embedding each token as a vector using the learned embedding matrix, passing the embeddings through a Transformer encoder and then 
 
-\section{Multilingual pretrained models}
+% terms I use later that need explaination:
+% - embedding layer of mBERT, embedding matrix
+% - model size
+% - masked language models
+% - freezing a model
 
-\xxx{TODO}
+% QA, NER, NLI, POS
+% paraphrase identification
 
-\subsection{Assessing the ability of multilingual models}
 
-- word level tasks
-- sentence level tasks
-- inlanguage vs crosslingual
+% \xxx{TODO}
+
+% Language modeling is a task where we predict the next word given the previous words. \cite{manning_foundations_1999} More formally, given a sequence of words $w_1, w_2, \dots, w_{m-1}$, the language model computes the probability of the next word $w_{m}$:
+
+% \begin{equation}
+%     P(w_{m} | w_1, w_2, \dots, w_{m-1})
+% \end{equation}
+
+% One method to compute this probability is to use n-gram language models. These models simplify the problem by making a Markov assumption --- the probability of the next word is conditioned only on the previous $n-1$ words:
+
+% \begin{equation}
+%     P(w_{m} | w_1, w_2, \dots, w_{m-1}) \approx P(w_{m} | w_{m-n+1}, w_{m-n+2}, \dots, w_{m-1})
+% \end{equation}
+
+% \xxx{TODO}
+
+% \section{Multilingual pretrained models}
+
+% \xxx{TODO}
+
+% \subsection{Assessing the ability of multilingual models}
+
+% - word level tasks
+% - sentence level tasks
+% - inlanguage vs crosslingual
 
 \section{Subword tokenization}
 
@@ -113,6 +138,7 @@ The implementation in the Tensorflow library follows a different, top-down appro
 \xxx{add inference}
 
 \subsection{Unigram LM}
+\label{sec:unigram}
 
 The Unigram LM tokenizer, sometimes referred to as the SentencePiece tokenizer \citep{kudo_sentencepiece_2018}, was introduced by \citet{kudo_subword_2018}. The motivation for this method was to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
 
@@ -185,17 +211,17 @@ The training of the Unigram LM works in a top-down fashion. It starts with a lar
 %     P(x_i) = \frac{f(x_i)}{\sum_{j=1}^{N} f(x_j)}
 % \end{equation}
 
-\subsection{Alternative tokenization approaches (low priority)}
+% \subsection{Alternative tokenization approaches (low priority)}
 
-\subsubsection{Character-level models}
-\subsubsection{Morphology based models}
+% \subsubsection{Character-level models}
+% \subsubsection{Morphology based models}
 
-\section{Subword regularization (low priority)}
+% \section{Subword regularization (low priority)}
 
-\begin{enumerate}
-    \item bpe dropout
-    \item unigram lm
-\end{enumerate}
+% \begin{enumerate}
+%     \item bpe dropout
+%     \item unigram lm
+% \end{enumerate}
 
 
 % \chapter{Related work}
@@ -246,6 +272,7 @@ In the following subsections, we will describe these three methods. First, we de
 % There have been several attempts to mitigate the language bias in multilingual language models. We will now describe the most prominent ones.
 
 \subsection{Language-Clustered Vocabularies}
+\label{sec:chung}
 
 \begin{figure}[ht]
     \centering
@@ -279,7 +306,7 @@ In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \ci
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.5\textwidth]{img/temp/chung_language_vectors.png}
+    \includegraphics[width=0.9\textwidth]{img/temp/chung_language_vectors.png}
     \caption{Binary vector representations used for language clustering. Figure taken from \cite{chung_improving_2020}.}
     \label{fig:chung_vectors}
 \end{figure}
@@ -333,6 +360,7 @@ The clustered vocabulary is then used to train a smaller and bigger multilingual
 
 
 \subsection{Determining vocabulary capacity for each language}
+\label{sec:zheng}
 
 In the paper \Citetitle{zheng_allocating_2021}, \citeauthor{zheng_allocating_2021} propose a method for determining the optimal vocabulary capacity for each language in a multilingual model. Further they propose a method for constructing a multilingual vocabulary by combining monolingual vocabularies so that the optimal capacity is achieved for each language. In the second part of the paper, the authors propose a method for accelerating the training of the model with the increased vocabulary size, which is out of the scope of this thesis.
 
@@ -408,7 +436,7 @@ After reaching the target size, the algorithm halts and returns the vocabulary c
 
 With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with vocabulary sizes 250\,000 and 500\,000 on a multilingual corpus with 86 languages. The authors compare the performance of the \textsc{VoCap} tokenizers with baseline tokenizers trained directly on the multilingual corpus. The multilingual corpus is again subsampled before the standard tokenizer training following \citet{devlin_bert_2019,lample_cross-lingual_2019} with an exponential smoothing factor of $\alpha=0.7$.
 
-The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. The results are shown in \autoref{fig:alp_improvement}. The authors show that the \textsc{VoCap} tokenizers improve the ALP metric for the 500\,000 vocabulary size over the baseline across all languages. The improvement is more prominent for low-resource and mid-resource languages compared to the high-resource languages. At the same time the difference between the standard tokenizers with vocabulary sizes 250\,000 and 500\,000 is negligible.
+The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. The results are shown in \autoref{fig:alp_improvement}. The authors show that the \textsc{VoCap} tokenizers improve the ALP metric for the 500\,000 vocabulary size over the baseline across all languages. The improvement is more prominent for low-resource and mid-resource languages compared to high-resource languages. At the same time the difference between the standard tokenizers with vocabulary sizes 250\,000 and 500\,000 is negligible.
 
 \begin{figure}
     \centering
@@ -417,25 +445,50 @@ The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. Th
     \label{fig:alp_improvement}
 \end{figure}
 
-To validate these results, the authors then pretrain masked language models using the standard and \textsc{VoCap} tokenizers and conduct experiments on tasks from the XTREME benchmark \cite{hu_xtreme_nodate}. The comparison is done on natural language inference, paraphrase identification, part of speech tagging, named entity recognition and question answering. The averaged results over all tasks suggest that the \textsc{VoCap} tokenizers outperform the standard tokenizers by 0.4 percentage points for the 250\,000 vocabulary size and 1.7 percentage points for the increased 500\,000 vocabulary size. When investigating further the results for XNLI and NER, the authors show that the improvements are gained on the low-resource and mid-resource languages. This is consistent with the ALP improvement results.
+To validate these results, the authors then pretrain masked language models using the standard and \textsc{VoCap} tokenizers and conduct experiments on tasks from the XTREME benchmark \cite{hu_xtreme_nodate}. The comparison is done on natural language inference, paraphrase identification, part of speech tagging, named entity recognition and question answering. The averaged results over all tasks suggest that the \textsc{VoCap} tokenizers outperform the standard tokenizers by 0.4 percentage points for the 250\,000 vocabulary size and 1.7 percentage points for the increased 500\,000 vocabulary size. When investigating further the results for XNLI and NER, the authors show that improvements are gained on the low-resource and mid-resource languages. This is consistent with the ALP improvement results.
 
 % With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with sizes 250k and 500k and show that for larger dictionaries (500k vocabulary size) their method outperforms the standard method of training a joint vocabulary on the union of the corpora. 
 
 
 \subsection{Combination of methods for scaling the vocabulary size}
 
-In the paper \textit{XLM-V: Overcoming the Vocabulary Bottleneck in Multilingual Masked Language Models}, \citeauthor{liang_xlm-v_2023} propose a method for combining the two methods described above with the aim to scale to even larger vocabulary sizes. 
+In the paper \textit{XLM-V: Overcoming the Vocabulary Bottleneck in Multilingual Masked Language Models}, \citeauthor{liang_xlm-v_2023} introduce a new multilingual language model with a 1M token vocabulary. To create this large vocabulary, the authors propose a new tokenization method by combining the two methods described in the previous sections \ref{sec:chung} and \ref{sec:zheng}. 
 
-The authors motivate their method by stating that two core principles will be upheld: (1) the vocabularies can be improved by de-emphasizing token sharing between lexically different languages and (2) proper allocation of vocabulary capacity for individual languages. These two points refer to the clustering of the vocabulary and the vocabulary allocation methods described above.
+% In this subsection, we describe our method for constructing multilingual vocabularies. At a high level, we (1) train individual monolingual sentencepiece models (SPM) for each language in our dataset using the Unigram Language Model (ULM) algorithm (Kudo and Richardson, 2018), (2) use the per-language vocabularies to construct lexical representation vectors for each language, (3) cluster the lexical representation vectors using K-Means, assign vocabulary capacities for each cluster using the ALP, and then construct per-cluster vocabularies using the ULM algorithm, and (4) create the final multilingual vocabulary by taking the union of the vocabularies for each cluster.
 
-The method 
+The proposed method consists of the following steps: (1) training monolingual tokenizers for each language using Unigram LM, (2) computing language vectors using negative log probability of the tokens, (3) finding a clustering of the languages with the k-means algorithm using the language vectors, (4) finding an appropriate vocabulary size for each cluster using the ALP from \citet{zheng_allocating_2021}, (5) training a tokenizer for each cluster using Unigram LM and (6) combining the tokenizers into a single multilingual tokenizer.
+
+As we can see, the overall method is similar to \citet{chung_improving_2020} with small adjustments. More concretely, the authors train larger monolingual Sentencepiece Unigram tokenizers in the first step, use a different method for computing the language vectors in the second step and use the ALP metric for finding the appropriate vocabulary sizes in the fourth step. We now describe each altered step in more detail.
+
+For training the monolingual tokenizers, the authors suggest using a larger vocabulary size of 30\,000 instead of 8\,000 used in \citet{chung_improving_2020}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/temp/liang_language_vectors.png}
+    \caption{Negative log probability vector representations used for language clustering. Compare to \autoref{fig:chung_vectors}. Figure taken from \cite{liang_xlm-v_2023}.}
+    \label{fig:liang_vectors}
+\end{figure}
+
+The language vectors in \citet{chung_improving_2020} are binary with 1 corresponding to each subword present in the vocabulary of a given language. In contrast, \citet{liang_xlm-v_2023} propose to use the negative log probability of the subwords as the language vectors (see \autoref{fig:liang_vectors}). The logits are the output of the Unigram LM tokenization method as explained in \autoref{sec:unigram}. The authors argue that "weighting each token by its likelihood better represents the lexical fingerprint of a language".
+
+Lastly, the authors argue that the method of \citet{chung_improving_2020} assigns deficient vocabulary sizes to some of the clusters, pointing out an example of a cluster containing Chinese and Japanese with a capacity of 28,593 tokens. The authors propose to use the ALP to allocate appropriate vocabulary sizes to each cluster. The exact method is unclear from the paper but to the best of our understanding, the method followed by the authors was to use the publicly available code and monolingual tokenizers from \citet{zheng_allocating_2021} and re-run the \textsc{VoCap} algorithm on their CC100 data instead of Wikipedia data. In this way, the authors obtained the optimized vocabulary sizes for the CC100 dataset for each language covered by \citet{zheng_allocating_2021}. Any language that was not included in the public implementation of \textsc{VoCap} was set to a fixed size of 2000 vocabulary size. The optimized vocabulary sizes for each language were then summed according to the cluster assignments to get the cluster vocabulary sizes. To achieve a specified target vocabulary size (500k, 1M, 1.5M, 2M), the authors then take the cluster vocabulary sizes and rescale them so that the sum equals the target size. As noted in \autoref{sec:chung}, the union of the vocabularies is not guaranteed to be equal to the target size because of the overlapping tokens between the cluster vocabularies. The authors report that the 1M vocabulary has an actual size of 901\,629 tokens.
+
+After creating the vocabulary, the authors then train a large multilingual masked language model based on XLM-R following \citet{conneau_unsupervised_2020}. 
+
+They run a shorter preliminary training with differently sized vocabularies (1M and 1.5M) and compare the performance of their proposed method to the original clustering method by \citet{chung_improving_2020} scaled to 1M vocabulary size and XLM-R with the original tokenization method scaled to 1M vocabulary size. They compare the results on the XNLI task and show that their method outperforms the other two methods by 1.11 and 1.34 percentage points respectively. 
+
+After the preliminary run, they fully train the final model with the 1M vocabulary size on 2.5TB of data and compare the performance to the original XLM-R model with 250k vocabulary size. They show that their model significantly outperforms the original XLM-R model on a variety of language understanding tasks.
+
+% The authors motivate their method by stating that the original XLM-R vocabulary is 
+
+% The authors motivate their method by stating that two core principles will be upheld: (1) the vocabularies can be improved by de-emphasizing token sharing between lexically different languages and (2) proper allocation of vocabulary capacity for individual languages. These two points refer to the clustering of the vocabulary and the vocabulary allocation methods described above.
 
 
-\subsection{Other approaches}
+% \subsection{Other approaches}
 
-- extending the vocabulary with new tokens
-- multiview tokenization
-- etc, go through my notes
+% - extending the vocabulary with new tokens
+% - multiview tokenization
+% - etc, go through my notes
 
 % identify the gaps in the current research
 % - No systematic comparison of the metrics
