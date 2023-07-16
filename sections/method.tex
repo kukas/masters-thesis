@@ -7,6 +7,70 @@ In this chapter, we introduce the methodology for experiments conducted in this 
 
 \section{Methodology overview}
 
+Methodology
+
+what do we want to measure? The effects of tokenization over the languages, focus on the differences the methods make on low resource vs high resource and how this translates to downstream tasks.b
+
+- data sampling
+    - !! do data hodně vysvětlit, že u toknizerů používáme různá alpha ale u pretrainingu ne.
+
+- introduce the metrics
+    - obecně naše metriky předpokládají nějaký předem daný vocabulary budget, který chceme spravedlivě rozdělit
+    - CPT, AR, JSD
+        - k AR metrice: je to samozřejmě závislý na vocab size, ale měl bych to poznamenat
+        - výhoda AR oproti CPT - u čínštiny započítává jednotlivé znaky, což by u CPT nebylo vidět
+
+        - k JSD metrice: není zřejmé jestli chceme vyšší overlap nebo nižší
+
+    - interpretation of the metrics - CPT, AR high good, JSD not sure
+    - also mention UNK and alphabet size
+- kinds of experiments
+    - tokenizers only
+        - eg: training data size, alphabet size, data imbalance
+    - tokenizers + MLM training
+        - eg: Huggingface tokenizers, replications
+    
+- introduce the evaluation procedure
+    - intrinsic evaluation
+        - overall metrics - why macro average over languages
+            - how to average JSD - all pairs
+        - per language metrics - why delta from some baseline, metrics are different for different languages so we need to normalize
+    - extrinsic evaluation
+        - in-language / cross-language
+            - overall - why macroaverage, per-language, how to do per-language in cross-lingual where there are pairs (we focus on target results)
+            - seeds, averaging, bootstrapping
+        - probing vs finetuningn
+            - vysvětlit proč jsou všechny experimenty probing a jak se to liší a proč jsme to vybrali
+        - tasks NLI, NER, POS tagging, ...
+    - correlation between intrinsic and extrinsic
+        - how to compute the correlation
+        - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
+
+
+Experiments
+- data, languages - how did we select them
+- vocabulary size - what did we pick, how does it relate to the previous work
+- tokenizers replication
+    - what are the variant we create
+    - add the cluster assignment tables
+    - přidat víc podrobností o našich replikacích - jaké clustery jsme dostali (Chung, Liang), jaké vocab sizes jsme alokovali (Zheng)
+
+- Huggingface vs Sentencepiece
+    - what are the parameters, how do we choose them or do we test them, what are the defaults
+    - tokenizer training - memory requirements, time requirements   
+- vanilla Unigram tokenizers
+- TokMix
+
+- maybe a table with all the tokenizers and their explanations
+
+- training MLMs - technical details
+    - machines
+    - masked token ratio 15%
+
+- probing MLMs - technical details
+    - chosen tasks for each experiment, metrics for tasks
+    
+
 % - training the models
 %     - we train with 10K steps, 8192 batch size, 128 sequence length
 %     - on 2x A100

@@ -1,14 +1,19 @@
 # Final priorities
+- methodology
+- experiments
+- discussion
+- introduction
+- abstract
+- poděkování
+- code readme and cleanup
+
+
 
 - DONE large language models
 - DONE napsat related work - liang
-- dopsat discussion
 
 - popsat tokmix
 
-- zkompletovat kód
-
-- vyhodit choice of experimental parameters
 
 - vyhodit finetuning v metodologii
 
@@ -19,6 +24,13 @@
 
 - projít citace
 - přepsat konec introduction
+
+# Finished chapters
+
+- Results = (finished), waiting for Tomasz comments
+    - possibly add the comparison between CPT and AR
+- Background = finished
+    - leda přidat pixel networks, character level, a přidávání tokenů do vocabu
 
 # Ideas
 
@@ -32,7 +44,7 @@
 
 ## Experimenty
 
-- run new chung / zheng finetunings
+- DONE run new chung / zheng finetunings
 - big chung, big zheng
 
 ## INTRODUCTION
@@ -49,36 +61,19 @@
 -vysvětlit UNK tokens
 
 ## METHOD
-- vysvětlit TokMix!!!
-- !! do data hodně vysvětlit, že u toknizerů používáme různá alpha ale u pretrainingu ne.
-- ! vysvětlit, že všechny experimenty jsou probing
-- k AR metrice: je to samozřejmě závislý na vocab size, ale měl bych to poznamenat
-- k JSD metrice: není zřejmé jestli chceme vyšší overlap nebo nižší
-- obecně naše metriky předpokládají nějaký předem daný vocabulary budget, který chceme spravedlivě rozdělit
-
-- vysvětlit UNK tokens, alphabet size
-- taky se zaměřit na OOV and overlap
 
 - vysvětlit in-language and crosslingual probing
 
-- výhoda AR oproti CPT - u čínštiny započítává jednotlivé znaky, což by u CPT nebylo vidět
 
 ## EXPERIMENTS
-- masked token ratio 15%
-- přidat víc podrobností o našich replikacích - jaké clustery jsme dostali (Chung, Liang), jaké vocab sizes jsme alokovali (Zheng)
 
 - ? do první sekce přidat Macro CPT/AR/JSD vs F1 NER, F1 POS, Acc NLI
     - jakože přidat scatterplot, ve kterém je na ose x Macro CPT a na ose y F1 NER
-- explain bootstrapping
 
 ## RESULTS
 
 - !! fix the paper results
     - consult with Tomasz
-
-- porovnat CPT and AR, protipříklad že nejsou stejný: přidání logogramů do čínštiny zvyšuje AR ale ne CPT
-
-- míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
 
 - opravit grafy language level cpt tak, aby se nemačkaly jazyky v ose x
     - něco jako každý druhý jazyk posunout trochu dolů
