@@ -34,7 +34,7 @@ In this thesis, we investigate the effect of subword tokenization on the perform
 
 In recent years we have seen a dramatic rise in the use of neural language models. The premise of these models is the ability to learn unsupervised from large amounts of unlabeled data. 
 
-We focus on studying the properties of \textbf{multilingual} language models following \citet{devlin_bert_2019} (mBERT) and \citet{conneau_unsupervised_2020} (XLM-R). In these works, a Transformer \cite{vaswani_attention_nodate} based multilingual masked language model is pretrained on sentences sampled from a multilingual corpus of around 100 languages. This allows for cross-lingual transfer, which the authors show on a variety of language understanding tasks.
+We focus on studying the properties of \textbf{multilingual} language models following \citet{devlin_bert_2019} (mBERT)\footnote{We cite the monolingual BERT paper as the mBERT model does not have an associated publication. In the literature, sometimes the mBERT Github README is cited for the multilingual variant\cite{devlin_bertmultilingualmd_2019}} and \citet{conneau_unsupervised_2020} (XLM-R). In these works, a Transformer \cite{vaswani_attention_nodate} based multilingual masked language model is pretrained on sentences sampled from a multilingual corpus of around 100 languages. This allows for cross-lingual transfer, which the authors show on a variety of language understanding tasks.
 
 The multilingual models such as mBERT or XLM-R are composed of the tokenizer, which splits the input text into tokens, the embedding matrix, which encodes the tokens into a sequence of word embeddings, and the Transformer encoder, which transforms the sequence of word embeddings into a sequence of so-called contextualized embeddings. The contextualized embeddings are then fed into a task-specific output layer --- usually a linear layer with a softmax activation. The pretraining is done using the masked language modeling task, where some of the input tokens are stochastically masked out and the model is trained to predict the masked tokens \cite{devlin_bert_2019}.
 
@@ -96,17 +96,19 @@ These tasks cover a broad spectrum of capabilities, testing basic linguistic und
 
 \section{Subword tokenization}
 
-Subword tokenization methods split up words into subword units, which are then used as the input tokens for the neural models. This is done to mitigate the out-of-vocabulary (OOV) problem and to reduce the computational complexity of the softmax cross-entropy loss over a very large output vocabulary. The most common subword tokenization methods are Byte Pair Encoding (BPE), Unigram LM and Wordpiece.
+Subword tokenization methods split up words into subword units, which are then used as the input tokens for the neural models. This step is generally needed for pretrained models because including all words in the model vocabulary would be computationally infeasible. Subword tokenization allows scaling down the vocabulary size by splitting up rare words into subword units. Another advantage of subword tokenization over word tokenization is that it allows the model to generalize to unseen words by composing the embeddings of the subword units. For word tokenization methods, the missing words are called out-of-vocabulary tokens and subword tokenization methods mitigate largely this issue. In this section, we describe the most common subword tokenization methods used in large multilingual language models.
 
-\xxx{TODO: define vocabulary - set of all tokens, vocabulary size}
+% This is done to mitigate the out-of-vocabulary (OOV) problem and to reduce the computational complexity of the softmax cross-entropy loss over a very large output vocabulary. The most common subword tokenization methods are Byte Pair Encoding (BPE), Unigram LM and Wordpiece.
+
+% \xxx{TODO: define vocabulary - set of all tokens, vocabulary size}
 
 \subsection{Byte Pair Encoding (BPE)}
 
-The Byte Pair Encoding (BPE) algorithm was introduced by \citet{Sennrich2015}. They have adapted a compression algorithm \todo{cite Gage 1994} to learn a subword vocabulary from a corpus. This method was shown to improve the performance of neural machine translation (NMT) models. BPE was subsequently used for some of the well known pretrained models such as GPT-2 \citep{Radford2019}.
+The Byte Pair Encoding (BPE) algorithm was introduced by \citet{sennrich_neural_2016}. They have adapted a compression algorithm \cite{gage_new_1994} to learn a subword vocabulary from a corpus. This method was shown to improve the performance of neural machine translation (NMT) models. BPE was subsequently used for some of the well-known pretrained models such as GPT-2 \citep{radford_improving_2018}.
 
 The principle of BPE is to iteratively merge the most frequent byte pairs in the corpus until the vocabulary size reaches the target size. The algorithm starts with a vocabulary of unique characters used in the input corpus. Using this vocabulary, we then compute the frequency of every character pair and merge the most frequent pair to create a new subword unit. We recompute the frequency of the subword unit pairs and repeat the process until the target vocabulary size is reached.
 
-\xxx{add info about inference}
+To tokenize an input text, the BPE algorithm then iteratively merges the pairs in the same order as they were merged during training. The algorithm stops when it has merged all pairs in the vocabulary. The output of the algorithm is a sequence of subword units that can be used as the input tokens for the neural model.
 
 \begin{algorithm}
     \begin{algorithmic}
@@ -129,13 +131,15 @@ The principle of BPE is to iteratively merge the most frequent byte pairs in the
 
 \subsection{Wordpiece}
 
-First introduced in \cite{SchusterandNakajima2012)} the Wordpiece algorithm is a similar technique to BPE. It is used in the well known pretrained models such as BERT \citep{devlin_bert_2019}. The training is based on greedy merging of the subword units. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an n-gram language model trained on the corpus.
+First introduced in \cite{schuster_japanese_2012} the Wordpiece algorithm is a similar technique to BPE. It is used in the BERT \citep{devlin_bert_2019} masked language model. The training is based on a greedy merging of the subword units similar to BPE. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an unigram language model trained on the corpus.
 
-Contrary to BPE and Unigram LM, there is no official, public implementation of the original Wordpiece algorithm. There are several implementations of the algorithm available but these diverge from the original algorithm. For example, the implementation in the HuggingFace library \citep{wolf_transformers_2020} does not use the n-gram language model to merge the subword units. Instead, the training follows the BPE procedure and only adds prefixes to the subword units to mimic the output format of the BERT Wordpiece implementation. \xxx{add a link into the source code?}
+Contrary to BPE and Unigram LM, there is no official, public implementation of the original Wordpiece algorithm. There are several implementations of the algorithm available but these diverge from the original algorithm. For example, the implementation in the Huggingface library \citep{wolf_transformers_2020} does not use the unigram language model to merge the subword units. Instead, the training follows the BPE procedure and only adds prefixes to the subword units to mimic the output format of the BERT Wordpiece implementation. \footnote{See the \href{https://github.com/huggingface/tokenizers/blob/291b2e23ae81cf94738835852213ce120152d121/tokenizers/src/models/wordpiece/trainer.rs}{Wordpiece implementation} in the Huggingface Tokenizers library.}
 
-The implementation in the Tensorflow library follows a different, top-down approach to create the subword vocabulary. It starts with a vocabulary of words and then iteratively splits the words into subword units to reach a target vocabulary size.
+% https://github.com/huggingface/tokenizers/blob/291b2e23ae81cf94738835852213ce120152d121/tokenizers/src/models/wordpiece/trainer.rs#L92
 
-\xxx{add inference}
+The implementation in the Tensorflow library follows a different, top-down approach to creating the subword vocabulary. It starts with a vocabulary of words and then iteratively splits the words into subword units to reach a target vocabulary size. \footnote{See the Tensorflow documentation for the \href{https://www.tensorflow.org/text/api_docs/python/text/WordpieceTokenizer}{Wordpiece tokenizer}.}
+
+% 
 
 \subsection{Unigram LM}
 \label{sec:unigram}
@@ -155,7 +159,7 @@ Where $\mathcal{S}(X)$ is the set of all possible segmentations of the input sen
     P(x) = \prod_{i=1}^{|x|} p(x_i)
 \end{equation}
 
-Here, the subword occurence probabilities cannot be computed using occurence statistics in the corpus. With a given vocabulary, there is usually many possibilites on how to segment the input sentence from character level granularity to word level. Instead, the Unigram LM uses the Expectation-Maximization (EM) algorithm to estimate the subword occurrence probabilities $p(x_i)$. The EM algorithm maximizes the marginal likelihood $\mathcal{L}$ with respect to the latent subword probabilities $p(x_i)$:
+Here, the subword occurrence probabilities cannot be computed using occurrence statistics in the corpus since we do not have the final vocabulary yet. Also, with a given vocabulary, there are usually many possibilities on how to segment the input sentence from character level granularity to word level. Instead, the Unigram LM uses the Expectation-Maximization (EM) algorithm to estimate the marginal subword occurrence probabilities $p(x_i)$ over all segmentation variants. The EM algorithm maximizes the marginal likelihood $\mathcal{L}$ with respect to the latent subword probabilities $p(x_i)$:
 
 \begin{equation}
     \mathcal{L} = \sum_{s=1}^{|D|} \log (P(X^{(s)})) = \sum_{s=1}^{|D|} \log( \sum_{x \in \mathcal{S}(X^{(s)})} P(x) )
@@ -163,7 +167,7 @@ Here, the subword occurence probabilities cannot be computed using occurence sta
 
 By maximizing the marginal likelihood, the Unigram LM considers all possible segmentations of the input sentences when estimating the subword occurrence probabilities $p(x_i)$. After optimization of $p(x)$, it is then possible to compute the most probable segmentation $x^\star$ for a given input sentence $X$ using the Viterbi algorithm.
 
-The training of the Unigram LM works in a top-down fashion. It starts with a large seed vocabulary of the most frequent character n-grams. These character n-grams are then iteratively pruned down to the target vocabulary size in the following way:
+The training of the Unigram LM works in a top-down fashion. It starts with a large seed vocabulary of the most frequent character n-grams. The default setting is seeding the vocabulary with top 1M most frequent character n-grams with $n \leq 16$. These character n-grams are then iteratively pruned down to the target vocabulary size in the following way:
 
 \begin{enumerate}
     \item With a given vocabulary $\mathcal{V}$, estimate the subword occurrence probabilities $p(x_i)$ using the EM algorithm.
@@ -173,7 +177,9 @@ The training of the Unigram LM works in a top-down fashion. It starts with a lar
     \item Repeat this process with the new vocabulary $\mathcal{V}$ until the target vocabulary size is reached.
 \end{enumerate}
 
-\xxx{-> bostrom has really nice pseudocode}
+After the training, the Unigram LM algorithm outputs a subword vocabulary $\mathcal{V}$ and the corresponding marginal subword probabilities $p(x_i)$. Tokenization of a new input is then done by running the Viterbi algorithm to sample top-n segmentations of the input sentence. 
+
+% \xxx{-> bostrom has really nice pseudocode}
 
 % For a given vocabulary $\mathcal{V}$,
 
@@ -229,33 +235,28 @@ The training of the Unigram LM works in a top-down fashion. It starts with a lar
 
 \section{Tokenization with many languages}
 
-Despite the recent advances in language modeling, the tokenization methods used in the multilingual language models remain mostly unchanged. The first models trained on multiple languages, such as mBERT \cite{devlin_bert_2019} and XLM \cite{lample_cross-lingual_2019} use the same tokenization methods as their monolingual versions - namely the Wordpiece and BPE algorithms. Later language models such as XLM-R \cite{conneau_unsupervised_2020}, mBART \cite{liu_multilingual_2020} or mT5 \cite{xue_mt5_2021} use the Unigram LM algorithm to learn the subword vocabulary. The most recent multilingual generative models, such as the 176B parameter BLOOM model \cite{scao_bloom_2022} or the XGLM \cite{lin_few-shot_2022} use the Byte-level BPE and Unigram LM algorithms respectively.
-
-
-% - section about how language models are still using the tokenization techniques such as BPE and Unigram LM that were developed for monolingual models.
-% - example models: mBERT uses Wordpiece, XLM uses BPE, XLM-R uses Unigram LM. More curHow can we evaluate and improve them?  (va, vo)
-% - mBART uses Unigram LM, T5 and mT5 uses Unigram LM. Even more recently, the 176B parameter BLOOM model uses Byte-level BPE and the multilingual generative model XGLM uses Unigram LM. Most of these models use the SentencePiece implementation and run the tokenization algorithm on the concatenation of all languages in the training data.
-
+Despite the recent advances in language modeling, the tokenization methods used in multilingual language models remain mostly unchanged. The first models trained on multiple languages, such as mBERT \cite{devlin_bert_2019,devlin_bertmultilingualmd_2019} and XLM \cite{lample_cross-lingual_2019} use the same tokenization methods as their monolingual versions - namely the Wordpiece and BPE algorithms. Later language models such as XLM-R \cite{conneau_unsupervised_2020}, mBART \cite{liu_multilingual_2020} or mT5 \cite{xue_mt5_2021} use the Unigram LM algorithm to learn the subword vocabulary. The most recent multilingual generative models, such as the 176B parameter BLOOM model \cite{scao_bloom_2022} or the XGLM \cite{lin_few-shot_2022} use the Byte-level BPE and Unigram LM algorithms respectively.
 
 The methods these models use to tokenize the input text are the same as the ones used in the monolingual models. The main difference is that the tokenization training algorithm is run on all of pretraining data. This means that the tokenizer is trained on all languages at once. 
 
-As we have pointed out previously, the pretraining data is not evenly distributed across languages. High resource languages such as English or Indonesian may have hundreds times the amount of training data than low resource languages such as Swahili or Amharic. 
-\tomasz{Here or even better before, explain what low-/high-resource mean,
- I.e. the distinction is made based on data available from the web not number of speakers. You may cite Joshi et al.}
-\tomasz{The following desciption should be in a separate section: Subsampling}
-To account for the discrepancy in the number of training examples per language, the training data is usually subsampled with a bias towards low-resource languages. This subsampling is performed both for the model pretraining and the tokenizer training \cite{devlin_bert_2019,lample_cross-lingual_2019}. \xxx{cite maybe the mBERT github page rather than bert paper. But I don't know how to cite it pls help}
+As we have pointed out previously, the pretraining data is not evenly distributed across languages. High-resource languages such as English or Indonesian may have hundreds of times the amount of training data than low-resource languages such as Swahili or Amharic.\footnote{By high-resource and low-resource languages, we mean languages with generally a lot or little data available in the pretraining corpora such as Wikipedia dumps or internet crawls. This may not necessarily correspond to the number of speakers of the language.}
+% \tomasz{Here or even better before, explain what low-/high-resource mean, I.e. the distinction is made based on data available from the web not number of speakers. You may cite Joshi et al.}
+% \tomasz{The following desciption should be in a separate section: Subsampling}
 
-We describe the subsampling method in detail in Section \ref{sec:data_scope}. In a nutshell, the subsampling is done by adjusting the probability of sampling a line $p(l)$ from a language $l$. The probabilities are exponentiated with a factor $\alpha$ and renormalized to sum to 1. With $\alpha=0.0$, the subsampling is uniform across languages. With $\alpha=1.0$, the smoothing has no effect. The usual values chosen for this factor $\alpha$ are 0.7 \cite{devlin_bert_2019}. 0.5 \cite{lample_cross-lingual_2019} and 0.3 \cite{conneau_unsupervised_2020}. Throughout this thesis, we will refer to this subsampling method and the factor $\alpha$ often. When we refer to the factor $\alpha$, we mean the factor used for the tokenizer training.
+
+To account for the discrepancy in the number of training examples per language, the training data is usually subsampled with a bias towards low-resource languages. This subsampling is performed both for the model pretraining and the tokenizer training \cite{devlin_bertmultilingualmd_2019,lample_cross-lingual_2019}.
+
+We describe the subsampling method in detail in Section \ref{sec:data_scope}. In a nutshell, the subsampling is done by adjusting the probability $p(l)$ of sampling a line from a language $l$. The probabilities are exponentiated with a factor $\alpha$ and renormalized to sum to 1. With $\alpha=0.0$, the subsampling is uniform across languages. With $\alpha=1.0$, the smoothing has no effect. The usual values chosen for this factor $\alpha$ are 0.7 \cite{devlin_bert_2019}. 0.5 \cite{lample_cross-lingual_2019} and 0.3 \cite{conneau_unsupervised_2020}. Throughout this thesis, we will refer to this subsampling method and the factor $\alpha$ often. When we refer to the factor $\alpha$, we mean the factor used for the tokenizer training. We will use a fixed, separate $\alpha$ for pretraining data sampling.
 
 \subsection{Bias towards high-resource languages}
 
-As \citet{rust_how_2021} have shown, the bias towards high-resource languages however still persists. They compare the performance of the multilingual model mBERT and language specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different langugaes, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. 
+As \citet{rust_how_2021} have shown, the bias towards high-resource languages however still persists, even after subsampling the training data. The authors compare the performance of the multilingual model mBERT and language-specific variants of BERT. By finetuning and evaluating on five different tasks across nine typologically different languages, they show that there is a performance gap between the multilingual and monolingual models. By further examination they determine that the performance gap may be explained by 1) pretraining data size and 2) the choice of tokenizer and its suitability for the tested language. 
 
-They show that the performance of mBERT can be improved for a specific language by switching to a monolingual vocabulary and retraining only the embedding layer of mBERT. The model with a dedicated vocabulary outperforms the vanilla mBERT on a variety of tasks, which indicates that the multilignual vocabulary of mBERT is not optimal. 
+They show that the performance of mBERT can be improved for a specific language by switching to a monolingual vocabulary and retraining only the embedding layer of mBERT. The model with a dedicated vocabulary outperforms the vanilla mBERT on a variety of tasks, which indicates that the multilingual vocabulary of mBERT is not optimal. 
 
 But what changes when we switch to a monolingual vocabulary and why does it improve the multilingual model to the point it approaches the performance of the dedicated monolingual model? \citet{rust_how_2021} propose to look at how often the tokenizer segments words. They show that for some languages, the multilingual tokenizer splits words into subwords drastically more often than the monolingual tokenizer. By changing the tokenizer, we improve the tokenization of the input text and thus the model performance.
 
-For measuring this, \citet{rust_how_2021} use a metric called \textit{fertility} introduced by \citet{acs_exploring_2019}. It is defined as the average number of subwords per word. They show that the fertility of the multilingual tokenizer is higher than the fertility of the monolingual tokenizer, especially for low-resource languages that are underrepresented in the training data. By measuring the correlation between the improvement in performance of the modified models and improvement in fertility, they show that there is a statistically significant relationship between the two.
+For measuring this, \citet{rust_how_2021} use a metric called \textit{fertility} introduced by \citet{acs_exploring_2019}. It is defined as the average number of subwords per word. They show that the fertility of the multilingual tokenizer is higher than the fertility of the monolingual tokenizer, especially for low-resource languages that are underrepresented in the training data. By measuring the correlation between the improvement in performance of the modified models and the improvement in fertility, they show that there is a statistically significant relationship between the two.
 
 % By comparing the fertility metric \citet{rust_how_2021} has shown that oversegmentation oversegmentation of low-resource languages leads to longer sequence lengths and more frequent splitting of words. Thus the multilingual model must learn to compose the subwords back into semantic units and also learn to attend to correct subwords over longer distances \cite{chung_improving_2020}. Moreover, mismatched segmentation granularity might lead to incompatible representations for subwords across languages. \citet{maronikolakis_wine_2021} have shown that tokenization compatibility can have a significant impact on multilingual performance.
 
@@ -263,7 +264,7 @@ For measuring this, \citet{rust_how_2021} use a metric called \textit{fertility}
 
 As we have described, \citet{rust_how_2021} have firmly established that there is indeed a disparity between the performance of the multilingual model mBERT and similar monolingual models. They have shown that the disparity is in part caused by the tokenization method used in the multilingual model.
 
-Other works have addressed this issue by proposing novel tokenization methods, that aim to improve the vocabulary of the multilingual model and increase its size to accomodate for all represented languages. The works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} all introduce new multilingual models that use an expanded vocabulary and a novel tokenization method for mitigating the language bias. Moreover, the authors all show that the standard recipe of training a tokenizer on a concatenation of all languages in the training data is not optimal and that the performance of the model can be improved by using their method, especially for the low-resource languages.
+Other works have addressed this issue by proposing novel tokenization methods, that aim to improve the vocabulary of the multilingual model and increase its size to accommodate for all represented languages. The works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} all introduce new multilingual models that use an expanded vocabulary and a novel tokenization method for mitigating the language bias. Moreover, the authors all show that the standard recipe of training a tokenizer on a concatenation of all languages in the training data is not optimal and that the performance of the model can be improved by using their method, especially for the low-resource languages.
 
 In the following subsections, we will describe these three methods. First, we describe the method of \citet{chung_improving_2020}, which replaces the standard method with a procedure of clustering similar language corpora together and training separate cluster-tokenizers before merging these tokenizers together. Then we describe the method introduced by \citet{zheng_allocating_2021} which infers the optimal per-language vocabulary size and then trains separate, monolingual tokenizers for each language that are then merged. Lastly, we describe the method of \citet{liang_xlm-v_2023}, which combines the previous two methods and trains even larger vocabularies than the previous two methods.
 
@@ -301,7 +302,7 @@ In the following subsections, we will describe these three methods. First, we de
     \label{fig:tokenization}
 \end{figure}
 
-In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \citeauthor{chung_improving_2020} propose a method to effectively increase the vocabulary size while mitigating the the language bias by using language-clustered vocabularies. They construct an improved vocabulary by merging together several smaller vocabularies that were trained on subsets of the whole, multilingual training corpus. These smaller vocabularies are constructed by clustering the monolingual corpora based on their similarity and then training a separate vocabulary for each cluster. The authors show that the language-clustered vocabularies lead to improved performance on low-resource languages.
+In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \citeauthor{chung_improving_2020} propose a method to effectively increase the vocabulary size while mitigating the language bias by using language-clustered vocabularies. They construct an improved vocabulary by merging together several smaller vocabularies that were trained on subsets of the whole, multilingual training corpus. These smaller vocabularies are constructed by clustering the monolingual corpora based on their similarity and then training a separate vocabulary for each cluster. The authors show that the language-clustered vocabularies lead to improved performance on low-resource languages.
 
 
 \begin{figure}[ht]
@@ -311,7 +312,7 @@ In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \ci
     \label{fig:chung_vectors}
 \end{figure}
 
-Their method works by clustering the similar languages together and then merging the cluster-level vocabularies. To cluster the languages using the k-means algorithm, it is necessary to define an euclidean vector space with each language having a representative vector (\autoref{fig:chung_vectors}). To this end, the authors first train equally sized vocabularies $V^l$ for each language separately using the Unigram LM method. Then they create a merged vocabulary $V^L$ by taking the union of the vocabularies $V^l$. Then, to produce a language vector $\vec{v}^l$ for each language $l$, the presence of each subword $V^L_i$ is checked in the language-specific $V^l$ and the value is set to 1 if the subword is present and 0 otherwise. \xxx{this seems to be overly compicated explanation}
+Their method works by clustering similar languages together and then merging the cluster-level vocabularies. To cluster the languages using the k-means algorithm, it is necessary to define an Euclidean vector space with each language having a representative vector (\autoref{fig:chung_vectors}). To this end, the authors first train equally sized vocabularies $V^l$ for each language separately using the Unigram LM method. Then they create a merged vocabulary $V^L$ by taking the union of the vocabularies $V^l$. Then, to produce a language vector $\vec{v}^l$ for each language $l$, the presence of each subword $V^L_i$ is checked in the language-specific $V^l$ and the value is set to 1 if the subword is present and 0 otherwise. \xxx{this seems to be overly complicated explanation}
 
 \begin{equation}
     \vec{v}^l_i = \begin{cases}
@@ -324,7 +325,7 @@ With the languages represented as vectors, the k-means algorithm can be used to 
 % (or equivalently: they normalize the language vectors to have a length 1 before clustering).
 With 104 languages in total, the number of clusters is set to 8. The choice of $k$ is determined empirically by running a set of preliminary experiments and comparing the results on a multilingual question-answering benchmark. The resulting clusters are shown in \autoref{fig:chung_clusters}.
 
-After the languages are clustered, the cluster-specific vocabularies are trained using the Unigram LM algorithm on the union of the corpora of the languages in the cluster. The size of each cluster-specific vocabulary is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. This means that more languages in a cluster lead to larger vocabulary size assigned but also if the languages share tokens, this overlap decreases the vocabulary size. The final vocabulary is then constructed by simply taking the union over the cluster vocabularies.
+After the languages are clustered, the cluster-specific vocabularies are trained using the Unigram LM algorithm on the union of the corpora of the languages in the cluster. The size of each cluster-specific vocabulary is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. This means that more languages in a cluster lead to a larger vocabulary size assigned but also if the languages share tokens, this overlap decreases the vocabulary size. The final vocabulary is then constructed by simply taking the union over the cluster vocabularies.
 
 \begin{figure}[ht]
     \centering
@@ -336,7 +337,7 @@ After the languages are clustered, the cluster-specific vocabularies are trained
 The final vocabulary is then compared to the standard recipe of training a Unigram LM vocabulary on a joint corpus\footnote{The authors do not define what they mean by following the "standard recipe". Based on the related work the authors replicate closely (mBERT and XLM-R) and compare themselves to, we assume that the standard recipe is training a Unigram LM tokenizer on the pretraining data after the exponential subsampling described in \ref{sec:data_scope}. The authors do mention using the sampling factor $\alpha=0.7$ for the pretraining data in the Appendix.}. Because the proposed clustering method does not have a way of controlling the size of the final vocabulary as taking the union inadvertently leads to some tokens being merged, the authors compare the vocabularies by first following the clustering method and arriving at a 488k subword vocabulary. Then the standard method is followed to train a vocabulary of the same size.
 
 The authors evaluate the vocabularies intrinsically - by examining the average number of tokens per sentence, out-of-vocabulary rate and vocabulary overlap using the Wasserstein-1 distance.
-By computing the average number of tokens per sentence for the whole corpus and for each language separately, the authors show that their method leads to a smaller average number of tokens per sentence for the whole corpus and further show that the improvements are more prominent for the low-resource languages. The authors also show that the out-of-vocabulary rate is lower for the language-clustered vocabulary, again the largest reduction in the OOV rate are in the low-resource and rare-script languages. Finally, the authors show on four hand-picked languages that the language-clustered vocabulary leads to a smaller Wasserstein-1 distance between two similar languages and at the same time larger distance between two linguistically different languages.
+By computing the average number of tokens per sentence for the whole corpus and for each language separately, the authors show that their method leads to a smaller average number of tokens per sentence for the whole corpus and further show that the improvements are more prominent for the low-resource languages. The authors also show that the out-of-vocabulary rate is lower for the language-clustered vocabulary, again the largest reductions in the OOV rate are in the low-resource and rare-script languages. Finally, the authors show on four selected languages that the language-clustered vocabulary leads to a smaller Wasserstein-1 distance between two similar languages and at the same time larger distance between two linguistically different languages.
 \tomasz{Maybe write a sentence or two on using Wasserstein-1 distance for lang similarity.}
 
 The clustered vocabulary is then used to train a smaller and bigger multilingual masked language model and evaluated on three distinct, multilingual tasks (question answering, natural language inference and named entity recognition). The baselines selected are the original mBERT model, XLM-R model and a smaller reproduction of XLM-R with an increased vocabulary size to match the parameter size of the introduced model. The authors show improvements for the smaller model on all three tasks over their baseline reproduction. Then they show the improvements in QA and NER tasks for the bigger model over the XLM-R and mBERT baselines. 
@@ -355,14 +356,10 @@ The clustered vocabulary is then used to train a smaller and bigger multilingual
 % - This still does not seem to solve the problem with cross-lingual sharing of wrong tokens such as “a” (conj in cs vs prep in eng)
 % - Can we do the clustering better so that the languages are clustered according to the  downstream performance rather than hand-picked similarity metric between langs?
 
-
-
-
-
 \subsection{Determining vocabulary capacity for each language}
 \label{sec:zheng}
 
-In the paper \Citetitle{zheng_allocating_2021}, \citeauthor{zheng_allocating_2021} propose a method for determining the optimal vocabulary capacity for each language in a multilingual model. Further they propose a method for constructing a multilingual vocabulary by combining monolingual vocabularies so that the optimal capacity is achieved for each language. In the second part of the paper, the authors propose a method for accelerating the training of the model with the increased vocabulary size, which is out of the scope of this thesis.
+In the paper \Citetitle{zheng_allocating_2021}, \citeauthor{zheng_allocating_2021} propose a method for determining the optimal vocabulary capacity for each language in a multilingual model. Further, they propose a method for constructing a multilingual vocabulary by combining monolingual vocabularies so that the optimal capacity is achieved for each language. In the second part of the paper, the authors propose a method for accelerating the training of the model with the increased vocabulary size, which is out of the scope of this thesis.
 
 % % - they observe that multilignual models do have a larger vocabulary than monolingual models (30k to 60k vs 250k). Still it is 2.5k per language on average in xlm-r
 % - they consider each language separately and calculate the optimal vocabulary size for each language
@@ -375,7 +372,7 @@ $$
 ALP(\mathcal{D}_i, V) = \frac{1}{|\mathcal{D}_i|} \sum_{j=1}^{|\mathcal{D}_i|} \sum_{k=1}^{|s_j|} \log(p_{uni}(s^k_{j}))
 $$
 
-where $\mathcal{D}_i$ is the monolingual corpus of language $i$, $V$ is the vocabulary and $p_{uni}(s^k_{j})$ is the unigram probability of the $k$-th token in the $j$-th sentence. The authors show that the average log probability positively correlates with the downstream task performance on a series of experiments with four distinct languages. They show this correlation by training a series of tokenizers with an increasing vocabulary size. Then they measure the ALP on these tokenizers, pretrain monolingual models for every vocabulary size and every language and evaluate them on two word-level classification tasks. For illustration we show the correlation between ALP and F1 score for the NER task in Figure \ref{fig:alp_vs_NER}. 
+where $\mathcal{D}_i$ is the monolingual corpus of language $i$, $V$ is the vocabulary and $p_{uni}(s^k_{j})$ is the unigram probability of the $k$-th token in the $j$-th sentence. The authors show that the average log probability positively correlates with the downstream task performance on a series of experiments with four distinct languages. They show this correlation by training a series of tokenizers with increasing vocabulary size. Then they measure the ALP on these tokenizers, pretrain monolingual models for every vocabulary size and every language and evaluate them on two word-level classification tasks. For illustration, we show the correlation between ALP and F1 score for the NER task in Figure \ref{fig:alp_vs_NER}. 
 
 % show figure 2 and 3 
 % \begin{figure}[h]
@@ -408,8 +405,9 @@ Although the authors report that the vocabulary size itself is also a good predi
 % - here they must compare pearson correlation because spearman would be the same for both - because ALP is a monotonic transformation of vocab size
 % - but also for their usecase maximizing pearson is better because they then greedily select the vocab sizes based on ALP and then they want the metric to be linear with the downstream performance - so that the greedy selection is optimal
 
+% This observation is in line with the research in machine translation \cite{gowda_finding_2020}. \xxx{maybe move this somewhere else and discuss the relevance for the MLMs, where we have much more training data than for the supervised MT} 
 
-To efficiently allocate the tokenizer vocabulary, the authors hypothesize that the pretraining size of the corpora must be also taken into account. The reason is that for low-resource languages, it is better to allocate less tokens as the language model does not have enough data to learn robust representations for the low-frequency tokens. This observation is in line with the research in machine translation \cite{gowda_finding_2020}. \xxx{maybe move this somewhere else and discuss the relevance for the MLMs, where we have much more training data than for the supervised MT} In the end the authors propose a greedy vocabulary allocation algorithm \textsc{VoCap} that maximizes the following objective:
+To efficiently allocate the tokenizer vocabulary, the authors hypothesize that the pretraining size of the corpora must be also taken into account. The reason is that for low-resource languages, it is better to allocate fewer tokens as the language model does not have enough data to learn robust representations for the low-frequency tokens. In the end, the authors propose a greedy vocabulary allocation algorithm \textsc{VoCap} that maximizes the following objective:
 
 $$
 \underset{t_1, \ldots, t_N}{\operatorname{argmax}} \sum_{i=1}^N q_i^\beta \operatorname{ALP}\left(D_i, V_{t_i}^i\right) \text { s.t. }\left|\bigcup_{i=1}^N V_{t_i}^i\right|=T
@@ -434,7 +432,7 @@ After reaching the target size, the algorithm halts and returns the vocabulary c
     \label{alg:vocab_allocation}
 \end{figure}
 
-With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with vocabulary sizes 250\,000 and 500\,000 on a multilingual corpus with 86 languages. The authors compare the performance of the \textsc{VoCap} tokenizers with baseline tokenizers trained directly on the multilingual corpus. The multilingual corpus is again subsampled before the standard tokenizer training following \citet{devlin_bert_2019,lample_cross-lingual_2019} with an exponential smoothing factor of $\alpha=0.7$.
+With the \textsc{VoCap} algorithm, \Citeauthor{zheng_allocating_2021} then create new tokenizers with vocabulary sizes 250\,000 and 500\,000 on a multilingual corpus with 86 languages. The authors compare the performance of the \textsc{VoCap} tokenizers with baseline tokenizers trained directly on the multilingual corpus. The multilingual corpus is again subsampled before the standard tokenizer training following \citet{devlin_bert_2019,lample_cross-lingual_2019} with an exponential smoothing factor of $\alpha=0.7$.
 
 The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. The results are shown in \autoref{fig:alp_improvement}. The authors show that the \textsc{VoCap} tokenizers improve the ALP metric for the 500\,000 vocabulary size over the baseline across all languages. The improvement is more prominent for low-resource and mid-resource languages compared to high-resource languages. At the same time the difference between the standard tokenizers with vocabulary sizes 250\,000 and 500\,000 is negligible.
 
@@ -445,7 +443,7 @@ The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. Th
     \label{fig:alp_improvement}
 \end{figure}
 
-To validate these results, the authors then pretrain masked language models using the standard and \textsc{VoCap} tokenizers and conduct experiments on tasks from the XTREME benchmark \cite{hu_xtreme_nodate}. The comparison is done on natural language inference, paraphrase identification, part of speech tagging, named entity recognition and question answering. The averaged results over all tasks suggest that the \textsc{VoCap} tokenizers outperform the standard tokenizers by 0.4 percentage points for the 250\,000 vocabulary size and 1.7 percentage points for the increased 500\,000 vocabulary size. When investigating further the results for XNLI and NER, the authors show that improvements are gained on the low-resource and mid-resource languages. This is consistent with the ALP improvement results.
+To validate these results, the authors then pretrain masked language models using the standard and \textsc{VoCap} tokenizers and conduct experiments on tasks from the XTREME benchmark \cite{hu_xtreme_nodate}. The comparison is done on natural language inference, paraphrase identification, part of speech tagging, named entity recognition and question answering. The averaged results over all tasks suggest that the \textsc{VoCap} tokenizers outperform the standard tokenizers by 0.4 percentage points for the 250\,000 vocabulary size and 1.7 percentage points for the increased 500\,000 vocabulary size. When investigating further the results for XNLI and NER, the authors show that improvements are gained in the low-resource and mid-resource languages. This is consistent with the ALP improvement results.
 
 % With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with sizes 250k and 500k and show that for larger dictionaries (500k vocabulary size) their method outperforms the standard method of training a joint vocabulary on the union of the corpora. 
 
