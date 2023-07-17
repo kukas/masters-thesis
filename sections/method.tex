@@ -3,170 +3,76 @@
 
 % In this chapter, we discuss the methodology of the thesis. We motivate and specify the research question, state the hypothesis and the specify how we test it.
 
-In this chapter, we introduce the methodology for experiments conducted in this thesis.
+% Methodology
 
-\section{Methodology overview}
+% what do we want to measure? The effects of tokenization over the languages, focus on the differences the methods make on low resource vs high resource and how this translates to downstream tasks.b
 
-Methodology
+% - data sampling
+%     - !! do data hodně vysvětlit, že u toknizerů používáme různá alpha ale u pretrainingu ne.
 
-what do we want to measure? The effects of tokenization over the languages, focus on the differences the methods make on low resource vs high resource and how this translates to downstream tasks.b
+% - introduce the metrics
+%     - obecně naše metriky předpokládají nějaký předem daný vocabulary budget, který chceme spravedlivě rozdělit
+%     - CPT, AR, JSD
+%         - k AR metrice: je to samozřejmě závislý na vocab size, ale měl bych to poznamenat
+%         - výhoda AR oproti CPT - u čínštiny započítává jednotlivé znaky, což by u CPT nebylo vidět
 
-- data sampling
-    - !! do data hodně vysvětlit, že u toknizerů používáme různá alpha ale u pretrainingu ne.
+%         - k JSD metrice: není zřejmé jestli chceme vyšší overlap nebo nižší
 
-- introduce the metrics
-    - obecně naše metriky předpokládají nějaký předem daný vocabulary budget, který chceme spravedlivě rozdělit
-    - CPT, AR, JSD
-        - k AR metrice: je to samozřejmě závislý na vocab size, ale měl bych to poznamenat
-        - výhoda AR oproti CPT - u čínštiny započítává jednotlivé znaky, což by u CPT nebylo vidět
-
-        - k JSD metrice: není zřejmé jestli chceme vyšší overlap nebo nižší
-
-    - interpretation of the metrics - CPT, AR high good, JSD not sure
-    - also mention UNK and alphabet size
-- kinds of experiments
-    - tokenizers only
-        - eg: training data size, alphabet size, data imbalance
-    - tokenizers + MLM training
-        - eg: Huggingface tokenizers, replications
+%     - interpretation of the metrics - CPT, AR high good, JSD not sure
+%     - also mention UNK and alphabet size
+% - kinds of experiments
+%     - tokenizers only
+%         - eg: training data size, alphabet size, data imbalance
+%     - tokenizers + MLM training
+%         - eg: Huggingface tokenizers, replications
     
-- introduce the evaluation procedure
-    - intrinsic evaluation
-        - overall metrics - why macro average over languages
-            - how to average JSD - all pairs
-        - per language metrics - why delta from some baseline, metrics are different for different languages so we need to normalize
-    - extrinsic evaluation
-        - in-language / cross-language
-            - overall - why macroaverage, per-language, how to do per-language in cross-lingual where there are pairs (we focus on target results)
-            - seeds, averaging, bootstrapping
-        - probing vs finetuningn
-            - vysvětlit proč jsou všechny experimenty probing a jak se to liší a proč jsme to vybrali
-        - tasks NLI, NER, POS tagging, ...
-    - correlation between intrinsic and extrinsic
-        - how to compute the correlation
-        - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
+% - introduce the evaluation procedure
+%     - intrinsic evaluation
+%         - overall metrics - why macro average over languages
+%             - how to average JSD - all pairs
+%         - per language metrics - why delta from some baseline, metrics are different for different languages so we need to normalize
+%     - extrinsic evaluation
+%         - in-language / cross-language
+%             - overall - why macroaverage, per-language, how to do per-language in cross-lingual where there are pairs (we focus on target results)
+%             - seeds, averaging, bootstrapping
+            %     - on how to compute significance for the cross-lingual tasks
+            %         - we want to compare the average over languages
+            %         - we can use bootstrapping to compute the confidence intervals
+            %             - for each language select a random seed and compute the average over these seeds
+            %             - sample many times and compute the confidence intervals
+%         - probing vs finetuningn
+%             - vysvětlit proč jsou všechny experimenty probing a jak se to liší a proč jsme to vybrali
+%         - tasks NLI, NER, POS tagging, ...
+%     - correlation between intrinsic and extrinsic
+%         - how to compute the correlation
+%         - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
 
 
-Experiments
-- data, languages - how did we select them
-- vocabulary size - what did we pick, how does it relate to the previous work
-- tokenizers replication
-    - what are the variant we create
-    - add the cluster assignment tables
-    - přidat víc podrobností o našich replikacích - jaké clustery jsme dostali (Chung, Liang), jaké vocab sizes jsme alokovali (Zheng)
+In this chapter, we introduce the methodology for experiments conducted in this thesis. We introduce the important data sampling method utilized in \citet{devlin_bert_2019,conneau_unsupervised_2020} we use frequently for our experiments. Then we introduce our proposed metrics for measuring the \textit{vocabulary allocation} and \textit{vocabulary overlap} of a tokenizer. We introduce the types of experiments we will conduct --- namely we will train different tokenizers and evaluate them against our metrics. Moreover, we will also use the tokenizers to train masked language models to verify that our metrics are useful for assessing the tokenizer quality for use in language models. We will also describe in detail the evaluation procedures and all evaluation settings and tasks. 
 
-- Huggingface vs Sentencepiece
-    - what are the parameters, how do we choose them or do we test them, what are the defaults
-    - tokenizer training - memory requirements, time requirements   
-- vanilla Unigram tokenizers
-- TokMix
-
-- maybe a table with all the tokenizers and their explanations
-
-- training MLMs - technical details
-    - machines
-    - masked token ratio 15%
-
-- probing MLMs - technical details
-    - chosen tasks for each experiment, metrics for tasks
-    
-
-% - training the models
-%     - we train with 10K steps, 8192 batch size, 128 sequence length
-%     - on 2x A100
-% - evaluation on downstream
-%     - utilized Huggingface examples for the downstream tasks so that there are no mistakes
-%     - on how to compute significance for the cross-lingual tasks
-%         - we want to compare the average over languages
-%         - we can use bootstrapping to compute the confidence intervals
-%             - for each language select a random seed and compute the average over these seeds
-%             - sample many times and compute the confidence intervals
-% To be able to compare several tokenization methods we need to fix a training and evaluation procedure that we will use throught the thesis for each experiment, be it a replication of a previous work or our own novel method. In following sections we describe the training and evaluation procedure that we use in the thesis.
 
 % For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised_2020}. Using the data we create multilingual vocabularies with the same size of 120K unique tokens using different methods. We use intrinsic evaluation framework from \citet{limisiewicz_tokenization_2023} to evaluate the tokenizers. Then we use the tokenizers to train multilingual masked language models on the same data and evaluate them on the same set of downstream tasks. We compare the results of the intrinsic and extrinsic evaluation to see if the improvements in the intrinsic evaluation translate to improvements in the downstream tasks.
 
-In this thesis, we investigate the effect of tokenizer properties on multilingual language models. We define metrics that measure the properties of the tokenizers and then we define the method by which we assess how these properties affect the performance of the language models. At the same time we want to improve the performance of the multilingual language model for the low-resource languages as this was shown to be a problem in previous work \cite{rust_how_2021}. Therefore we use the metrics we define to assess the methods proposed to solve this problem. Furthermore we propose methods to improve the performance of the language models and evaluate them using the same metrics.
+% In this thesis, we investigate the effect of tokenizer properties on multilingual language models. We define metrics that measure the properties of the tokenizers and then we define the method by which we assess how these properties affect the performance of the language models. At the same time we want to improve the performance of the multilingual language model for the low-resource languages as this was shown to be a problem in previous work \cite{rust_how_2021}. Therefore we use the metrics we define to assess the methods proposed to solve this problem. Furthermore we propose methods to improve the performance of the language models and evaluate them using the same metrics.
 
 
-
-\section{Data and scope}
-\label{sec:data_scope}
-% - prepare the pretraining/tokenizer training data
-%     - selecting the dataset
-%         - mBERT, Zheng - wikipedias
-%         - XLM, Chung, Liang - CC100 
-%     - select the languages
-%         - which languages to use
-%         - we follow the XNLI selection more or less
-%         - show the table with the languages
-%     - download the data
-%         - how much data to use
-%     - subsample the data
-%         - what alphas to use?
-%             - Conneau, Chung uses 0.3 \xxx{check this}
-%             - Liang uses T=2 -> alpha=0.5
-%             - Zheng uses 0.7!
-%         - we choose alpha 0.0 and 0.3 (for Limi it was 0.25)
-%         - we also create a evaluation and test set
-
-For training the vocabularies and the masked language models we follow our related work \cite{conneau_unsupervised_2020,chung_improving_2020,liang_xlm-v_2023} and use the CC100 dataset. The other common choice is using Wikipedia data \cite{devlin_bert_2019,zheng_allocating_2021} but the CC100 have been shown to improve low-resource languages such as Swahili and Urdu \cite{conneau_unsupervised_2020}.
-
-This unlabeled, multilingual dataset was created from the Common Crawl corpus using an automatic pipeline. The data was deduplicated and language-identified. Then for each monolingual corpus the data was filtered using Kneser-Ney language models trained on Wikipedia. Documents with perplexity under a certain language-specific threshold were filtered out. The data processing pipeline is described in detail in \citet{wenzek_ccnet_nodate}. A reproduction of the dataset is available at \url{https://data.statmt.org/cc-100/}.
-
-For the purposes of this thesis, we select 20 out of 116 languages following \citet{limisiewicz_tokenization_2023} and download 10\% of the data for each language. The reason for selecting a subset of the languages available and using only part of the data is our computational constraints. First, by limiting the amount of data, we can train the models faster. Second, by limiting the number of languages, we can scale down the vocabulary size. Because a large amount of the model parameters is in the embedding matrix, the vocabulary size has a large impact on the model size. In turn this affects the training time and the memory requirements. We use the same 20 languages for all experiments in this thesis.
-
-The exact choice of the language subset is motivated by the downstream evaluation datasets. We use the 15 languages covered by XNLI and add 5 more. The languages are selected to cover a wide range of language families and scripts. The full list of languages is shown in Table \xxx{tab:languages}.
-
-\todo{add table with the languages with a summary of some of the properties (which languages share script, which are typologically related, which use spaces and which don't, which are low-resource)}
-
-\begin{table}
-    % uncomment the following line if you use the fitted top captions for tables
-    % (see the \floatsetup[table] comments in `macros.tex`.
-    %\floatbox{table}[\FBwidth]{
-    \centering\footnotesize\sf
-    \begin{tabular}{llrl}
-    \toprule
-    Language & Language code & Script \\
-    \midrule
-    English & en & Latin \\
-    Vietnamese & vi & Latin \\
-    Russian & ru & Cyrillic \\
-    French & fr & Latin \\
-    German & de & Latin \\
-    Spanish & es & Latin \\
-    Thai & th & Thai \\
-    Bulgarian & bg & Cyrillic \\
-    Hebrew & he & Hebrew \\
-    Chinese-simplified & zh-Hans & Chinese \\
-    Greek & el & Greek \\
-    Turkish & tr & Latin \\
-    Arabic & ar & Arabic \\
-    Hindi & hi & Devanagari \\
-    Tamil & ta & Tamil \\
-    Georgian & ka & Georgian \\
-    Urdu & ur & Arabic \\
-    Telugu & te & Telugu \\
-    Marathi & mr & Devanagari \\
-    Swahili & sw & Latin \\
-    % \addlinespace % a nice non-intrusive separator of data groups (or final table sums)
-    \bottomrule
-    \end{tabular}
-    %}{  % uncomment if you use the \floatbox (as above), erase otherwise
-    \caption{List of languages used in the experiments.}
-    %}  % uncomment if you use the \floatbox
-    \label{tab:languages}
-\end{table}
-    
+\section{Data sampling}
 
 % This subset of CC100 is then used for further experiments with vocabulary creation that will be described in the following sections.
-\xxx{TODO: describe the resampling method, compare different alphas used in the literature}
-For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages. Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. This is a standard practice followed by multiple independent authors \xxx{cite}. The empirical probability of sampling a line from language $l$ is given by:
+% \xxx{TODO: describe the resampling method, compare different alphas used in the literature}
+% For pretraining the models and training the tokenizers we do not use the full 10\% of the data. Because the data is heavily skewed towards the high-resource languages. Instead, we further subsample the data, following \citet{conneau_unsupervised_2020-1} to balance the number of lines per language. This is a standard practice followed by multiple independent authors \xxx{cite}. The empirical probability of sampling a line from language $l$ is given by:
+
+% In the following chapters, we will reference often the balancing factor $\alpha$, here we defin
+
+As explained in the previous chapters, the training data available for each language differs significantly in the total size (counted as the number of lines). For training the multilingual language model and associated tokenizer, it is generally advised to address this data imbalance by oversampling the languages with a low amount of data available (low-resource languages) and undersample the languages with high amounts of data (high-resource languages). One possible balancing procedure proposed by \citet{devlin_bert_2019,conneau_unsupervised_2020} is parametrized by the exponent $\alpha$ which we will now describe. In the following chapters, we will reference often the balancing factor $\alpha$. If not mentioned otherwise, what we mean is the data balance in the \textbf{tokenizer} training data (not pretraining data for the model) implied by sampling with the $\alpha$ parameter.
+
+We assume we have $N$ monolingual corpora $C_l$ with languages $l \in L$. Each corpus with the language $l \in L$ has a different number of lines $N_l = |C_l|$. Then, the probability of sampling a line from the concatenation of all corpora $\cup_{l \in L} C_l$ is:
 
 \begin{equation}
     p(l) = \frac{N_l}{\sum_{l' \in L} N_{l'}}
 \end{equation}
 
-Where $N_l$ is the number of lines in the dataset for language $l$.
+% Where $N_l$ is the number of lines in the dataset for language $l$.
 
 To ensure that the low-resource languages are not underrepresented in the training data, we modify this probability distribution using an exponential smoothing parameter $\alpha$:
 
@@ -174,13 +80,13 @@ To ensure that the low-resource languages are not underrepresented in the traini
     p'(l) = \frac{p(l)^\alpha}{\sum_{l' \in L} p(l')^\alpha}
 \end{equation}
 
-For $\alpha = 0$ we get the uniform distribution over the languages, for $\alpha = 1$ we get the original distribution. For pretraining the language models, we use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}. For training the tokenizers, we specify the alpha as a parameter of the tokenizer training procedure. Usually we use $\alpha = 0.0$ (1 milion lines per language, 20 milion in total) and $\alpha = 0.3$.
+For $\alpha = 0.0$ we get a uniform distribution over the languages, for $\alpha = 1.0$ we get the original distribution. 
 
-We also sample uniformly from the rest of the CC100 dataset to create evaluation and test splits. Here we use $\alpha = 0.0$ to represent all languages equally.
+For pretraining the language models, we use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}. For training the tokenizers, we always specify the alpha as a parameter of the tokenizer training procedure. 
 
 \section{Tokenizer metrics}
 
-\xxx{lets write the motivation here and maybe move it to the background section later}  
+% \xxx{lets write the motivation here and maybe move it to the background section later}  
 
 % - motivation: we want to evaluate the tokenizers before costly pretraining
 % - by comparing the tokenizers we can select the best one for pretraining
@@ -226,11 +132,17 @@ We also sample uniformly from the rest of the CC100 dataset to create evaluation
 
 In this section we introduce the metrics that we use to evaluate the tokenizers. By measuring the tokenizers we would like to explore two questions. First, we would like to analyse how the tokenizers differ between each other. How granular is the segmentation given an example text? And how much are the tokens shared between the languages? Second, using the observed differences between tokenizers, we would like to analyse how they influence the multilingual language models, that are trained using the tokenizers. We will describe the methodology for measuring the influences in the following sections \xxx{ref}.
 
-When assessing the multilingual tokenizers, we also want to focus not only on the overall properties but also investigate the quality of tokenization for the individual languages. This gives us a better understanding of the tokenizers and allows us to compare the tokenizers between each other given a target language. For this purpose, we will use samples of evaluation corpora for each language. The metrics we define will be therefore functions of the tokenizer $\tau$ and the corpus $C_l$ with the selected language $l$. 
+When assessing the multilingual tokenizers, we also want to focus not only on the overall properties but also investigate the quality of tokenization for the individual languages. This gives us a better understanding of the tokenizers and allows us to compare the tokenizers with each other given a target language. For this purpose, we will use monolingual evaluation corpora for each language. The metrics we define will be therefore functions of the tokenizer $\tau$ and the corpus $C_l$ with the selected language $l$. 
 
-For each metric we will provide motivation and comparison with similar metrics used in the literature. 
+We introduce three metrics - average rank, characters per token and Jensen-Shannon divergence. The first two metrics aim to measure the "vocabulary allocation" of the tokenizer --- the degree to which is the given language represented in the vocabulary. The third metric measures the "vocabulary overlap" between a given pair of languages --- the degree of token sharing between two languages.
 
-\xxx{mention the vocabulary allocation and vocabulary overlap}
+Later, in \autoref{sec:metric_comparison}, we compare our metrics with the metrics used in the literature.
+
+To define the metrics formally, we use the following notation \cite{zouhar_tokenization_2023}. Let $\Sigma$ be a set of characters we call the alphabet. In our context, the alphabet is the set of all valid Unicode characters. We call a string $\sigma \in \Sigma^*$ a line. Finally, we call a multiset of lines $C_l = \{ \sigma_1, \ldots, \sigma_{N_l} \} \subset \Sigma^*$ a corpus of size $N_l$. The $l \in L$ denotes a language of the corpus from a set of languages $L$. Next, we denote the set $V_\tau \subset \Sigma^*$ as the vocabulary of a tokenizer $\tau$. The tokenizer $\tau: \Sigma^* \rightarrow V_\tau^*$ is a mapping from a line $\sigma \in \Sigma^*$ to a sequence of tokens $\tau(\sigma) \in V_\tau^*$. We denote the number of tokens in a sequence $s$ as $|s|$. Finally, we denote the number of occurrences of a token $v \in V_\tau$ in a corpus $C_l$ as $\textrm{cnt}(v, C_l)$.
+\xxx{TODO: Check the notation}
+% For each metric we will provide motivation and comparison with similar metrics used in the literature. 
+
+% \xxx{mention the vocabulary allocation and vocabulary overlap}
 \xxx{TODO: add UNK rate?!}
 
 \subsection{Characters per token}
@@ -242,7 +154,7 @@ For each metric we will provide motivation and comparison with similar metrics u
     \label{fig:cpt_example}
 \end{figure}
 
-The first metric we will use is the average number of characters per token (CPT). The motivation for this metric is that we want to measure how granular the tokenization is. If the tokenizer splits the words into many tokens, the average number of characters per token will be low. On the other hand, if the tokenizer does not split the words, the average number of characters per token will be high. We hypothesize, that longer tokens are better for the language models, because they potentially carry more meaning. The extreme case of this metric is the character-level tokenization, where the average number of characters per token is 1. In this case the model would need to learn to reconstruct the words from the characters.
+The first metric we propose is the average number of characters per token (CPT). The motivation for this metric is that we want to measure how granular the tokenization for a given language is. If the tokenizer splits the words into many tokens, the average number of characters per token will be low. On the other hand, if the tokenizer does not split the words, the average number of characters per token will be high. We hypothesize, that longer tokens are better for the language models, because they potentially carry more meaning. The extreme case of this metric is the character-level tokenization, where the average number of characters per token is 1. In this case the model would need to learn to reconstruct the words from the characters.
 
 The metric is defined as follows. Given a tokenizer $\tau$ and a language corpus $C_l$, we first tokenize the corpus using the tokenizer $\tau$. Then we compute the average number of characters per token in the tokenized corpus:
 
@@ -303,6 +215,22 @@ We will use JSD for the analysis of an overlap between two languages given a tok
 
 Computing the JSD between the two distributions will result in a metric that measures how much the two distributions overlap. The JSD is a symmetric metric that is bounded between 0 and 1. Low JSD means that the two distributions are similar, high JSD means that the two distributions are different. 
 
+\subsection{Alphabet size and out-of-vocabulary tokens}
+
+Among the metrics we propose, we also measure the alphabet size of the tokenizers defined as the number of tokens of length 1 in the vocabulary:
+
+\begin{equation}
+    \mathrm{Alphabet} = |\{t \in V_\tau, |t| = 1\}|
+\end{equation}
+
+We also measure the number of out-of-vocabulary (OOV) tokens in the corpus. The UNK token is a special token that used to represent all the tokens that are not present in the vocabulary $V_\tau$. We measure the number of UNK tokens in the corpus as follows:
+
+\begin{equation}
+    \mathrm{OOV} = \sum_{t \in \tau(C_l)} \mathbbm{1}_{t = \mathrm{<UNK>}}
+\end{equation}
+
+Where $\mathbbm{1}_{t = \mathrm{<UNK>}}$ is an indicator function that is 1 if the token is UNK and 0 otherwise. Because we use the same validation set for all the tokenizers, we can compare the number of OOV tokens directly between the tokenizers. Note that in the literature, the out-of-vocabulary tokens are measured as a OOV rate (number of OOV tokens divided by the total number of tokens in the corpus). We do not use this metric because the values of the OOV rate are small for the subword tokenizers and therefore slightly harder to compare.
+
 % Further, we will be mainly concerned with the tokenization of the training corpora $\tau(C_l)$ and the empirical distribution over the tokenizer vocabulary:
 
 % \xxx{fix the equation once I settle on the notation. The denominator is wrong here}
@@ -327,9 +255,45 @@ Computing the JSD between the two distributions will result in a metric that mea
 
 % \section{Investigating the influence of the tokenizer on the language model}
 
-\section{Extrinsinc evaluation}
+\section{Evaluation procedures}
 
-\tomasz{Here, I would write section Extrinsic Evaluation. 
-With general description assesing tokenizer influnce on downstream tasks.
-Details should be provided in the next chapter: Experiments...}
+In this section, we introduce the evaluation procedures that we use to evaluate the tokenizers. We first describe the types of experiments we do with the tokenizers. Then we explain the intrinsic evaluation procedure. Then we describe the extrinsic evaluation procedure.
+
+\subsection{Types of experiments}
+
+Generally, we can distinguish two types of experiments we do with the tokenizers we compare in this thesis. The first type of experiment is comparing different tokenizers to each other using the evaluation metrics we introduced in the previous section. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer. To do this, we will train the tokenizers on the same training corpus and then evaluate them using the intrinsic evaluation metrics on validation sets from all the languages $L$. 
+
+The second type of experiment is comparing different tokenizers on downstream tasks. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer on the task of natural language understanding. To do this, we will train the tokenizers on the same training corpus and then use the tokenizers to train otherwise identical language models. Then we will evaluate the language models on the same validation sets from all the languages $L$. Because the language models are identical, the differences in the performance will be caused only by the differences in the tokenizers and the random initialization of the language models.
+
+\subsection{Intrinsic evaluation}
+
+For the intrinsic evaluation of a set of tokenizers, we compute the metrics we introduced in the previous section on the validation sets from all the languages $L$. We compute the metrics for each tokenizer and validation language separately. Then, we compare the per language metrics between the tokenizers. Because the metrics are generally different for different languages (for example the characters per token for Chinese will be always smaller than the characters per token for English), we will compare the differences between the tokenizers rather than the absolute values.
+
+We will also compute the metrics for the whole set of languages $L$. We do this by averaging the metrics over all the languages. We use the macro average, which means that we average the metrics for each language with the same weight. We use the macro average because we want to assess equally the improvements over the high-resource and low-resource languages. This is of course an arbitrary choice we make to assess each language equally. Different weighting schemes might be more appropriate for different applications.
+
+The JSD metric which measures the \textit{vocabulary overlap} is defined between a pair of languages, measuring the overlap between the two. We compute the overall overlap by considering the JSD values for all pairs $l_1, l_2 \in L, l_1 \neq l_2$.
+
+\subsection{Extrinsic evaluation}
+%     - extrinsic evaluation
+%         - in-language / cross-language
+%             - overall - why macroaverage, per-language, how to do per-language in cross-lingual where there are pairs (we focus on target results)
+%             - seeds, averaging, bootstrapping
+            %     - on how to compute significance for the cross-lingual tasks
+            %         - we want to compare the average over languages
+            %         - we can use bootstrapping to compute the confidence intervals
+            %             - for each language select a random seed and compute the average over these seeds
+            %             - sample many times and compute the confidence intervals
+%         - probing vs finetuningn
+%             - vysvětlit proč jsou všechny experimenty probing a jak se to liší a proč jsme to vybrali
+%         - tasks NLI, NER, POS tagging, ...
+%     - correlation between intrinsic and extrinsic
+%         - how to compute the correlation
+%         - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
+
+
+
+
+% \tomasz{Here, I would write section Extrinsic Evaluation. 
+% With general description assesing tokenizer influnce on downstream tasks.
+% Details should be provided in the next chapter: Experiments...}
 

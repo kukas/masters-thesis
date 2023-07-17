@@ -2,6 +2,38 @@
 \chapter{Experiments}
 
 
+% Experiments
+% - data, languages - how did we select them
+% - vocabulary size - what did we pick, how does it relate to the previous work
+% - tokenizers replication
+%     - what are the variant we create
+%     - add the cluster assignment tables
+%     - přidat víc podrobností o našich replikacích - jaké clustery jsme dostali (Chung, Liang), jaké vocab sizes jsme alokovali (Zheng)
+
+% - Huggingface vs Sentencepiece
+%     - what are the parameters, how do we choose them or do we test them, what are the defaults
+%     - tokenizer training - memory requirements, time requirements   
+% - vanilla Unigram tokenizers
+% - TokMix
+
+% - maybe a table with all the tokenizers and their explanations
+
+% - training MLMs - technical details
+%     - we train with 10K steps, 8192 batch size, 128 sequence length
+%     - on 2x A100
+%     - machines
+%     - masked token ratio 15%
+
+% - probing MLMs - technical details
+%     - chosen tasks for each experiment, metrics for tasks
+%     - utilized Huggingface examples for the downstream tasks so that there are no mistakes
+    
+
+% - training the models
+% - evaluation on downstream
+
+% To be able to compare several tokenization methods we need to fix a training and evaluation procedure that we will use throught the thesis for each experiment, be it a replication of a previous work or our own novel method. In following sections we describe the training and evaluation procedure that we use in the thesis.
+
 
 \tomasz{I suggest to start a new chapter here: Experiments
 With structure:
@@ -12,6 +44,81 @@ With structure:
 - Implementation details/ experimental setup: with all details about implemnetation. 
 }
 
+
+
+\section{Data and scope}
+\label{sec:data_scope}
+% - prepare the pretraining/tokenizer training data
+%     - selecting the dataset
+%         - mBERT, Zheng - wikipedias
+%         - XLM, Chung, Liang - CC100 
+%     - select the languages
+%         - which languages to use
+%         - we follow the XNLI selection more or less
+%         - show the table with the languages
+%     - download the data
+%         - how much data to use
+%     - subsample the data
+%         - what alphas to use?
+%             - Conneau, Chung uses 0.3 \xxx{check this}
+%             - Liang uses T=2 -> alpha=0.5
+%             - Zheng uses 0.7!
+%         - we choose alpha 0.0 and 0.3 (for Limi it was 0.25)
+%         - we also create a evaluation and test set
+
+For training the vocabularies and the masked language models we follow our related work \cite{conneau_unsupervised_2020,chung_improving_2020,liang_xlm-v_2023} and use the CC100 dataset. The other common choice is using Wikipedia data \cite{devlin_bert_2019,zheng_allocating_2021} but the CC100 have been shown to improve low-resource languages such as Swahili and Urdu \cite{conneau_unsupervised_2020}.
+
+This unlabeled, multilingual dataset was created from the Common Crawl corpus using an automatic pipeline. The data was deduplicated and language-identified. Then for each monolingual corpus the data was filtered using Kneser-Ney language models trained on Wikipedia. Documents with perplexity under a certain language-specific threshold were filtered out. The data processing pipeline is described in detail in \citet{wenzek_ccnet_nodate}. A reproduction of the dataset is available at \url{https://data.statmt.org/cc-100/}.
+
+For the purposes of this thesis, we select 20 out of 116 languages following \citet{limisiewicz_tokenization_2023} and download 10\% of the data for each language. The reason for selecting a subset of the languages available and using only part of the data is our computational constraints. First, by limiting the amount of data, we can train the models faster. Second, by limiting the number of languages, we can scale down the vocabulary size. Because a large amount of the model parameters is in the embedding matrix, the vocabulary size has a large impact on the model size. In turn this affects the training time and the memory requirements. We use the same 20 languages for all experiments in this thesis.
+
+The exact choice of the language subset is motivated by the downstream evaluation datasets. We use the 15 languages covered by XNLI and add 5 more. The languages are selected to cover a wide range of language families and scripts. The full list of languages is shown in Table \xxx{tab:languages}.
+
+\xxx{add table with the languages with a summary of some of the properties (which languages share script, which are typologically related, which use spaces and which don't, which are low-resource)}
+
+\begin{table}
+    % uncomment the following line if you use the fitted top captions for tables
+    % (see the \floatsetup[table] comments in `macros.tex`.
+    %\floatbox{table}[\FBwidth]{
+    \centering\footnotesize\sf
+    \begin{tabular}{llrl}
+    \toprule
+    Language & Language code & Script \\
+    \midrule
+    English & en & Latin \\
+    Vietnamese & vi & Latin \\
+    Russian & ru & Cyrillic \\
+    French & fr & Latin \\
+    German & de & Latin \\
+    Spanish & es & Latin \\
+    Thai & th & Thai \\
+    Bulgarian & bg & Cyrillic \\
+    Hebrew & he & Hebrew \\
+    Chinese-simplified & zh-Hans & Chinese \\
+    Greek & el & Greek \\
+    Turkish & tr & Latin \\
+    Arabic & ar & Arabic \\
+    Hindi & hi & Devanagari \\
+    Tamil & ta & Tamil \\
+    Georgian & ka & Georgian \\
+    Urdu & ur & Arabic \\
+    Telugu & te & Telugu \\
+    Marathi & mr & Devanagari \\
+    Swahili & sw & Latin \\
+    % \addlinespace % a nice non-intrusive separator of data groups (or final table sums)
+    \bottomrule
+    \end{tabular}
+    %}{  % uncomment if you use the \floatbox (as above), erase otherwise
+    \caption{List of languages used in the experiments.}
+    %}  % uncomment if you use the \floatbox
+    \label{tab:languages}
+\end{table}
+    
+
+
+For pretraining the language models, we use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}. For training the tokenizers, we always specify the alpha as a parameter of the tokenizer training procedure. Usually we use $\alpha = 0.0$ (1 milion lines per language, 20 milion in total) and $\alpha = 0.3$.
+
+We also sample uniformly from the rest of the CC100 dataset to create evaluation and test splits. Here we use $\alpha = 0.0$ to represent all languages
 
 % - training the tokenizers
 %     - the choice of implementation
@@ -54,6 +161,12 @@ With structure:
 % \xxx{add image}
 
 % \xxx{TODO: add the other factors - coverage (alphabet), vocab size, model}
+
+\section{Tokenizer implementations and important parameters}
+
+
+\section{Vocabulary size}
+
 
 \section{Reproducing the vocabulary capacity balancing methods}
 
