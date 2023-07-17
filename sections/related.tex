@@ -246,7 +246,7 @@ As we have pointed out previously, the pretraining data is not evenly distribute
 
 To account for the discrepancy in the number of training examples per language, the training data is usually subsampled with a bias towards low-resource languages. This subsampling is performed both for the model pretraining and the tokenizer training \cite{devlin_bertmultilingualmd_2019,lample_cross-lingual_2019}.
 
-We describe the subsampling method in detail in Section \ref{sec:data_scope}. In a nutshell, the subsampling is done by adjusting the probability $p(l)$ of sampling a line from a language $l$. The probabilities are exponentiated with a factor $\alpha$ and renormalized to sum to 1. With $\alpha=0.0$, the subsampling is uniform across languages. With $\alpha=1.0$, the smoothing has no effect. The usual values chosen for this factor $\alpha$ are 0.7 \cite{devlin_bert_2019}. 0.5 \cite{lample_cross-lingual_2019} and 0.3 \cite{conneau_unsupervised_2020}. Throughout this thesis, we will refer to this subsampling method and the factor $\alpha$ often. When we refer to the factor $\alpha$, we mean the factor used for the tokenizer training. We will use a fixed, separate $\alpha$ for pretraining data sampling.
+We describe the subsampling method in detail in \autoref{sec:data_sampling}. In a nutshell, the subsampling is done by adjusting the probability $p(l)$ of sampling a line from a language $l$. The probabilities are exponentiated with a factor $\alpha$ and renormalized to sum to 1. With $\alpha=0.0$, the subsampling is uniform across languages. With $\alpha=1.0$, the smoothing has no effect. The usual values chosen for this factor $\alpha$ are 0.7 \cite{devlin_bert_2019}. 0.5 \cite{lample_cross-lingual_2019} and 0.3 \cite{conneau_unsupervised_2020}. Throughout this thesis, we will refer to this subsampling method and the factor $\alpha$ often. When we refer to the factor $\alpha$, we mean the factor used for the tokenizer training. We will use a fixed, separate $\alpha$ for pretraining data sampling.
 
 \subsection{Bias towards high-resource languages}
 
@@ -413,7 +413,7 @@ $$
 \underset{t_1, \ldots, t_N}{\operatorname{argmax}} \sum_{i=1}^N q_i^\beta \operatorname{ALP}\left(D_i, V_{t_i}^i\right) \text { s.t. }\left|\bigcup_{i=1}^N V_{t_i}^i\right|=T
 $$
 
-Where $N$ is the number of languages, $q_i$ is the probability of sampling training instances from i-th language during pre-training (we describe the per-language sampling in \ref{sec:data_scope}), $\beta$ is a hyperparameter that controls the importance of the corpus size and $T$ is the total vocabulary capacity. 
+Where $N$ is the number of languages, $q_i$ is the probability of sampling training instances from i-th language during pre-training (we describe the per-language sampling in \autoref{sec:data_sampling}), $\beta$ is a hyperparameter that controls the importance of the corpus size and $T$ is the total vocabulary capacity. 
 
 The \textsc{VoCap} algorithm works by precomputing a series of tokenizer vocabularies with vocabulary sizes from 1\,000 to 50\,000 for every language and computing the ALP metric for each of them. Then it iteratively builds the final vocabulary by:
 
