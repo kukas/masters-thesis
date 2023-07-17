@@ -1,17 +1,35 @@
 # Final priorities
-- DONE methodology
-- experiments
+- think about research questions
+    - what are the questions (introduction)
+    - how to answer them (methodology / experimental setup)
+    - what are the answers (results)
+
+- methodology
+    - add implementation details and other common parts from experiments
+    - define constants
+- experiments + results
+    - this could be structured as three sections
+        - validity of metrics
+        - tokenizer properties
+        - balancing methods
+    - each section will have a similar structure:
+        - research question / motivation
+        - experimental setup
+        - results
+
+
 - discussion
+    - the discussion about overlap - discuss the confluence with the vocabulary allocation, the allocation seems to be more important. The tokenizer metric figure AR vs JSD is a good illustration of this - the first batch of experiments JSD is positively correlated, for the second batch of experiments JSD is negatively correlated with allocation. This is reflected in the results
 - introduction
 - abstract
 - go through the results and Tomasz comments
 - poděkování
 - code readme and cleanup
+- citations cleanup
 
 
 
-- DONE large language models
-- DONE napsat related work - liang
+- remove alphabet discussion from the paper results section
 
 - popsat tokmix
 
