@@ -343,39 +343,9 @@ We use the Huggingface framework \cite{wolf_transformers_2020} for pretraining t
 
 The models are pretrained for 10k steps with batchsize 8192 achieved by using gradient accumulation. This amounts to $\approx 1.6$ epochs over the training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$
 
-\section{Model finetuning and probing}
+\section{Model probing}
 
-For evaluating the language modeling capability of the models we use two techniques. First, we want to evaluate the performance of the models using finetuning on language understanding tasks. This approach is taken by the related work and it is the standard way of multilingual model evaluation. We use part of the XTREME benchmark, namely the Natural language inference, Part of Speech tagging and Named entity recognition tasks. For each task we finetune on every language and measure the performance on the development set. We do not apply any hyperparameter search apart from choosing a satisfactory learning rate and batch size for each task by running few short experiments. 
-
-Second, we also use probing \cite{conneau_what_2018,belinkov_interpretability_2020,blevins_analyzing_2022} to evaluate the language modeling capability of the models. We use the same tasks from XTREME benchmark, but instead of finetuning we freeze the base model and train only simple linear classifiers on top of the base model. This approach allows us to evaluate the language modeling capability of the models without the influence of the finetuning procedure. 
+- technical details
 
 % Model
 % - mBERT - 120k vocabulary, 12-layer, 768-hidden, 12-heads, 110M parameters
-
-\section{Evaluation on downstream tasks}
-
-Here we present the downstream tasks we use in our paper \cite{limisiewicz_tokenization_2023}. For the language balancing experiments we use a subset of these tasks (POS, NER, NLI) that we found to have different responses to the changes in the CPT, AR and JSD metrics.
-
-\subsection{POS}
-
-We use Part of Speech annotations from Universal Dependencies \cite{nivre_universal_2020}. The dataset is available for 17 languages analyzed by us (not covered: Swahili, Thai, Georgian). Each word is assigned one of the 17 coarse POS tags.
-
-\subsection{NER}
-
-We use Wikiann dataset \cite{pan_cross-lingual_2017} consisting of Wikipedia articles with annotated named entities of three types: location, person, and organization in IOB2. Following XTREME, we use balanced data splits from \cite{rahimi_massively_2019}.
-
-\subsection{Dependency labeling}
-
-As in Part of Speech, we use Universal Dependencies \cite{nivre_universal_2020} for the dependency relation annotations. We use the largest UD treebank available for each language.
-For each word we predict one of the 37 universal relations to its head word. Because the relation is between two words, we use the concatenation of the two word representations along with their element-wise product as an input to the probe ($[h_{w1}; h_{w2}; h_{w1} \odot h_{w2}]$).
-
-\subsection{NLI}
-
-We use XNLI dataset \cite{conneau_xnli_2018} for Natural Language Inference. We train the linear classification probe on top of the concatenation of two sentence vectors and their element-wise product: $[h_{s1}; h_{s2}; h_{s1} \odot h_{s2}]$. We predict one of two relations between the first of sentences (called premise): contradicts, entails, or is neutral to the second sentence (called a hypothesis). We evaluate XNLI with the accuracy of classification.
-
-XNLI contains data for 15 languages (not covered: te, ta, mr, he, ka).
-
-\subsection{Sentence Retrieval}
-We use up to 1,000 sentences aligned for pairs of languages from Tatoeba dataset \cite{artetxe_massively_2019}. For the pairs including English, we use the same sample as in XTREME data collection. For other pairs, we perform sampling ourselves. 
-
-We compute the cosine similarity between sentence representations across languages and find the best alignment with the Hungarian algorithm\cite{kuhn_hungarian_1955}. We compute the accuracy as the number of correctly aligned sentences divided by the total number of sentences.

@@ -263,13 +263,14 @@ In this section, we introduce the evaluation procedures that we use to evaluate 
 
 Generally, we can distinguish two types of experiments we do with the tokenizers we compare in this thesis. The first type of experiment is comparing different tokenizers to each other using the evaluation metrics we introduced in the previous section. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer. To do this, we will train the tokenizers on the same training corpus and then evaluate them using the intrinsic evaluation metrics on validation sets from all the languages $L$. 
 
-The second type of experiment is comparing different tokenizers on downstream tasks. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer on the task of natural language understanding. To do this, we will train the tokenizers on the same training corpus and then use the tokenizers to train otherwise identical language models. Then we will evaluate the language models on the same validation sets from all the languages $L$. Because the language models are identical, the differences in the performance will be caused only by the differences in the tokenizers and the random initialization of the language models.
+The second type of experiment is comparing different tokenizers on downstream tasks. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer on the task of natural language understanding. To do this, we will train the tokenizers on the same training corpus and then use the tokenizers to train otherwise identical language models. Then we will evaluate the language models on the same validation sets from all the languages $L$. 
 
 \subsection{Intrinsic evaluation}
+\label{sec:intrinsic_evaluation}
 
-For the intrinsic evaluation of a set of tokenizers, we compute the metrics we introduced in the previous section on the validation sets from all the languages $L$. We compute the metrics for each tokenizer and validation language separately. Then, we compare the per language metrics between the tokenizers. Because the metrics are generally different for different languages (for example the characters per token for Chinese will be always smaller than the characters per token for English), we will compare the differences between the tokenizers rather than the absolute values.
+For the intrinsic evaluation of a set of tokenizers, we compute the metrics we introduced in the previous section on the validation sets from all the languages $L$. We compute the metrics for each tokenizer and validation language separately. Then, we compare the per language metrics between the tokenizers. Because the metrics are generally different for different languages (for example the characters per token for Chinese will be always smaller than the characters per token for English), we will compare the relative differences between the tokenizers rather than the absolute values.
 
-We will also compute the metrics for the whole set of languages $L$. We do this by averaging the metrics over all the languages. We use the macro average, which means that we average the metrics for each language with the same weight. We use the macro average because we want to assess equally the improvements over the high-resource and low-resource languages. This is of course an arbitrary choice we make to assess each language equally. Different weighting schemes might be more appropriate for different applications.
+We will also compute the overall metrics for the whole set of languages $L$. We do this by averaging the metrics over all the languages. We use the macro average over languages, which means that we average the metrics for each language with the same weight. We use the macro average because we want to assess equally the improvements over the high-resource and low-resource languages. This is a choice we make to assess each language equally. Different weighting schemes might be more appropriate for different applications.
 
 The JSD metric which measures the \textit{vocabulary overlap} is defined between a pair of languages, measuring the overlap between the two. We compute the overall overlap by considering the JSD values for all pairs $l_1, l_2 \in L, l_1 \neq l_2$.
 
@@ -290,10 +291,79 @@ The JSD metric which measures the \textit{vocabulary overlap} is defined between
 %         - how to compute the correlation
 %         - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
 
+For the extrinsic evaluation of a set of tokenizers we compare the performance of a set of language models that differ only in the tokenizers used. The performance is compared on a set of language understanding tasks.
+Because the language models are identical except for the tokenizer used, the differences in the performance will be caused only by the differences in the tokenizers and random factors such as the weight initialization of the language models.
 
+Concretely, given a set of tokenizers, we train a set of masked language models with the same architecture and pretraining data. We then evaluate the models by training linear classifiers (probes) on top of the contextualized word embeddings produced by the language models. For a given pretrained model, we train probes for each task-language combination utilizing training data in all languages given for the task. For each configuration, we train 3 random initializations of the probe with different seeds to acquire more stable results and an estimate of the variation. In total, $N_\mathrm{models} \times N_\mathrm{tasks} \times N_\mathrm{languages} \times N_\mathrm{seeds}$ probes are trained to compare the performance of the models for one experiment.
+
+We use probing \cite{conneau_what_2018,belinkov_interpretability_2020,blevins_analyzing_2022} to evaluate the language modeling capability of the models. Instead of finetuning we freeze the base model and train only linear classifiers on top of the outputs of the base model. This approach allows us to evaluate the language modeling capability of the models without the influence of the finetuning procedure. We choose probing because it leads to less noisy results than finetuning. 
+
+% the noise could be caused by the smaller difference between pretraining data amount and the amount of data used for finetuning.
+
+To evaluate a model $m$ on task $t$ and languages $t_L$, we will train probes $f_{m, t, l_\mathrm{src}}$ for each training (source) language $l_\mathrm{src} \in t_L$. Then the probe will be evaluated on the task test sets in languages $l_\mathrm{tgt} \in t_L$ using standard classification metrics used for the given task such as accuracy and the F1 score.
+% full probe notation: $f_{m, t, l_\mathrm{src}}: \mathbb{R}^d \rightarrow \mathcal{D}_t$
+% we denote the model outputs \mathbb{R}^d
+
+% given model outputs $\vec{x} \in $, we can evaluate the performance of the probe on a given language $l_\mathrm{tgt}$ by computing the accuracy of the probe on the test set for the given language $l_\mathrm{tgt}$.
+
+\subsubsection{Evaluation schemes}
+
+We will distinguish between two evaluation schemes - in-language evaluation and cross-language \xxx{(cross-lingual?)} evaluation. 
+
+The in-language performance of the model $m$ for task $t$ and a language $l$ will be computed by evaluating the probe $f_{m, t, l}$ on the test set for the same language $l$. 
+The overall in-language performance of the model $m$ for task $t$ will be computed by averaging the in-language performance over all the languages $l \in t_L$. 
+
+The cross-language performance of the model for task $t$ from the source language $l_\mathrm{src}$ to the target language $l_\mathrm{tgt}$ will be computed by evaluating the probe $f_{m, t, l_\mathrm{src}}$ on the test set for a different language $l_\mathrm{tgt} \neq l_\mathrm{src}$. 
+The overall cross-language performance of the model $m$ for task $t$ will be computed by averaging the cross-language performance over all the language pairs $l_\mathrm{src}, l_\mathrm{tgt} \in t_L, l_\mathrm{src} \neq l_\mathrm{tgt}$.
+Moreover, we will compute the cross-language performance per language $l$ of the model $m$ for task $t$ by averaging the cross-language performance over all the languages $l_\mathrm{src} \in t_L$ given a target language $l$.
+
+When considering the results per language in both evaluation schemes, it is useful to consider only the relative differences between the models rather than absolute values. The performance of the models for a given language is influenced by eg. by the amount of training data available for the language. Therefore, when interpreting the results per language, we will choose a reference model and compute the relative difference between the performance of the reference model and the other models.
+
+\subsubsection{Correlation between intrinsic and extrinsic evaluation}
+
+To support the claim that the intrinsic evaluation is a good proxy for the extrinsic evaluation, we will compute the correlation between the intrinsic and extrinsic evaluation. Because the tokenizer metrics and model performance are influenced by the evaluation language as mentioned in the previous paragraph and in \autoref{sec:intrinsic_evaluation}, we center the tokenizer metrics and downstream task results by subtracting the mean for each language in the in-language setting or pair of languages in the cross-lingual setting. In both cases, means are computed across all tokenizers. We present Spearman’s correlation coefficient and the associated p-value.
+
+\subsubsection{Variation estimation}
+
+To account for the inherent randomness of the training procedure, we will train multiple probes for each configuration $(m, t, l)$. We will use 3 random seeds for each probe and report the average performance over the seeds. We will also report the standard deviation of the performance over the seeds. In the case of the summarized performances, we estimate the standard deviation using bootstrapping over the seeds.
+
+Note that because for one tokenizer we pretrain only one model, as it is the most costly part of the experiment, we do not have an estimate of the variance of the performance of the model. We will interpret the results of the experiments with this fact in mind.
+
+
+% For evaluating the language modeling capability of the models we use two techniques. First, we want to evaluate the performance of the models using finetuning on language understanding tasks. This approach is taken by the related work and it is the standard way of multilingual model evaluation. We use part of the XTREME benchmark, namely the Natural language inference, Part of Speech tagging and Named entity recognition tasks. For each task we finetune on every language and measure the performance on the development set. We do not apply any hyperparameter search apart from choosing a satisfactory learning rate and batch size for each task by running few short experiments. 
+
+% Second, we also use probing \cite{conneau_what_2018,belinkov_interpretability_2020,blevins_analyzing_2022} to evaluate the language modeling capability of the models. We use the same tasks from XTREME benchmark, but instead of finetuning we freeze the base model and train only simple linear classifiers on top of the base model. This approach allows us to evaluate the language modeling capability of the models without the influence of the finetuning procedure. 
 
 
 % \tomasz{Here, I would write section Extrinsic Evaluation. 
 % With general description assesing tokenizer influnce on downstream tasks.
 % Details should be provided in the next chapter: Experiments...}
 
+
+\section{Evaluation on downstream tasks}
+
+Here we present the downstream tasks we use in our paper \cite{limisiewicz_tokenization_2023}. For our further experiments, we use a subset of these tasks (POS, NER, NLI) that we have found to have different responses to the changes in the CPT, AR and JSD metrics.
+
+\subsection{POS}
+
+We use Part of Speech annotations from Universal Dependencies \cite{nivre_universal_2020}. The dataset is available for 17 languages analyzed by us (not covered: Swahili, Thai, Georgian). Each word is assigned one of the 17 coarse POS tags.
+
+\subsection{NER}
+
+We use Wikiann dataset \cite{pan_cross-lingual_2017} consisting of Wikipedia articles with annotated named entities of three types: location, person, and organization in IOB2. Following XTREME, we use balanced data splits from \cite{rahimi_massively_2019}.
+
+\subsection{Dependency labeling}
+
+As in Part of Speech, we use Universal Dependencies \cite{nivre_universal_2020} for the dependency relation annotations. We use the largest UD treebank available for each language.
+For each word we predict one of the 37 universal relations to its head word. Because the relation is between two words, we use the concatenation of the two word representations along with their element-wise product as an input to the probe ($[h_{w1}; h_{w2}; h_{w1} \odot h_{w2}]$).
+
+\subsection{NLI}
+
+We use XNLI dataset \cite{conneau_xnli_2018} for Natural Language Inference. We train the linear classification probe on top of the concatenation of two sentence vectors and their element-wise product: $[h_{s1}; h_{s2}; h_{s1} \odot h_{s2}]$. We predict one of two relations between the first of sentences (called premise): contradicts, entails, or is neutral to the second sentence (called a hypothesis). We evaluate XNLI with the accuracy of classification.
+
+XNLI contains data for 15 languages (not covered: te, ta, mr, he, ka).
+
+\subsection{Sentence Retrieval}
+We use up to 1,000 sentences aligned for pairs of languages from Tatoeba dataset \cite{artetxe_massively_2019}. For the pairs including English, we use the same sample as in XTREME data collection. For other pairs, we perform sampling ourselves. 
+
+We compute the cosine similarity between sentence representations across languages and find the best alignment with the Hungarian algorithm\cite{kuhn_hungarian_1955}. We compute the accuracy as the number of correctly aligned sentences divided by the total number of sentences.

@@ -1,9 +1,10 @@
 # Final priorities
-- methodology
+- DONE methodology
 - experiments
 - discussion
 - introduction
 - abstract
+- go through the results and Tomasz comments
 - poděkování
 - code readme and cleanup
 
@@ -14,8 +15,6 @@
 
 - popsat tokmix
 
-
-- vyhodit finetuning v metodologii
 
 - přidat tabulky s clusteringy do experiments
 
@@ -38,6 +37,8 @@
 
 - co dělat s rozdílnou interpretací vocab overlap mezi 6 lang and 20 lang
 - je v pohodě prezentovat jen alpha=0.0 a vyhodit word-balancing?
+- použití figures z posteru
+- jak prezentovat ten jeden "theoretical result" s ALP=-H*TL, kam ho umístit, jak ho předělat na lemma/proof
 
 ## Otázka pro Ondru Duška?
 - jak psát captions k obrázkům?
@@ -61,8 +62,6 @@
 -vysvětlit UNK tokens
 
 ## METHOD
-
-- vysvětlit in-language and crosslingual probing
 
 
 ## EXPERIMENTS
