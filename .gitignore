@@ -26,3 +26,4 @@ thesis.run.xml
 *.toc
 *.vrb
 .vscode/settings.json
+unused_or_old/

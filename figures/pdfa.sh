@@ -4,16 +4,24 @@
 # you use this on the thesis, it _will_ become PDF/A compliant (and SIS will
 # accept it), but won't contain the magic PDF/A "stamp" and will show only as
 # normal PDF-1.4. :(
-gs -dPDFA=1 \
-   -dBATCH \
-   -dNOPAUSE \
-   -sProcessColorModel=DeviceCMYK \
-   -sColorConversionStrategy=UseDeviceIndependentColor \
-   -sDEVICE=pdfwrite \
-   -dPDFACompatibilityPolicy=3 \
-   -sOutputFile="pdfa-$1" \
-   "$1"
+mkdir -p pdfa_out/
 
+for f in *.pdf
+do
+   echo $f
+   gs -dPDFA=1 \
+      -dBATCH \
+      -dNOPAUSE \
+      -sProcessColorModel=DeviceCMYK \
+      -sColorConversionStrategy=UseDeviceIndependentColor \
+      -sDEVICE=pdfwrite \
+      -dPDFACompatibilityPolicy=3 \
+      -sOutputFile="pdfa_out/$f" \
+      "$f"
+   # mv "pdfa-$f" pdfa_out/
+   # mv pdfa_out/"pdfa-$f" pdfa_out/"$f"
+   # gs -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -dEmbedAllFonts=true -sOutputFile=my_plot_embedded.pdf -f my_plot.pdf
+done
 # Notes:
 #
 # PDFACompatibilityPolicy=3 actually doesn't exist. A bug in ghostscript

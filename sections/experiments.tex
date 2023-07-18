@@ -214,21 +214,21 @@ We arrive at $|L|$ vocabularies $V^l$. Next we take the union of all vocabularie
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{img/chung_distances.png}
+    \includegraphics[width=0.9\textwidth]{figures/chung_distances.pdf}
     \caption{Cosine distances between the language vectors $\vec{v}^l$ for Chung et al.}
     \label{fig:chung_distances}
 \end{figure}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{img/liang_cosine_distances.png}
+    \includegraphics[width=0.9\textwidth]{figures/liang_cosine_distances.pdf}
     \caption{Cosine distances between the language vectors $\vec{v}^l$ for Liang et al.}
     \label{fig:liang_cosine_distances}
 \end{figure}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{img/liang_euclid_distances.png}
+    \includegraphics[width=0.9\textwidth]{figures/liang_euclid_distances.pdf}
     \caption{Euclidean distances between the language vectors $\vec{v}^l$ for Liang et al.}
     \label{fig:liang_euclid_distances}
 \end{figure}
@@ -245,6 +245,294 @@ After the tokenizers are trained, we merge the vocabularies using the method des
 Here we slightly improve the methods of Chung and Liang. By following the original method as described above, the final size of the vocabulary will be lower than the target we set. This is because the cluster vocabularies $V^{c_j}$ will contain overlapping tokens and merging will remove these duplicates. This negative effect becomes larger with the increasing number of clusters $k$. Therefore, on top of training the prescribed cluster vocabulary of size $|V^{c_j}|$, we also train slightly larger vocabularies $V_q^{c_j'}$ of size $|V_q^{c_j}| = q|V^{c_j}|$ for $q = 1.1, 1.2, 1.3$. We then select the minimum $q$ that results in a vocabulary of size at least 120k tokens after merging the cluster vocabularies. After that we trim the vocabulary if needed. This improvement is done to ensure the final vocabulary size is exactly 120k tokens and the comparison between the methods is fair.
 
 The resulting clusters and the corresponding per-cluster vocabulary sizes are found in Table \xxx{todo add table}
+
+
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            zh, ar, ru, bg & 27425 \\
+            el, ur, ta, te, th, he, ka & 48841 \\
+            en, es, tr, sw, vi, fr, de & 43622 \\
+            hi, mr & 12108 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k4}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+        \toprule
+        Languages & Size \\
+        \midrule
+        el, zh, ar, ur, ta, te, th, he, ka & 61285 \\
+        en, es, tr, sw, vi, fr, de & 43370 \\
+        hi, mr & 10370 \\
+        ru, bg & 16970 \\
+        \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k4}
+    \end{subtable}
+
+    \caption{Cluster assignments for 4 clusters}
+    \label{fig:multiple_tables}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            el & 7458 \\
+            ru, bg & 12975 \\
+            ta, te & 14318 \\
+            en, es, tr, sw, th, ka, vi, fr, de & 56509 \\
+            ar, ur & 13788 \\
+            hi, mr & 12030 \\
+            zh & 7458 \\
+            he & 7458 \\
+            \bottomrule
+            \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k4}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            en, fr & 12256 \\
+            es, tr, sw, de & 27342 \\
+            ru, bg & 16970 \\
+            ar, ur & 12256 \\
+            vi & 3770 \\
+            hi, mr & 10370 \\
+            el, ta, te, th, he, ka & 37713 \\
+            zh & 11313 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k4}
+    \end{subtable}
+
+    \caption{Cluster assignments for 8 clusters}
+    \label{fig:multiple_tables}
+\end{figure}
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar, ur & 14020 \\
+            tr & 7582 \\
+            en, fr & 13549 \\
+            hi, mr & 12232 \\
+            ru, bg & 13194 \\
+            vi & 7582 \\
+            te & 7582 \\
+            el & 7582 \\
+            zh & 7582 \\
+            he & 7582 \\
+            ta & 7582 \\
+            sw & 7582 \\
+            ka & 7582 \\
+            th & 7582 \\
+            es & 7582 \\
+            de & 7582 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k4}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            de & 8228 \\
+            ar & 7200 \\
+            en, fr & 13370 \\
+            hi, mr & 11313 \\
+            ru, bg & 18513 \\
+            ka & 8228 \\
+            he & 5142 \\
+            tr, th & 14400 \\
+            te & 7200 \\
+            vi & 4113 \\
+            el & 10285 \\
+            ta & 4113 \\
+            zh & 12342 \\
+            sw & 6170 \\
+            es & 7200 \\
+            ur & 6170 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k4}
+    \end{subtable}
+
+    \caption{Cluster assignments for 16 clusters}
+    \label{fig:multiple_tables}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7200 \\
+            bg & 7200 \\
+            de & 7200 \\
+            el & 7200 \\
+            en & 7200 \\
+            es & 7200 \\
+            fr & 7200 \\
+            he & 7200 \\
+            hi & 7200 \\
+            ka & 7200 \\
+            mr & 7200 \\
+            ru & 7200 \\
+            sw & 7200 \\
+            ta & 7200 \\
+            te & 7200 \\
+            th & 7200 \\
+            tr & 7200 \\
+            ur & 7200 \\
+            vi & 7200 \\
+            zh & 7200 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k20}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7200 \\
+            bg & 8228 \\
+            de & 8228 \\
+            el & 10285 \\
+            en & 6170 \\
+            es & 7200 \\
+            fr & 7200 \\
+            he & 5142 \\
+            hi & 5142 \\
+            ka & 8228 \\
+            mr & 6170 \\
+            ru & 10285 \\
+            sw & 6170 \\
+            ta & 4113 \\
+            te & 7200 \\
+            th & 6170 \\
+            tr & 8228 \\
+            ur & 6170 \\
+            vi & 4113 \\
+            zh & 12342 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k20}
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7000 \\
+            bg & 8000 \\
+            de & 8000 \\
+            el & 10000 \\
+            en & 6000 \\
+            es & 7000 \\
+            fr & 7000 \\
+            he & 5000 \\
+            hi & 5000 \\
+            ka & 8000 \\
+            mr & 6000 \\
+            ru & 10000 \\
+            sw & 6000 \\
+            ta & 4000 \\
+            te & 7000 \\
+            th & 6000 \\
+            tr & 8000 \\
+            ur & 6000 \\
+            vi & 4000 \\
+            zh & 12000 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{zheng_allocating_2021}}
+        \label{tab:zheng_allocations}
+    \end{subtable}
+
+
+    \caption{Allocated vocabulary sizes for 20 languages}
+    \label{fig:multiple_tables}
+\end{figure}
+% \input{./tables/chung_clusters_k20.tex}
+% \input{./tables/chung_clusters_k16.tex}
+% \input{./tables/chung_clusters_k8.tex}
+% \input{./tables/chung_clusters_k4.tex}
+
+% \input{./tables/liang_clusters_k20.tex}
+% \input{./tables/liang_clusters_k16.tex}
+% \input{./tables/liang_clusters_k8.tex}
+% \input{./tables/liang_clusters_k4.tex}
 
 \subsection{Reproducing the \textsc{VoCap} method}
 

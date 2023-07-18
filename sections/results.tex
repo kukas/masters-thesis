@@ -55,7 +55,7 @@ For this experiment, we train three distinct tokenizers --- Huggingface Unigram,
 
 \input{tables/20l_metrics.tex}
 
-In the \autoref{tab:20l_metrics} we see that the choice of the tokenization method largely influences the vocabulary allocation and overlap metrics. The Huggingface BPE tokenizer produces the longest tokens, the most uniform allocation of tokens, and the least overlap between languages. On the other hand, the Huggingface Unigram segments the text into shorter tokens and the average vocabulary overlap between all languages is much higher. The high overlap might be related to the low allocation as it is more likely that shorter tokens are shared between languages. Because we use the default Huggingface settings for the tokenizer training, the resulting tokenizers differ also in the vocabulary size\tomasz{How is it so, I'm sure we controlled for vocabulary size.}.
+In the \autoref{tab:20l_metrics} we see that the choice of the tokenization method largely influences the vocabulary allocation and overlap metrics. The Huggingface BPE tokenizer produces the longest tokens, the most uniform allocation of tokens, and the least overlap between languages. On the other hand, the Huggingface Unigram segments the text into shorter tokens and the average vocabulary overlap between all languages is much higher. The high overlap might be related to the low allocation as it is more likely that shorter tokens are shared between languages. Because we use the default Huggingface settings for the tokenizer training, the resulting tokenizers differ also in the alphabet size.
  As we will discuss in \autoref{sec:implementation} and \autoref{sec:character_coverage}, this difference is not sufficient to explain the gap between the tokenizers.\tomasz{gap in what?} % Nevertheless the difference in the alphabet size has an influence on the Chinese language. As we discuss in \citet{limisiewicz_tokenization_2023}, on the language level, the Unigram Tokenizer allocates more tokens to Chinese (as measured by the Average Rank metric) compared to the other methods. This is probably related to the alphabet size, where the majority of the low-occurence tokens might come from the less frequent logograms of the Chinese dictionary.
 
 Next, we use the tokenizers from \autoref{tab:20l_metrics} and pretrain three masked language models with otherwise identical configuration and training data.
@@ -80,27 +80,28 @@ Note that in this results section we have included only a part of the experiment
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{paper/figures/pair_analysis_20L.pdf}
+    \includegraphics[width=\textwidth]{figures/pair_analysis_20L.pdf}
     \caption{We compare the tokenizer metrics against the contextualized representation quality. For each tokenizer, we pretrain a masked language model, freeze it, and train a linear probe for each task and each of the available languages. We observe a high Spearman correlation between CPT and the word-level tasks (NER, POS, UD) and a high correlation between AR and the sentence-level task XNLI. This suggests that our vocabulary allocation metrics are good indicators of the tokenizer's quality and higher vocabulary allocation leads to better downstream performance. Each data point corresponds to an average result over three seeds of probe training and evaluating one of the languages. The results for each language are centered around the mean to account for the differences between languages.}
     \label{fig:pair_analysis_20L}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{img/temp/X_pair_analysis_20L.png}
+    \includegraphics[width=\textwidth]{figures/X_pair_analysis_20L.pdf}
     \caption{We compare the tokenizer metrics against the cross-lingual performance of the models. For each tokenizer, we pretrain a masked language model, freeze it, and train a linear probe on each of the available languages. Then we evaluate the models on all languages the probe has \textbf{not} been trained on, assessing the cross-lingual properties of the model. Here we observe a high correlation between JSD and the word-level tasks, especially the POS and UD. This suggests that less overlap (higher divergence) between the vocabularies of the languages leads to better cross-lingual performance for word-level tasks.
     \xxx{remove the ar and cpt metrics?}} 
     \label{fig:X_pair_analysis_20L}
 \end{figure}
 
-\input{paper/tables/corr_in_lang_20l_camread.tex}
+\input{tables/corr_in_lang_20l_camread.tex}
+\input{tables/corr_x_lang_20l_camread.tex}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{img/temp/corr_x_lang_20l.png}
-    \caption{Correlations between task cross-lingual transfer results and tokenization measures."Stars denote statistical significance: (* coresponeds to $p<0.05$ and ** to $p<0.01$).\xxx{remove the ar and cpt metrics? Merge with the previous correlation table?}}
-    \label{fig:corr_x_lang_20l}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{img/temp/corr_x_lang_20l.png}
+%     \caption{Correlations between task cross-lingual transfer results and tokenization measures."Stars denote statistical significance: (* coresponeds to $p<0.05$ and ** to $p<0.01$).\xxx{remove the ar and cpt metrics? Merge with the previous correlation table?}}
+%     \label{fig:corr_x_lang_20l}
+% \end{figure}
 
 % ---------
 
@@ -213,9 +214,6 @@ We investigate the differences between the balanced Unigram and the replicated m
 \end{figure}
 
 Next, we inspect the Chung method and compare it in detail to our Unigram tokenizers in \autoref{fig:chung_vs_alphas}. For comparison, we select a run with a low number of clusters (k=4) and a high number of clusters (k=16). We see that the different numbers of clusters yield different results. In the case of a higher number of clusters, we see that the tokenizer exhibits a similar trend in CPT and AR across the languages as the balanced Unigram tokenizer with $\alpha=0.0$ albeit with some deviations. In the case of a lower number of clusters, the metrics per language seem to be more distinct compared to our Unigram tokenizers. 
-
-\input{./tables/chung_clusters_k16.tex}
-\input{./tables/chung_clusters_k4.tex}
 
 We look at the CPT per language for k=16 more closely and identify the languages where the Chung tokenizer differs significantly from the Unigram tokenizer with $\alpha=0.0$. We see that the CPT drops significantly for Bulgarian (bg), Urdu (ur), Marathi (mr), and to some degree French (fr). On the other hand, we see smaller improvements for English (en), Vietnamese (vi), Spanish (es), Thai (th), Hindi (hi), and Tamil (ta). We compare this to the cluster assignments in \autoref{tab:chung_clusters_k16}. Revealingly, we observe that all languages with the large drop in CPT have been assigned to a cluster with another, higher-resource language. Bulgarian is assigned with Russian (8th largest corpus versus 3rd largest corpus), Urdu with Arabic (17th vs. 13th), Marathi with Hindu (18th vs. 14th) and French with English (4th vs. 1st)
 
