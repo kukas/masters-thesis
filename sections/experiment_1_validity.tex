@@ -1,3 +1,88 @@
 \chapter{Validity of metrics}
 \label{chap:experiment_1_validity}
 
+% \textbf{Q1:} How do subword tokenizers differ in overlap and allocation of learned vocabularies?
+% \textbf{Q2:} Which properties of multilingual tokenizers affect the language model representation quality?
+
+% motivation
+In this chapter, we propose an experiment to answer (\textbf{Q1}) how subword tokenizers differ in overlap and allocation of learned vocabularies. Moreover, we explore (\textbf{Q2}) which properties affect the language model representation quality. Our goal is to establish that the metrics we propose are useful for assessing the differences between tokenizers and that they are useful for comparing whether a given tokenizer is better than another.
+
+% overview
+To answer these questions, we train three tokenizers and assess how they differ in the metrics we propose. We then look at how are these differences manifested when we use these tokenizers to train otherwise identical multilingual models. We then assess whether the proposed metrics are good predictors of the model's performance.  \xxx{("manifest" still sounds better to me, dont know)}
+
+The results presented in this section are selected from our paper \citet{limisiewicz_tokenization_2023}. We refer the reader to the paper for more in-detail analysis and additional experiments. Here we present experiments that are most relevant to the thesis goal.
+
+% method
+\section{Method}
+
+We train three distinct tokenizers --- Huggingface Unigram, Huggingface BPE and TokMix tokenizer \cite{limisiewicz_tokenization_2023} described in the following subsection. We use the \href{https://github.com/huggingface/tokenizers}{Huggingface implementation} of the training algorithms for the Unigram and BPE tokenizers. We choose the default hyperparameters for all tokenizers which we summarize in \xxx{table}. The training data for all tokenizers is the CC100 corpus sampled with the exponential smoothing factor $\alpha=0.25$.
+% which corresponds to the XLM-R tokenizer (there $\alpha=0.3$). 
+After tokenizer training, we perform an intrinsic evaluation of the tokenizers on each language separately and report the macro average of the metrics (For details see \autoref{sec:intrinsic_evaluation}).
+
+After tokenizer evaluation, we use the tokenizers to train three masked language models. We use the same training data and the same model architecture for all models defined in \cite{limisiewicz_tokenization_2023}. The only difference is the tokenizer used to preprocess the data. We then evaluate the models using probing. We evaluate the overall in-language performance and compare it to the tokenizer metrics. We then do a more fine-grained comparison by evaluating the model on each language separately and comparing the results to the tokenizer metrics also measured on each language separately. (For details see \autoref{sec:extrinsic_evaluation}) 
+
+% and then we assess 
+
+% which we explain in 
+
+\subsection{TokMix tokenizer}
+
+To create our TokMix tokenizer, we run the Huggingface Unigram tokenizer training on each language corpus $C_l, l \in L$ separately. After this, we end up with 20 separate tokenizers with equal vocabulary sizes \xxx{$|V_l| = ?$}. We merge the vocabularies of all tokenizers into one large vocabulary $V = \bigcup_{l \in L} V_l$, average the token probabilities and trim the vocabulary to the desired size $|V| = 120\,000$. 
+
+\section{Intrinsic evaluation}
+
+\input{tables/20l_metrics.tex}
+
+In the \autoref{tab:20l_metrics} we see that the choice of the tokenization method largely influences the vocabulary allocation and overlap metrics. The Huggingface BPE tokenizer produces the longest tokens, the most uniform allocation of tokens, and the least overlap between languages. On the other hand, the Huggingface Unigram segments the text into shorter tokens and the average vocabulary overlap between all languages is much higher. The high overlap might be related to the low allocation as it is more likely that shorter tokens are shared between languages. 
+
+Interestingly, the TokMix tokenizer has a similar \textit{vocabulary allocation} (CPT, AR) as the Huggingface BPE tokenizer. This is surprising as the TokMix tokenizer is based on the Huggingface Unigram tokenizer, which shows significantly lower scores.
+
+\section{Extrinsic evaluation}
+
+% Next, we use the tokenizers from \autoref{tab:20l_metrics} and pretrain three masked language models with otherwise identical configuration and training data.
+% We then evaluate the quality of the output representations of these models by probing the contextualized vectors against several tasks (XNLI, UD, POS, NER). We test the in-language and cross-lingual settings. The in-language setting are shown in \autoref{fig:pair_analysis_20L}. We show the relationship between our metrics and the downstream tasks.
+Next, we use the tokenizers from \autoref{tab:20l_metrics} and pretrain three masked language models. We find that the choice of the tokenizer has a large impact on the model's in-language performance. The \autoref{tab:in_lang_avg_20l} shows that the Huggingface Unigram has a significantly lower performance than the other two tokenizers on the word-level tasks (NER, POS, UD). The overall performance on sentence-level NLI is similar across tokenizers. % We see a similar trend for the cross-lingual setting
+
+We validate this observation by looking at the interaction between the tokenizer metrics and model performance on the level of individual evaluation languages in \autoref{fig:pair_analysis_20L}. In each scatterplot, each point represents a pair $(\tau, l)$ of a tokenizer $\tau$ from our three tested tokenizers and a language $l$ from the set of languages available for the given task\footnote{As explained in \autoref{sec:correlation_intrinsic_extrinsic}, we center the tokenizer metrics and downstream task results by subtracting the mean for each language to account for the differences between languages we cannot control for. This way we see only the improvements and deteriorations of the tokenizers and models compared to the mean value for the given language.}. The points are colored by the tokenizer. We see that the Huggingface Unigram tokenizer exhibits lower performance on the word-level tasks which corresponds to the lower vocabulary allocation metrics. We quantify this relationship by computing Spearman's correlation coefficient between the tokenizer metrics and the model performance. The results are shown in \autoref{tab:corr_in_lang_20l}. We see that the vocabulary allocation metrics are positively correlated with the model performance on the word-level tasks. The length of the tokens has a strong positive influence on POS, dependency labeling, and NER results ($r > 0.65$), while it does not significantly affect NLI results. The correlation between the average rank and NER scores is weaker but still significant. Moreover, it is significantly correlated with XNLI accuracy with a medium coefficient $r = 0.56$. This suggests that longer tokens and more tokens allocated for a given language in the vocabulary improves the in-language model performance on the word-level tasks. 
+
+We conduct a similar analysis for the cross-lingual setting. We evaluate the probes on all languages excluding the one the probe was trained on. The results are shown in \autoref{fig:X_pair_analysis_20L}. Each point corresponds to a triplet $(\tau, l_\mathrm{src}, l_\mathrm{tgt})$ of a tokenizer $\tau$, a language $l_\mathrm{src}$ the probe was trained on, and a language $l_\mathrm{tgt}$ the probe was evaluated on. The points are colored by the tokenizer. We see that the cross-lingual performance is positively correlated with the vocabulary overlap metric JSD in the case of the word-level tasks. This suggests that smaller vocabulary overlap between the languages improves the cross-lingual performance on the word-level tasks. On the other hand, we see that the correlation between the CPT metric and the cross-lingual performance is similarly strong and that there is also a strong correlation between JSD and CPT. In this case the correlation between JSD and downstream performance could be caused by a confounding factor of the better vocabulary allocation as measured by CPT.
+
+In overall, we see that the differences between tokenizers are reflected in the representation quality. High CPT and AR metrics are correlated with better probe performance, especially on the word-level tasks such as part of speech tagging, named entity recognition, and dependency labeling. Moreover, the cross-lingual performance is also correlated with the vocabulary allocation and overlap metrics. 
+
+Therefore, we see that our metrics are useful for assessing the differences between tokenizers. Moreover, the differences in tokenizers are reflected in the learned representations of the models, especially on word-level tasks.
+
+Note that in this section we have included only a part of the experiments from our paper \citet{limisiewicz_tokenization_2023}. Namely, we focus only on the experiments that are based on the same 20 languages as the rest of the thesis. For our purposes, we focus only on the more general conclusions. We refer the reader to the original paper for the full set of experiments, where we additionally discuss in more detail which tasks are more affected by which properties of the tokenizers.
+
+
+% The probe performance is largely dependent on the tested language, to assess only the differences yielded by the use of different tokenizers, \tomaszrep{we center the per-language results on the mean across the three models}{we center results, i.e. substract mean across the tree models from per language results}.
+%  This way we see only the improvements and deteriorations of the models compared to the mean performance. The metrics are centered in the same way. 
+
+
+% \xxx{maybe I can actually get rid of the scatterplots and just show the correlation tables from the paper. The problem is the mixing of 6 langs and 20 langs which I do not explain here.} \tomasz{can we just keep 20 languages results?}
+
+% All correlations are summarized in \autoref{tab:corr_in_lang_20l} and \autoref{fig:corr_x_lang_20l}. The length of the tokens has a strong positive influence on POS, dependency labeling, and NER results ($r > 0.65$), while it does not significantly affect NLI results. The correlation between the average rank and NER scores is weaker but still significant. Moreover, it is significantly correlated with XNLI accuracy with a medium coefficient $r = 0.56$. 
+
+% Overall, we see that our metrics are useful for assessing the differences between tokenizers. Moreover, the differences in tokenizers are reflected in the learned representations of the models, especially on word-level tasks.
+
+% \xxx{what to do with JSD, in paper we present the 6 lang experiments. Here I wanted to keep things simple and focus on the 20 lang experiments. But it seems that for 20 langs the influence of JSD is actually positive for NER and there is $\approx 0$ influence on XNLI. }\tomasz{I think lack of correlation is caused by not trying NoOverlap method for 20 languages. Consider skipping this finding.}
+
+% Firstly, we see that the default settings of the Huggingface tokenizers produce very different alphabet sizes and in turn affect the UNK rate. As we will see later, this does not affect the metrics significantly.
+
+\input{tables/in_lang_avg_20l.tex}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/pair_analysis_20L.pdf}
+    \caption{We compare the tokenizer metrics against the contextualized representation quality. For each tokenizer, we pretrain a masked language model, freeze it, and train a linear probe for each task and each of the available languages. We observe a high Spearman correlation between CPT and the word-level tasks (NER, POS, UD) and a high correlation between AR and the sentence-level task XNLI. This suggests that our vocabulary allocation metrics are good indicators of the tokenizer's quality and higher vocabulary allocation leads to better downstream performance. Each data point corresponds to an average result over three seeds of probe training and evaluating one of the languages. The results for each language are centered around the mean to account for the differences between languages.}
+    \label{fig:pair_analysis_20L}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/X_pair_analysis_20L.pdf}
+    \caption{We compare the tokenizer metrics against the cross-lingual performance of the models. For each tokenizer, we pretrain a masked language model, freeze it, and train a linear probe on each of the available languages. Then we evaluate the models on all languages the probe has \textbf{not} been trained on, assessing the cross-lingual properties of the model. Here we observe a high correlation between JSD and the word-level tasks, especially the POS and UD. This suggests that less overlap (higher divergence) between the vocabularies of the languages leads to better cross-lingual performance for word-level tasks.} 
+    \label{fig:X_pair_analysis_20L}
+\end{figure}
+
+\input{tables/corr_in_lang_20l_camread.tex}
+\input{tables/corr_x_lang_20l_camread.tex}
