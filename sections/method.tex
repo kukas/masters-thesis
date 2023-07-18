@@ -165,7 +165,8 @@ The metric is defined as follows. Given a tokenizer $\tau$ and a language corpus
 
 where $|s|$ is the number of characters in the sentence $s \in C_l$ and $|\tau(s)|$ is the number of tokens in the tokenized sentence. The metric is illustrated in Figure \ref{fig:cpt_example}.
 
-The CPT metric is connected to the \textit{average tokenized length} (or sequence length, or description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. The authors suggest using the metric to compare whether one tokenizer splits a selected low-resource language into more tokens compared to another tokenizer. The average tokenized length is defined as the average number of tokens per sentence: \tomasz{As I wrote before, Results chapter is not a palce for definitions}
+The CPT metric is connected to the \textit{average tokenized length} (or sequence length, or description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. The authors suggest using the metric to compare whether one tokenizer splits a selected low-resource language into more tokens compared to another tokenizer. The average tokenized length is defined as the average number of tokens per sentence: 
+
 \begin{equation}
 \label{eq:tl_def}
     TL(\tau, C_l) = \frac{\sum_{s \in C_l}|\tau(s)|}{|C_l|}
@@ -183,7 +184,7 @@ Even though the metrics are equivalent, we use the CPT metric instead of the ave
 
 CPT is also similar to another metric used in the literature --- the word fertility metric used in \citet{rust_how_2021}. The word fertility is defined as the average number of tokens per word. We can see that the same argument as in \autoref{eq:tl} can be made about fertility and CPT. If we consider a corpus-specific constant "average number of characters per word", we see that fertility and CPT are proportional. The fertility metric has been shown to correlate with downstream performance and therefore seems to be a good metric. The downside of this metric is that it is not language-agnostic because it is not defined for languages without word delimiters such as Chinese or Thai.
 
-\subsection{Average Rank}
+\subsection{Average rank}
 
 \begin{figure}[h]
     \centering
@@ -250,7 +251,7 @@ By examination of ALP, it becomes evident that the metric is a composition of tw
 In comparison to our average rank, ALP measures the number of used tokens and the uniformity of the distribution thanks to the entropy in the equation. On the other hand, the ALP metric is punished by the length of the tokens, which is counterintuitive. We therefore stick to our AR metric, which is more intuitive and does not suffer from this issue.
 
 
-\subsection{Average rank and entropy}
+\subsubsection{Average rank and entropy}
 
 Next, a natural question is what is the difference between average rank and information entropy. The entropy of the tokenized corpus is defined as follows:
 
@@ -290,7 +291,7 @@ We see that under the Zipfian assumption, the entropy may be viewed as an "avera
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{img/temp/ar_alr_entropy.jpg}
+    \includegraphics[width=0.9\textwidth]{figures/ar_alr_entropy.pdf}
     \caption{We compute the average rank, average log rank, and entropy for different tokenizers and languages. Then we plot each metric against entropy. We see that entropy and average log rank are similar, which supports our assumption that the tokens follow Zipf's distribution.}
     \label{fig:ar_alr_entropy}
 \end{figure}
@@ -298,6 +299,7 @@ We see that under the Zipfian assumption, the entropy may be viewed as an "avera
 This provides us with an intuitive understanding of the difference between the two metrics. AR and entropy can be viewed as being related, with the difference being in their sensitivity to the rank of the tokens. AR, being directly related to rank, is more sensitive to changes in probability in lower-frequency tokens. This is because the weighted average used in AR is more affected by linear rank values than the logarithmic rank values used in entropy calculation.
 
 \subsection{Jensen-Shannon Divergence}
+\label{sec:jsd}
 
 \begin{figure}[h]
     \centering
@@ -438,7 +440,7 @@ To support the claim that the intrinsic evaluation is a good proxy for the extri
 
 To account for the inherent randomness of the training procedure, we will train multiple probes for each configuration $(m, t, l)$. We will use 3 random seeds for each probe and report the average performance over the seeds. We will also report the standard deviation of the performance over the seeds. In the case of the summarized performances, we estimate the standard deviation using bootstrapping over the seeds.
 
-Note that because for one tokenizer we pretrain only one model, as it is the most costly part of the experiment, we do not have an estimate of the variance of the performance of the model. We will interpret the results of the experiments with this fact in mind.
+Note that because for one tokenizer we pretrain only one model, as it is the most costly part of the experiment, we do not have an estimate of the variance of the pretraining of the model. We will interpret the results of the experiments with this fact in mind.
 
 
 % For evaluating the language modeling capability of the models we use two techniques. First, we want to evaluate the performance of the models using finetuning on language understanding tasks. This approach is taken by the related work and it is the standard way of multilingual model evaluation. We use part of the XTREME benchmark, namely the Natural language inference, Part of Speech tagging and Named entity recognition tasks. For each task we finetune on every language and measure the performance on the development set. We do not apply any hyperparameter search apart from choosing a satisfactory learning rate and batch size for each task by running few short experiments. 
