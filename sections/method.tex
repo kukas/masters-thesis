@@ -54,7 +54,11 @@
 % \textbf{Q5:} How do the reproduced methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
 
 
-In this chapter, we introduce the methodology for experiments conducted in this thesis. We introduce the important data sampling method utilized in \citet{devlin_bert_2019,conneau_unsupervised_2020} we use frequently for our experiments. Then we introduce our proposed metrics for measuring the \textit{vocabulary allocation} and \textit{vocabulary overlap} of a tokenizer. We introduce the types of experiments we will conduct. Namely we will train different tokenizers and evaluate them against our metrics. Moreover, we will also use the tokenizers to train masked language models to verify that our metrics are useful for assessing the tokenizer quality for use in language models. We will also describe in detail the evaluation procedures and all evaluation settings and tasks. 
+In this chapter, we introduce the methodology for experiments conducted in this thesis. We introduce the important data sampling method utilized in \citet{devlin_bert_2019,conneau_unsupervised_2020} we use frequently for our experiments.
+Then we introduce our proposed metrics for measuring the \textit{vocabulary allocation} and \textit{vocabulary overlap} of a tokenizer. 
+We introduce the types of experiments we will conduct. 
+\tomaszrep{Namely}{Overall,} we will train different tokenizers and evaluate them against our metrics.
+\tomaszrep{Moreover,}{Subsequently,} we will also use the tokenizers to train masked language models to verify that our metrics are useful for assessing the tokenizer quality for use in language models. We will also describe in detail the evaluation procedures and all evaluation settings and tasks. 
 
 % \xxx{TODO - WIP}
 % In this chapter, we explain the methodology for experiments conducted in this thesis. We answer our research questions stated in the \autoref{chap:introduction} in the following manner. In the \autoref{sec:tokenizer_metrics}, we introduce metrics for measuring the quality of tokenizers. We use these metrics to investigate the differences between tokenizers (\textbf{Q1}, ). We then validate the usefulness of our metrics by training masked language models using the tokenizers and evaluating them on a set of downstream tasks to see whether are our metrics good predictors of the model performance. (\textbf{Q2}). Then we use our metrics on a more granular level and investigate the differences 
@@ -74,7 +78,9 @@ In this chapter, we introduce the methodology for experiments conducted in this 
 
 % In the following chapters, we will reference often the balancing factor $\alpha$, here we defin
 
-As explained in the previous chapters, the training data available for each language differs significantly in the total size (counted as the number of lines). For training the multilingual language model and associated tokenizer, it is generally advised to address this data imbalance by oversampling the languages with a low amount of data available (low-resource languages) and undersample the languages with high amounts of data (high-resource languages). One possible balancing procedure proposed by \citet{devlin_bert_2019,conneau_unsupervised_2020} is parametrized by the exponent $\alpha$ which we will now describe. In the following chapters, we will reference often the balancing factor $\alpha$. If not mentioned otherwise, what we mean is the data balance in the \textbf{tokenizer} training data (not pretraining data for the model) implied by sampling with the $\alpha$ parameter.
+As explained in the previous chapters \tomasz{refer to specific chapter}, the training data available for each language differs significantly in the total size (counted as the number of lines). For training the multilingual language model and associated tokenizer, it is generally advised to address this data imbalance by oversampling the languages with a low amount of data available (low-resource languages) and undersample the languages with high amounts of data (high-resource languages). One possible balancing procedure proposed by \citet{devlin_bert_2019,conneau_unsupervised_2020} is parametrized by the exponent $\alpha$ which we will now describe.
+\tomaszrep{In the following chapters, we will reference often the balancing factor $\alpha$. 
+If not mentioned otherwise, we consider data balance in the \textbf{tokenizer} training data (not pretraining data for the model) implied by sampling with the $\alpha$ parameter.}{[confusing, the second sentence is reiterated clearer at the end of the section.]}
 
 We assume we have $N$ monolingual corpora $C_l$ with languages $l \in L$. Each corpus with the language $l \in L$ has a different number of lines $N_l = |C_l|$. Then, the probability of sampling a line from the concatenation of all corpora $\cup_{l \in L} C_l$ is:
 
@@ -149,7 +155,7 @@ We introduce three metrics - average rank, characters per token and Jensen-Shann
 
 % Later, in \autoref{sec:metric_comparison}, we compare our metrics with the metrics used in the literature.
 
-To define the metrics formally, we use the following notation \cite{zouhar_tokenization_2023}. Let $\Sigma$ be a set of characters we call the alphabet. In our context, the alphabet is the set of all valid Unicode characters. We call a string $\sigma \in \Sigma^*$ a line. Finally, we call a multiset of lines $C_l = \{ \sigma_1, \ldots, \sigma_{N_l} \} \subset \Sigma^*$ a corpus of size $N_l$. The $l \in L$ denotes a language of the corpus from a set of languages $L$. Next, we denote the set $V_\tau \subset \Sigma^*$ as the vocabulary of a tokenizer $\tau$. The tokenizer $\tau: \Sigma^* \rightarrow V_\tau^*$ is a mapping from a line $\sigma \in \Sigma^*$ to a sequence of tokens $\tau(\sigma) \in V_\tau^*$. We denote the number of tokens in a sequence $s$ as $|s|$. Finally, we denote the number of occurrences of a token $v \in V_\tau$ in a corpus $C_l$ as $\textrm{cnt}(v, C_l)$.
+To define the metrics formally, we use the following notation \cite{zouhar_tokenization_2023}. Let $\Sigma$ be a set of characters we call the alphabet. In our context, the alphabet is the set of all valid Unicode characters. We call a string $\sigma \in \Sigma^*$ a line \tomasz{wait, what is $\Sigma^*$? How is it different from $\Sigma$?}. Finally, we call a multiset of lines $C_l = \{ \sigma_1, \ldots, \sigma_{N_l} \} \subset \Sigma^*$ a corpus of size $N_l$. The $l \in L$ denotes a language of the corpus from a set of languages $L$. Next, we denote the set $V_\tau \subset \Sigma^*$ as the vocabulary of a tokenizer $\tau$. The tokenizer $\tau: \Sigma^* \rightarrow V_\tau^*$ is a mapping from a line $\sigma \in \Sigma^*$ to a sequence of tokens $\tau(\sigma) \in V_\tau^*$. We denote the number of tokens in a sequence $s$ as $|s|$. Finally, we denote the number of occurrences of a token $v \in V_\tau$ in a corpus $C_l$ as $\textrm{cnt}(v, C_l)$.
 \xxx{TODO: Check the notation}
 % For each metric we will provide motivation and comparison with similar metrics used in the literature. 
 
@@ -175,7 +181,8 @@ The metric is defined as follows. Given a tokenizer $\tau$ and a language corpus
 
 where $|s|$ is the number of characters in the sentence $s \in C_l$ and $|\tau(s)|$ is the number of tokens in the tokenized sentence. The metric is illustrated in Figure \ref{fig:cpt_example}.
 
-The CPT metric is connected to the \textit{average tokenized length} (or sequence length, or description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. The authors suggest using the metric to compare whether one tokenizer splits a selected low-resource language into more tokens compared to another tokenizer. The average tokenized length is defined as the average number of tokens per sentence: 
+The CPT metric is connected to the \textit{average tokenized length} (or sequence length, or description length) metric used in \citet{chung_improving_2020,liang_xlm-v_2023}. 
+These works suggest using the metric to compare whether one tokenizer splits a selected low-resource language into more tokens compared to another tokenizer. The average tokenized length is defined as the average number of tokens per sentence: 
 
 \begin{equation}
 \label{eq:tl_def}
@@ -203,7 +210,7 @@ CPT is also similar to another metric used in the literature --- the word fertil
     \label{fig:ar_example}
 \end{figure}
 
-Another metric we use for comparing the tokenizers is Average Rank (AR). The motivation for this metric is that we want to measure how many tokens are effectively used in the vocabulary for representing the corpus. Each language will have some amount of tokens dedicated to it in the vocabulary and our goal is to measure this allocation. We also want to take into account how frequently are these tokens used. We hypothesize that very frequent and very rare tokens are not as useful for the language models as the high-frequency tokens might be too ambiguous and low-frequency tokens might not have enough training examples to learn from \cite{gowda_finding_2020}. We therefore propose to measure the average rank (the position of the token sorted by frequency) of tokens needed to cover a monolingual corpus, weighted by their probability.
+Another metric we use for comparing the tokenizers is Average Rank (AR). The motivation for this metric is that we want to measure how many tokens are effectively used in the vocabulary for representing the corpus. Each language will have some amount of tokens dedicated to it in the vocabulary and our goal is to measure this allocation. We also want to take into account how frequently are these tokens used. We hypothesize that very frequent and very rare tokens are not as useful for the language models as the high-frequency tokens might be too ambiguous and low-frequency tokens might not have enough training examples to learn from \cite{gowda_finding_2020}. We therefore propose to measure the average rank (the position of the token sorted by frequency) of tokens \tomaszrep{needed to cover a monolingual corpus, weighted by their probability.}{in the empirical probability distribution over a monolingual corpus.}
 % Here one metric suggestion could be something along the lines of "number of tokens from vocabulary of $\tau$ needed to cover the 95/98/100\% of the corpus". That metric would work but the downside is that we do not know how to set the threshold. Moreover we would like the metric to reflect the shape of the distribution of the token coverage. We prefer a distribution that is more balanced. High-frequency tokens might be too ambiguous and low-frequency tokens might not have enough training examples to learn from \cite{gowda_finding_2020}. Therefore we propose a different metric that reflects both the vocabulary allocation and the uniformity of the token distribution. On top of that it is parameter-free.
 
 Given a tokenizer $\tau$ and a language corpus $C_l$, we first tokenize the corpus using the tokenizer $\tau$. Then we compute the empirical probability of the tokens in the tokenized corpus.
@@ -220,6 +227,7 @@ We sort the tokens by their probability and assign them ranks from 1 to $|V_\tau
 
 The metric is illustrated in Figure \ref{fig:ar_example}. Higher AR signals that the vocabulary contains higher number of tokens used for tokenizing given language. Moreover with high AR we can expect that the tokens are distributed more uniformly.
 
+\tomasz{I suggest creating a subsection here:}
 Now, we would like to address how our \textit{average rank} compares to different metrics used in the literature. 
 
 First, we examine the \textit{average log probability} (ALP) defined in \citet{zheng_allocating_2021}. This metric is proposed for the same purpose as our AR metric. It is also said to measure language-specific vocabulary capacity and the authors claim that it is "penalized by the subword units with low-frequency". Surprisingly, we can show that the ALP metric is equivalent to the product of negative entropy and average tokenized length.
@@ -314,7 +322,7 @@ This provides us with an intuitive understanding of the difference between the t
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{img/temp/jsd_example.png}
-    \caption{Jensen-Shannon Divergence}
+    \caption{Jensen-Shannon Divergence \tomasz{cite the source: poster}}
     \label{fig:jsd_example}
 \end{figure}
 
@@ -336,7 +344,7 @@ Computing the JSD between the two distributions will result in a metric that mea
 
 Overlap in tokenization has been studied in \citet{wu_beto_2019}, although the metric used there was the absolute number of overlapping tokens. The benefit of using Jensen-Shannon divergence for measuring the vocabulary overlap is that the metric takes into account the occurrence of the shared tokens. This is important because some of the overlapping tokens may be for example infrequent emojis or other special tokens that do not carry much information about the language nor the actual overlap in more meaningful tokens.
 
-\citet{chung_improving_2020} uses the Wasserstein distance (or the "earth mover's distance") to measure the overlap between two languages. We believe this is a mistake as the Wasserstein distance is defined for probability measures (probability distributions on a given metric space). The tokenizer vocabulary has no metric structure and the authors of the article do not specify how they define the metric on the vocabulary. It is therefore not suitable to use the Wasserstein distance for measuring the overlap between two tokenizers.
+\citet{chung_improving_2020} uses the Wasserstein distance (or the "earth mover's distance") to measure the overlap between two languages. We believe this is \tomaszrep{a mistake}{suboptimal} as the Wasserstein distance is defined for probability measures (probability distributions on a given metric space). The tokenizer vocabulary has no metric structure and the authors of the article do not specify how they define the metric on the vocabulary. It is therefore not suitable to use the Wasserstein distance for measuring the overlap between two tokenizers.
 
 \subsection{Alphabet size and out-of-vocabulary tokens}
 
@@ -353,6 +361,7 @@ We also measure the number of out-of-vocabulary (OOV) tokens in the corpus. The 
 \end{equation}
 
 Where $\mathbbm{1}_{t = \mathrm{<UNK>}}$ is an indicator function that is 1 if the token is UNK and 0 otherwise. Because we use the same validation set for all the tokenizers, we can compare the number of OOV tokens directly between the tokenizers. Note that in the literature, the out-of-vocabulary tokens are measured as a OOV rate (number of OOV tokens divided by the total number of tokens in the corpus). We do not use this metric because the values of the OOV rate are small for the subword tokenizers and therefore slightly harder to compare.
+\tomasz{I think OOV rate could be better because it's not sensitive to the size of the corpus. But if you already compute the abs. number then leave it.}
 
 % Further, we will be mainly concerned with the tokenization of the training corpora $\tau(C_l)$ and the empirical distribution over the tokenizer vocabulary:
 
@@ -384,18 +393,18 @@ In this section, we introduce the evaluation procedures that we use to evaluate 
 
 \subsection{Types of experiments}
 
-Generally, we can distinguish two types of experiments we do with the tokenizers we compare in this thesis. The first type of experiment is comparing different tokenizers to each other using the evaluation metrics we introduced in the previous section. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer. To do this, we will train the tokenizers on the same training corpus and then evaluate them using the intrinsic evaluation metrics on validation sets from all the languages $L$. 
+Generally, we can distinguish two types of experiments we do with the tokenizers we compare in this thesis. The first type of experiment is comparing different tokenizers to each other using the evaluation metrics we introduced in the previous section. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer. To do this, we will train the tokenizers on the same training corpus and then evaluate them using the intrinsic evaluation metrics on validation sets \tomaszrep{from}{for} all the languages $L$. 
 
-The second type of experiment is comparing different tokenizers on downstream tasks. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer on the task of natural language understanding. To do this, we will train the tokenizers on the same training corpus and then use the tokenizers to train otherwise identical language models. Then we will evaluate the language models on the same validation sets from all the languages $L$. 
+The second type of experiment is comparing different tokenizers on downstream tasks. For example, we can compare the Unigram LM tokenizer to the BPE tokenizer on the task of natural language understanding. To do this, we will train the tokenizers on the same training corpus and then use the tokenizers to train otherwise identical language models. Then we will evaluate the language models on \tomaszrep{the same validation sets from}{test[?] sets for} all the languages $L$. 
 
 \subsection{Intrinsic evaluation}
 \label{sec:intrinsic_evaluation}
 
 For the intrinsic evaluation of a set of tokenizers, we compute the metrics we introduced in the previous section on the validation sets from all the languages $L$. We compute the metrics for each tokenizer and validation language separately. Then, we compare the per language metrics between the tokenizers. Because the metrics are generally different for different languages (for example the characters per token for Chinese will be always smaller than the characters per token for English), we will compare the relative differences between the tokenizers rather than the absolute values.
 
-We will also compute the overall metrics for the whole set of languages $L$. We do this by averaging the metrics over all the languages. We use the macro average over languages, which means that we average the metrics for each language with the same weight. We use the macro average because we want to assess equally the improvements over the high-resource and low-resource languages. This is a choice we make to assess each language equally. Different weighting schemes might be more appropriate for different applications.
+We will also compute the overall metrics for the whole set of languages $L$. We do this by averaging the metrics over all the languages. We use the macro average over languages, which means that we average the metrics for each language with the same weight. We use the macro average because we want to assess equally the \tomaszrep{improvements over}{impact on} the high-resource and low-resource languages. This is a choice we make to assess each language equally. Different weighting schemes might be more appropriate for different applications.
 
-The JSD metric which measures the \textit{vocabulary overlap} is defined between a pair of languages, measuring the overlap between the two. We compute the overall overlap by considering the JSD values for all pairs $l_1, l_2 \in L, l_1 \neq l_2$.
+The JSD metric which measures the \textit{vocabulary overlap} is defined between a pair of languages, measuring the overlap between the two. We compute the overall overlap by considering the JSD values for all pairs \tomasz{of languages:} $l_1, l_2 \in L, l_1 \neq l_2$.
 
 \subsection{Extrinsic evaluation}
 %     - extrinsic evaluation
@@ -414,18 +423,22 @@ The JSD metric which measures the \textit{vocabulary overlap} is defined between
 %         - how to compute the correlation
 %         - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
 
-For the extrinsic evaluation of a set of tokenizers we compare the performance of a set of language models that differ only in the tokenizers used. The performance is compared on a set of language understanding tasks.
+For the extrinsic evaluation of \tomaszrep{a set of}{} tokenizers, we compare the performance of \tomaszrep{a set of}{corresponding} language models that differ only in the tokenizers used.
+\tomasz{The performance is compared}{We evaluate the performance} on a set of language understanding tasks.
 Because the language models are identical except for the tokenizer used, the differences in the performance will be caused only by the differences in the tokenizers and random factors such as the weight initialization of the language models.
 
-Concretely, given a set of tokenizers, we train a set of masked language models with the same architecture and pretraining data. We then evaluate the models by training linear classifiers (probes) on top of the contextualized word embeddings produced by the language models. For a given pretrained model, we train probes for each task-language combination utilizing training data in all languages given for the task. For each configuration, we train 3 random initializations of the probe with different seeds to acquire more stable results and an estimate of the variation. In total, $N_\mathrm{models} \times N_\mathrm{tasks} \times N_\mathrm{languages} \times N_\mathrm{seeds}$ probes are trained to compare the performance of the models for one experiment.
+Concretely, given a set of tokenizers, we train \tomaszrep{a set of}{corresponding} masked language models with the same architecture and pretraining data.
+ We then evaluate the models by training linear classifiers (probes) on top of the contextualized word embeddings produced by the language models. 
+ For a given pretrained model, we train probes for each task-language combination utilizing training data in all languages given for the task.
+ For each configuration, we train 3 random initializations of the probe with different seeds to acquire more stable results and an estimate of the variation. In total, $N_\mathrm{models} \times N_\mathrm{tasks} \times N_\mathrm{languages} \times N_\mathrm{seeds}$ probes are trained to compare the performance of the models for one experiment.
 
-We use probing \cite{conneau_what_2018,belinkov_interpretability_2020,blevins_analyzing_2022} to evaluate the language modeling capability of the models. Instead of finetuning we freeze the base model and train only linear classifiers on top of the outputs of the base model. This approach allows us to evaluate the language modeling capability of the models without the influence of the finetuning procedure. We choose probing because it leads to less noisy results than finetuning. 
+We use probing \cite{conneau_what_2018,belinkov_interpretability_2020,blevins_analyzing_2022} to evaluate the language modeling capability of the models. Instead of finetuning we freeze the base model and train only linear classifiers on top of the outputs of the base model. This approach allows us to evaluate the language modeling capability of the models without the influence of the finetuning procedure. 
+\tomaszrep{We choose probing because it leads to less noisy results than finetuning.}{[I'm afraid it's false]}
 
 % the noise could be caused by the smaller difference between pretraining data amount and the amount of data used for finetuning.
 
-To evaluate a model $m$ on task $t$ and languages $t_L$, we will train probes $f_{m, t, l_\mathrm{src}}$ for each training (source) language $l_\mathrm{src} \in t_L$. Then the probe will be evaluated on the task test sets in languages $l_\mathrm{tgt} \in t_L$ using standard classification metrics used for the given task such as accuracy and the F1 score.
+To evaluate a model $m$ on task $t$ and languages $t_L$, we will train probes $f_{m, t, l_\mathrm{src}}$ for each training (source) language $l_\mathrm{src} \in t_L$. Then the probe will be evaluated on the task test sets in languages $l_\mathrm{tgt} \in t_L$ using standard classification metric \tomaszrep{s used for the given task such as accuracy and the F1 score.}{ (in our case: accuracy or F1).} 
 % full probe notation: $f_{m, t, l_\mathrm{src}}: \mathbb{R}^d \rightarrow \mathcal{D}_t$
-% we denote the model outputs \mathbb{R}^d
 
 % given model outputs $\vec{x} \in $, we can evaluate the performance of the probe on a given language $l_\mathrm{tgt}$ by computing the accuracy of the probe on the test set for the given language $l_\mathrm{tgt}$.
 
@@ -444,13 +457,14 @@ When considering the results per language in both evaluation schemes, it is usef
 
 \subsubsection{Correlation between intrinsic and extrinsic evaluation}
 
-To support the claim that the intrinsic evaluation is a good proxy for the extrinsic evaluation, we will compute the correlation between the intrinsic and extrinsic evaluation. Because the tokenizer metrics and model performance are influenced by the evaluation language as mentioned in the previous paragraph and in \autoref{sec:intrinsic_evaluation}, we center the tokenizer metrics and downstream task results by subtracting the mean for each language in the in-language setting or pair of languages in the cross-lingual setting. In both cases, means are computed across all tokenizers. We present Spearman’s correlation coefficient and the associated p-value.
+To support the claim that intrinsic evaluation is a good proxy for extrinsic evaluation, we will compute the correlation between intrinsic and extrinsic evaluation. Because the tokenizer metrics and model performance are influenced by the evaluation language as mentioned in the previous paragraph and in \autoref{sec:intrinsic_evaluation}, we center the tokenizer metrics and downstream task results by subtracting the mean for each language in the in-language setting or pair of languages in the cross-lingual setting. In both cases, means are computed across all tokenizers. We present Spearman’s correlation coefficient and the associated p-value.
 
 \subsubsection{Variation estimation}
 
 To account for the inherent randomness of the training procedure, we will train multiple probes for each configuration $(m, t, l)$. We will use 3 random seeds for each probe and report the average performance over the seeds. We will also report the standard deviation of the performance over the seeds. In the case of the summarized performances, we estimate the standard deviation using bootstrapping over the seeds.
 
-Note that because for one tokenizer we pretrain only one model, as it is the most costly part of the experiment, we do not have an estimate of the variance of the pretraining of the model. We will interpret the results of the experiments with this fact in mind.
+Note that because for one tokenizer we pretrain only one model, as it is the most costly part of the experiment, we do not estimate the variance for the pretraining of the model.
+\tomaszrep{We will interpret the results of the experiments with this fact in mind.}{[unnecessary]}
 
 
 % For evaluating the language modeling capability of the models we use two techniques. First, we want to evaluate the performance of the models using finetuning on language understanding tasks. This approach is taken by the related work and it is the standard way of multilingual model evaluation. We use part of the XTREME benchmark, namely the Natural language inference, Part of Speech tagging and Named entity recognition tasks. For each task we finetune on every language and measure the performance on the development set. We do not apply any hyperparameter search apart from choosing a satisfactory learning rate and batch size for each task by running few short experiments. 
@@ -469,7 +483,7 @@ Here we present the downstream tasks we use in our paper \cite{limisiewicz_token
 
 \subsection{POS}
 
-We use Part of Speech annotations from Universal Dependencies \cite{nivre_universal_2020}. The dataset is available for 17 languages analyzed by us (not covered: Swahili, Thai, Georgian). Each word is assigned one of the 17 coarse POS tags.
+We use Part of Speech annotations from Universal Dependencies \cite{nivre_universal_2020}. The dataset is available for 17 languages analyzed by us (not covered: Swahili, Thai, Georgian). \tomasz{PROBLEM: You haven't introduced the list of languages yet!} Each word is assigned one of the 17 coarse POS tags.
 
 \subsection{NER}
 
@@ -478,7 +492,7 @@ We use Wikiann dataset \cite{pan_cross-lingual_2017} consisting of Wikipedia art
 \subsection{Dependency labeling}
 
 As in Part of Speech, we use Universal Dependencies \cite{nivre_universal_2020} for the dependency relation annotations. We use the largest UD treebank available for each language.
-For each word we predict one of the 37 universal relations to its head word. Because the relation is between two words, we use the concatenation of the two word representations along with their element-wise product as an input to the probe ($[h_{w1}; h_{w2}; h_{w1} \odot h_{w2}]$).
+For each word, we predict one of the 37 universal relations to its head word. Because the relation is between two words, we use the concatenation of the two word representations along with their element-wise product as an input to the probe ($[h_{w1}; h_{w2}; h_{w1} \odot h_{w2}]$).
 
 \subsection{NLI}
 
@@ -490,3 +504,11 @@ XNLI contains data for 15 languages (not covered: te, ta, mr, he, ka).
 We use up to 1,000 sentences aligned for pairs of languages from Tatoeba dataset \cite{artetxe_massively_2019}. For the pairs including English, we use the same sample as in XTREME data collection. For other pairs, we perform sampling ourselves. 
 
 We compute the cosine similarity between sentence representations across languages and find the best alignment with the Hungarian algorithm\cite{kuhn_hungarian_1955}. We compute the accuracy as the number of correctly aligned sentences divided by the total number of sentences.
+
+
+\section{Implementation Details}
+\tomasz{IMO good place to dump all Appendi-worthy details.}
+
+\subsection{Tokenizers}
+\subsection{Model Pretraining}
+\subsection{Probing}
