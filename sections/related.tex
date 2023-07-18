@@ -25,7 +25,7 @@
 
 % In order to organize Chapter Two, you will first start with an introduction about the general problem and your topic. Then you will provide an advance organizer, which indicates what will be covered in the literature review.
 
-In this thesis, we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end, we first introduce multilingual language models. Then, we explain the concept of subword tokenization and the most common subword tokenization methods. Lastly, we show what problems arise when using pretrained models in multilingual settings and what methods have been proposed to mitigate these problems.
+In this thesis, we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end, we first introduce multilingual language models. Then, we explain the concept of subword tokenization and the standard subword tokenization methods. Lastly, we show what problems have been identified when using standard tokenizers in multilingual settings and what methods have been proposed to mitigate these problems.
 
 \tomasz{Rewrite the intro: Be more clear and sepecific}
 \tomasz{Genearal remark: you may create separate section summarizing the metrics of allocation (e.g. fertility, ALP) ala overlap (e.g. Wasserstein)}
@@ -108,7 +108,7 @@ The Byte Pair Encoding (BPE) algorithm was introduced by \citet{sennrich_neural_
 
 The principle of BPE is to iteratively merge the most frequent byte pairs in the corpus until the vocabulary size reaches the target size. The algorithm starts with a vocabulary of unique characters used in the input corpus. Using this vocabulary, we then compute the frequency of every character pair and merge the most frequent pair to create a new subword unit. We recompute the frequency of the subword unit pairs and repeat the process until the target vocabulary size is reached.
 
-To tokenize an input text, the BPE algorithm then iteratively merges the pairs in the same order as they were merged during training. The algorithm stops when it has merged all pairs in the vocabulary. The output of the algorithm is a sequence of subword units that can be used as the input tokens for the neural model.
+To tokenize an input text, the BPE algorithm then iteratively merges the pairs in the same order as they were merged during training. The algorithm stops when it has merged all pairs in the vocabulary. The output of the algorithm is a sequence of subword units that can be used as the input tokens for the neural model. We show the pseudocode of the BPE algorithm in Algorithm \ref{alg:bpe}.
 
 \begin{algorithm}
     \begin{algorithmic}
@@ -264,7 +264,7 @@ For measuring this, \citet{rust_how_2021} use a metric called \textit{fertility}
 
 As we have described, \citet{rust_how_2021} have firmly established that there is indeed a disparity between the performance of the multilingual model mBERT and similar monolingual models. They have shown that the disparity is in part caused by the tokenization method used in the multilingual model.
 
-Other works have addressed this issue by proposing novel tokenization methods, that aim to improve the vocabulary of the multilingual model and increase its size to accommodate for all represented languages. The works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} all introduce new multilingual models that use an expanded vocabulary and a novel tokenization method for mitigating the language bias. Moreover, the authors all show that the standard recipe of training a tokenizer on a concatenation of all languages in the training data is not optimal and that the performance of the model can be improved by using their method, especially for the low-resource languages.
+Other works have addressed this issue by proposing novel tokenization methods, that aim to improve the vocabulary of the multilingual model and increase its size to accommodate for all represented languages. The works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} all introduce new multilingual models that use an expanded vocabulary and a novel tokenization method for mitigating the language bias. Moreover, the authors all claim that the standard recipe of training a tokenizer on a concatenation of all languages in the training data is not optimal and that the performance of the model can be improved by using their method, especially for the low-resource languages. 
 
 In the following subsections, we will describe these three methods. First, we describe the method of \citet{chung_improving_2020}, which replaces the standard method with a procedure of clustering similar language corpora together and training separate cluster-tokenizers before merging these tokenizers together. Then we describe the method introduced by \citet{zheng_allocating_2021} which infers the optimal per-language vocabulary size and then trains separate, monolingual tokenizers for each language that are then merged. Lastly, we describe the method of \citet{liang_xlm-v_2023}, which combines the previous two methods and trains even larger vocabularies than the previous two methods.
 
@@ -358,6 +358,29 @@ The clustered vocabulary is then used to train a smaller and bigger multilingual
 
 \subsection{Determining vocabulary capacity for each language}
 \label{sec:zheng}
+
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[
+      block/.style={rectangle, draw, fill=blue!20, text width=8.5em, text centered, rounded corners, minimum height=4em},
+      line/.style={draw, -latex}
+    ]
+    
+    \node [block] (corpora) {Monolingual Corpora};
+    \node [block, right of=corpora, node distance=4.5cm] (vocab) {Train tokenizers of different sizes};
+    \node [block, right of=vocab, node distance=4.5cm] (alp) {Compute ALP for each language and size};
+    \node [block, below of=alp, node distance=2.5cm] (merge) {Combine tokenizers by maximizing ALP};
+    \node [block, left of=merge, node distance=4.5cm] (final) {Final Vocabulary};
+    
+    \path [line] (corpora) -- (vocab);
+    \path [line] (vocab) -- (alp);
+    \path [line] (alp) -- (merge);
+    \path [line] (merge) -- (final);
+    
+    \end{tikzpicture}
+    \caption{Flowchart of the \citeauthor{zheng_allocating_2021} method for determining vocabulary capacity.}
+    \label{fig:zheng_flowchart}
+\end{figure}
 
 In the paper \Citetitle{zheng_allocating_2021}, \citeauthor{zheng_allocating_2021} propose a method for determining the optimal vocabulary capacity for each language in a multilingual model. Further, they propose a method for constructing a multilingual vocabulary by combining monolingual vocabularies so that the optimal capacity is achieved for each language. In the second part of the paper, the authors propose a method for accelerating the training of the model with the increased vocabulary size, which is out of the scope of this thesis.
 
