@@ -1,4 +1,4 @@
-# Final priorities
+# meeting
 - think about research questions
     - what are the questions (introduction)
     - how to answer them (methodology / experimental setup)
@@ -17,16 +17,26 @@
         - experimental setup
         - results
 
+# Final priorities
+
 
 - discussion
     - the discussion about overlap - discuss the confluence with the vocabulary allocation, the allocation seems to be more important. The tokenizer metric figure AR vs JSD is a good illustration of this - the first batch of experiments JSD is positively correlated, for the second batch of experiments JSD is negatively correlated with allocation. This is reflected in the results
 - introduction
+- related work - maybe include discussion about the gaps in the literature
 - abstract
 - go through the results and Tomasz comments
-- poděkování
-- code readme and cleanup
-- citations cleanup
 
+- experimental setup
+    - (low priority) Tokenizer implementations and important parameters
+
+Thursday:
+- fix the layout
+- poděkování
+- pdfa
+    - figures from paper break pdfa
+- citations cleanup
+- podepsat výtisky
 
 
 - remove alphabet discussion from the paper results section

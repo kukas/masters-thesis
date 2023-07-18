@@ -1,0 +1,431 @@
+\chapter{Balancing methods}
+
+\section{Reproducing the vocabulary capacity balancing methods}
+
+% - replication of the previous balancing work
+%     - the code is not available for Chung and Liang, for Zheng we reimplement even though the code is available
+%     - therefore we follow all papers closely
+%     - Chung
+%         - reproductions of chung are available in the paper Overlap-based Vocabulary Generation Improves Cross-lingual Transfer Among Related Languages
+%             - they do not replicate the results of Chung
+%         - we run training with 8k vocab size, unigram, coverage 0.9995 (default in Sentencepiece) for each language
+%             - this is specified in the paper
+%             - we use 1M lines for each language which we have shown to be enough in preliminary experiments
+%         - we compute the binary vectors for each language and normalize them to unit length
+%         - we compute clusters using k-means, with k=4, 8, 12, 16, 20 (=all languages)
+%         - train the tokenizers on the clusters
+%             - target vocab size is 120k, again use Sentencepiece defaults
+%             - to reach the vocab size we train also +10\%, +20\%, +30\% of the target size and then prune
+%         - then we merge the tokenizers
+
+%     - Liang
+%         - we follow the same procedure as in Chung
+%         - compute negative log-likelihoods for each token over the corpus and use the euclidean distance to compute the similarity
+%         - but we use the sizes from Zheng
+
+In this section, we describe the reproduced methods for balancing the low- and high- resource languages in the vocabulary. As the code for two out of three of the methods is not available, we follow and reimplement the original papers closely and describe the differences in our implementation.
+
+The methods of \citet{chung_improving_2020} and \citet{liang_xlm-v_2023} follow a three step process: 1) grouping the languages into clusters by similarity, 2) running the Unigram LM tokenizer training on the clustered corpora and 3) combining the cluster-vocabularies into a single, multilingual vocabulary. The method of \citet{zheng_allocating_2021} works in two steps: 1) training the Unigram LM tokenizers for each language separately and 2) selecting the best vocabulary size for each language and combining the vocabularies into a single, multilingual vocabulary.
+
+As we can see the methods share the last merging step and differ in the clustering approaches. We therefore describe the clustering approaches first, then we describe the Zheng method and finally we describe the merging step common for all methods.
+
+\subsection{Reproducing the clustering methods}
+\tomasz{General remark: It's better to keep experiments definition (i.e. hypothesis statement and experiment overview.) separated from implementation details.
+The later are important bu shouldn't steal attention of the reader from the story.}
+
+The first step for the Chung and Liang methods is to train monolingual Unigram LM tokenizers for each language $l$ from the set of 20 languages $L$. As specified in \citet{chung_improving_2020}, we use the default Sentencepiece settings. Namely, we use the Unigram LM model, character coverage of 0.9995, number of seed sentencepieces is 1M. \xxx{add all parameters to appendix}. We use 1M lines for each language which we have shown to be enough in preliminary experiments \xxx{add ref}. This choice also corresponds to the \citet{zheng_allocating_2021} method, which uses 1M lines for each language. The vocabulary size differs between Chung and Liang and so we train two sets of monolingual tokenizers, with 8k and 30k vocabulary size respectively.
+
+We arrive at $|L|$ vocabularies $V^l$. Next we take the union of all vocabularies $V^L = \bigcup_{l \in L} V^l$ and compute the "vector representation" $\vec{v}^l$ for each language $l$ as described in \xxx{ref:related work}. For Chung we compute a binary vector of size $|V^L|$, where each element $v^l_i$ is 1 if the token $i$ is in the vocabulary $V^l$ of language $l$ and 0 otherwise. For Liang we compute a vector of size $|V^L|$, where each element $v^l_i$ is the negative log-likelihood of the token $i$ in the language $l$\footnote{Here we need to handle the tokens that occur 0 times for a given language and thus would have an infinite negative log-likelihood. From Figure 1 in \cite{liang_xlm-v_2023} we infer, that the authors substitute inf with 0. This is strange considering that log-likelihood of 0 implies probability 1. The euclidean distance between two language vector representations used in the k-means algorithm could be then affected by low-occurence tokens that occur infrequently in one language (high negative log-likelihood) but do not occur in another ($v^l_i = 0$). Nevertheless as we show in figure \xxx{ref}, the language similarities still correlate with the overlap count based similarity used in \cite{chung_improving_2020}}.
+
+\xxx{TODO?: Discuss whether Liang et al used the cosine distance or euclidean distance for the k-means algorithm. Maybe it is too much detail. But at the same time it is a funny detail because if they have used the cosine distance then the results would be the almost the same as for Chung et al. But they do not discuss this in the paper and they claim that their method is better.}
+
+\xxx{TODO?: We compute the NLLs by computing the empirical distributions from the training data. Maybe they take the NLLs from the trained Unigram LM models. But this is not clear from the paper.}
+
+With the vector representations $\vec{v}^l$ we can cluster the languages into $k$ clusters $C^k$ using the k-means algorithm. We use the implementation from \cite{scikit-learn} with the default parameters \xxx{check the parameters}. By normalizing the language representation vectors to unit length, we effectively switch to the cosine distance as the metric for the k-means algorithm. We experiment with $k \in \{4, 8, 12, 16, 20\}$. Note that $k=20$ corresponds to separating each language into a separate cluster which is similar to the method \textsc{TokMix} we introduce in \citet{limisiewicz_tokenization_2023}. 
+
+Then, given a clustering of languages $C$, for each cluster $c_j \in C$ we create new training corpus by concatenating all of the pretraining data belonging to the cluster\footnote{Here we have departed slightly from the recipe in the papers and used 1M lines per language instead of using the pretraining data. The reasoning is that we know that 1M lines per language is enough data to train the tokenizers effectively and at the same time we do not run into out-of-memory problems. On the other hand we have effectively used more balanced data to train the cluster tokenizers than Chung and Liang did. The difference is best illustrated by considering the marginal case of number of clusters $k=1$. With one cluster we would effectively train the tokenizer on the balanced multilingual dataset ($\alpha = 0$) as opposed to the original papers where in the case of $k=1$ the tokenizer would be trained on the pretraining data where the language imbalance is present ($\alpha = 0.5$).}. We run the Sentencepiece algorithm again on these clustered corpora to arrive at cluster-specific vocabularies $V^{c_j}$. The vocabulary size for each cluster is determined following the Chung and Liang methods. For both methods we want to arrive at the final size of 120k tokens after merging the cluster-specific vocabularies. Therefore we need to determine the size of each cluster vocabulary $|V^{c_j}|$ such that $\sum_{j=1}^k |V^{c_j}| = 120k$. Moreover, we would like to distribute the capacity of the final vocabulary effectively so that each cluster is assigned enough tokens to cover the languages it contains. The Chung method sets the size of the cluster vocabulary to be proportional to the the size of the union over the monolignual vocabularies $|\bigcup_{l \in c_j} V^l|$ to determine the size of each cluster vocabulary $|V^{c_j}| = \frac{|\bigcup_{l \in c_j} V^l|}{\sum_{i=1}^k |\bigcup_{l' \in c_i} V^{l'}|} \cdot 120k$.
+
+The Liang method sets the size of the cluster vocabulary to be proportional to the sum of the vocabulary allocations from \citet{zheng_allocating_2021} for the languages belonging to the cluster. We use the statistics from Table 9 in \citet{zheng_allocating_2021}, following \citet{liang_xlm-v_2023}.
+
+After the tokenizers are trained, we merge the vocabularies using the method described in \xxx{ref}. 
+
+Here we slightly improve the methods of Chung and Liang. By following the original method as described above, the final size of the vocabulary will be lower than the target we set. This is because the cluster vocabularies $V^{c_j}$ will contain overlapping tokens and merging will remove these duplicates. This negative effect becomes larger with the increasing number of clusters $k$. Therefore, on top of training the prescribed cluster vocabulary of size $|V^{c_j}|$, we also train slightly larger vocabularies $V_q^{c_j'}$ of size $|V_q^{c_j}| = q|V^{c_j}|$ for $q = 1.1, 1.2, 1.3$. We then select the minimum $q$ that results in a vocabulary of size at least 120k tokens after merging the cluster vocabularies. After that we trim the vocabulary if needed. This improvement is done to ensure the final vocabulary size is exactly 120k tokens and the comparison between the methods is fair.
+
+The resulting clusters and the corresponding per-cluster vocabulary sizes are found in Table \xxx{todo add table}
+
+
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            zh, ar, ru, bg & 27425 \\
+            el, ur, ta, te, th, he, ka & 48841 \\
+            en, es, tr, sw, vi, fr, de & 43622 \\
+            hi, mr & 12108 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k4}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+        \toprule
+        Languages & Size \\
+        \midrule
+        el, zh, ar, ur, ta, te, th, he, ka & 61285 \\
+        en, es, tr, sw, vi, fr, de & 43370 \\
+        hi, mr & 10370 \\
+        ru, bg & 16970 \\
+        \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k4}
+    \end{subtable}
+
+    \caption{Cluster assignments for 4 clusters}
+    \label{fig:multiple_tables}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            el & 7458 \\
+            ru, bg & 12975 \\
+            ta, te & 14318 \\
+            en, es, tr, sw, th, ka, vi, fr, de & 56509 \\
+            ar, ur & 13788 \\
+            hi, mr & 12030 \\
+            zh & 7458 \\
+            he & 7458 \\
+            \bottomrule
+            \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k4}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            en, fr & 12256 \\
+            es, tr, sw, de & 27342 \\
+            ru, bg & 16970 \\
+            ar, ur & 12256 \\
+            vi & 3770 \\
+            hi, mr & 10370 \\
+            el, ta, te, th, he, ka & 37713 \\
+            zh & 11313 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k4}
+    \end{subtable}
+
+    \caption{Cluster assignments for 8 clusters}
+    \label{fig:multiple_tables}
+\end{figure}
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar, ur & 14020 \\
+            tr & 7582 \\
+            en, fr & 13549 \\
+            hi, mr & 12232 \\
+            ru, bg & 13194 \\
+            vi & 7582 \\
+            te & 7582 \\
+            el & 7582 \\
+            zh & 7582 \\
+            he & 7582 \\
+            ta & 7582 \\
+            sw & 7582 \\
+            ka & 7582 \\
+            th & 7582 \\
+            es & 7582 \\
+            de & 7582 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k4}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            de & 8228 \\
+            ar & 7200 \\
+            en, fr & 13370 \\
+            hi, mr & 11313 \\
+            ru, bg & 18513 \\
+            ka & 8228 \\
+            he & 5142 \\
+            tr, th & 14400 \\
+            te & 7200 \\
+            vi & 4113 \\
+            el & 10285 \\
+            ta & 4113 \\
+            zh & 12342 \\
+            sw & 6170 \\
+            es & 7200 \\
+            ur & 6170 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k4}
+    \end{subtable}
+
+    \caption{Cluster assignments for 16 clusters}
+    \label{fig:multiple_tables}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7200 \\
+            bg & 7200 \\
+            de & 7200 \\
+            el & 7200 \\
+            en & 7200 \\
+            es & 7200 \\
+            fr & 7200 \\
+            he & 7200 \\
+            hi & 7200 \\
+            ka & 7200 \\
+            mr & 7200 \\
+            ru & 7200 \\
+            sw & 7200 \\
+            ta & 7200 \\
+            te & 7200 \\
+            th & 7200 \\
+            tr & 7200 \\
+            ur & 7200 \\
+            vi & 7200 \\
+            zh & 7200 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k20}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7200 \\
+            bg & 8228 \\
+            de & 8228 \\
+            el & 10285 \\
+            en & 6170 \\
+            es & 7200 \\
+            fr & 7200 \\
+            he & 5142 \\
+            hi & 5142 \\
+            ka & 8228 \\
+            mr & 6170 \\
+            ru & 10285 \\
+            sw & 6170 \\
+            ta & 4113 \\
+            te & 7200 \\
+            th & 6170 \\
+            tr & 8228 \\
+            ur & 6170 \\
+            vi & 4113 \\
+            zh & 12342 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k20}
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7000 \\
+            bg & 8000 \\
+            de & 8000 \\
+            el & 10000 \\
+            en & 6000 \\
+            es & 7000 \\
+            fr & 7000 \\
+            he & 5000 \\
+            hi & 5000 \\
+            ka & 8000 \\
+            mr & 6000 \\
+            ru & 10000 \\
+            sw & 6000 \\
+            ta & 4000 \\
+            te & 7000 \\
+            th & 6000 \\
+            tr & 8000 \\
+            ur & 6000 \\
+            vi & 4000 \\
+            zh & 12000 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{zheng_allocating_2021}}
+        \label{tab:zheng_allocations}
+    \end{subtable}
+
+
+    \caption{Allocated vocabulary sizes for 20 languages}
+    \label{fig:multiple_tables}
+\end{figure}
+% \input{./tables/chung_clusters_k20.tex}
+% \input{./tables/chung_clusters_k16.tex}
+% \input{./tables/chung_clusters_k8.tex}
+% \input{./tables/chung_clusters_k4.tex}
+
+% \input{./tables/liang_clusters_k20.tex}
+% \input{./tables/liang_clusters_k16.tex}
+% \input{./tables/liang_clusters_k8.tex}
+% \input{./tables/liang_clusters_k4.tex}
+
+\subsection{Reproducing the \textsc{VoCap} method}
+
+%     - Zheng
+%         - train monolingual tokenizers for all 20 languages with vocab sizes 1k ... 40k
+%         - load a sample of CC100 data for each language (50k lines per language)
+%         - tokenize the data with all of the monolingual tokenizers
+%         - compute the ALP for each language and vocabulary size
+%         - select the best vocabulary size for each language greedily
+%         - we also experiment with optimizing CPT instead of ALP
+%         - we also experiment with computing the CPT improvement on each merge step instead of precomputing it for all vocab sizes
+
+%         - they have this suspicious plot with ALP with Joint250k, Joint500k and VoCap500k and the differences are too much
+
+From the high level, the \textsc{VoCap} method works by selecting the best vocabulary size for each language and then merging the monolingual vocabularies. The best vocabulary size is determined by maximizing the overall \textit{Average Log Probability} metric defined in \xxx{ref}. 
+
+To replicate the \textsc{VoCap} method, we first need to compute the \textsc{ALP} metric for each language and each vocabulary size. We therefore train monolingual tokenizers using Sentencepiece with default settings for all 20 languages with vocabulary sizes from 1k to 40k.\footnote{The more effective way, not discussed by \citet{zheng_allocating_2021}, would be to modify the Sentencepiece unigram trainer code to produce a tokenizer after each prune iteration. That way we would get series of tokenizers with decreasing vocabulary size in one go, instead of running the trainer 40 times. As the computational cost of training the tokenizers is not high, we have not implemented this improvement.} We use 1M lines per language for training the monolingual tokenizers again, following \citet{zheng_allocating_2021}. Note that for Chinese the tokenizer vocabulary size starts at 5k due to the large number of unique logograms in the language. 
+
+% reference for 1M lines: https://github.com/bozheng-hit/VoCapXLM/blob/main/train_mono_spm.py#L73
+
+We then load a sample of CC100 data for each language (100k lines per language) and tokenize each monolingual corpus with the respective tokenizers of increasing vocabulary sizes. We are then able to compute the $\mathrm{ALP}(l, V)$ \xxx{fix the formula so that it matches related work} for each language $l$ and each vocabulary size $V \in \{1000, 2000, ..., 40\,000\}$
+
+Now we can greedily select the best vocabulary sizes. We start with selecting the lowest vocabulary size for each language (1k for all languages except Chinese where we start with 5k). We merge the selected vocabularies of the tokenizers. Then in each iteration, we check which language would benefit the most from increasing the vocabulary size by 1000. Concretely, we check the increase in ALP for each language and increase the vocabulary size for that language by merging the bigger vocabulary with the total vocabulary. We repeat this process until the total vocabulary size reaches 120k tokens. Any tokens over the limit are removed from the vocabulary.
+
+Contrary to \citet{zheng_allocating_2021}, we do not use the $\beta$ rescaling factor to account for the pretraining corpus size. By setting $\beta$ to 0, we want to achieve the best ALP for each language regardless of their corpus size. This is because we want to balance the low-resource languages, not necessarily achieve the best performance on the downstram tasks.
+
+The final vocabulary sizes for each language are found in Table \xxx{todo add table}.
+
+Additionally, we also experiment with optimizing the \textsc{CPT} metric instead of \textsc{ALP}. We also experiment with computing the \textsc{CPT} improvement on each merge step instead of precomputing it for all vocab sizes, since the metric increase might be slightly different for the intermediate tokenizer. None of these modifications lead to substantially better results and so we stick to the original method. \xxx{rewrite this or remove it}
+
+\subsection{Merging the tokenizers}
+
+%     - merging the tokenizers
+%         - merging is not really described in the papers
+%         - of course we take the union of the vocabularies
+%         - but how to set the logits?
+%             - to illustrate that even this step should be documented, the probabilities of XLM-V vocabulary do not sum to one
+%     - reaching the target size
+%         - train +10\%, +20\% of the target size and then prune
+
+For all reproduced methods, the last step is to take several UnigramLM tokenizers and merge them into the final, multilingual tokenizer. Now we will describe how do we merge tokenizers in our case. Unfortunately, the merging step is not described fully in any of the reproduced papers. In the case of the UnigramLM tokenizers, tokenizer $\tau$ consists of vocabulary (set of strings) $T^\tau \subset \Sigma^\star$ and the corresponding logits $L^\tau: \Sigma^\star \rightarrow \mathbb{R}$ so that $\sum_{t \in T^\tau} \exp(L^\tau(t)) = 1$. \xxx{maybe mention the logits in related work} The logits are used for finding the most probable segmentation of an input sentence. 
+
+To create the merged vocabulary for input tokenizers $\tau_1, ... \tau_m$ we take the union over the vocabularies:
+
+\begin{equation}
+    T^\tau \coloneqq \bigcup_{i=1}^m T^{\tau_i}
+\end{equation}
+
+We set the merged logits to the log of the average probability of the token in the input tokenizers:
+
+\begin{equation}
+    \forall t \in T^\tau: L^\tau(t) \coloneqq \log(\frac{1}{m} \sum_{i, t \in T^{\tau_i}} \exp(L^{\tau_i}))
+\end{equation}
+
+If the token $t$ is not present in some of the input tokenizers, we consider the probability of the token for that tokenizer to be zero. 
+
+In this way the sum of the probabilities of the tokens in the merged vocabulary is one and thus the merged tokenizer is a valid UnigramLM tokenizer. We can see this by the following derivation:
+
+\begin{equation}
+    \sum_{t \in T^\tau} \exp(L^\tau(t)) = \sum_{t \in T^\tau} \frac{1}{m} \sum_{i, t \in T^{\tau_i}} \exp(L^{\tau_i}) = \frac{1}{m} \sum_{i=1}^m \sum_{t \in T^{\tau_i}} \exp(L^{\tau_i}) = \frac{1}{m} \sum_{i=1}^m 1 = 1
+\end{equation}
+
+\xxx{the second equality should be maybe more explained}
+
+We argue that this is the most natural way to merge the tokenizers and so we assume this is probably the way the other authors did the merging. By observing the logits in the tokenizer released by \citet{liang_xlm-v_2023} though, we see that the authors do merge the logits in some way but the sum of the probabilities in the final tokenizer is $\approx 4.55$ (not counting the special tokens), which suggests some problems in the merging step.
+
+\xxx{We have also checked empirically, that the individual tokenizers perform similarly to the merged tokenizer and so the merging procedure seems to preserve the properties of the merged tokenizers.}
+
+% urls for the tokenizers:
+% https://github.com/bozheng-hit/VoCapXLM/blob/main/VoCap_500k/sentencepiece.bpe.model
+% https://huggingface.co/facebook/xlm-v-base/blob/main/sentencepiece.bpe.model
+
+
+% \section{Proposed methods}
+
+% - motivation for word-balancing:
+%     - we assume that there is a topic imbalance in the CC100 corpus
+%         - assume there is 99% of news and 1% biology
+%         - the name of the ministry of agriculture will be more common than the word "evolution"
+%             - but it is more useful to cover the most common words in biology than the uncommon words in news
+%         - by balancing the words we may achieve better coverage of the topics
+%     - we assume it is better to split roots of words and not have many inflected forms of the same word
+%         - if the word "evolution" occurs much more frequently than "evoluce", the model might learn "evolution" but will oversegment "evoluce"
+%         - by balancing the words we may arrive at a better segmentation because it will be more useful to split "evolution" into evolu + tion and evoluce into evolu + ce
+
+% We propose to compare the replicated methods with the original method from \citet{conneau_unsupervised_2020} with $\alpha=0.3$. Moreover, we also propose to simply use the balancing factor $\alpha=0.0$, which leads to data balance, that is equal in the number of lines across all languages. 
+% Specifically, both methods use the same Sentencepiece tokenizer implementation as used in the replications. We use the Unigram LM as in \citet{conneau_unsupervised_2020}, set the vocabulary size to 120k and leave the rest of the parameters default. The main difference is the training data where $\alpha=0.0$ uses 1M lines per language and $alpha=0.3$ uses a sample of 10M lines from the CC100 with the language balance factor $\alpha=0.3$. 
+
+% The next method we propose is based 
