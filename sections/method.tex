@@ -47,8 +47,17 @@
 %         - how to compute the correlation
 %         - míra korelace závisí na tom, jak moc se liší experimenty. Když porovnáváme jen stejné experimenty, pak nám vyjde nízká
 
+% \textbf{Q1:} How do subword tokenizers differ in overlap and allocation of learned vocabularies?
+% \textbf{Q2:} Which properties of multilingual tokenizers affect the language model representation quality?
+% \textbf{Q3:} What is the reason that the standard tokenizer training method does not work well in the multilingual setting? 
+% \textbf{Q4:} What is the effect of using the reproduced methods on the representation of low-resource languages? And
+% \textbf{Q5:} How do the reproduced methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
+
 
 In this chapter, we introduce the methodology for experiments conducted in this thesis. We introduce the important data sampling method utilized in \citet{devlin_bert_2019,conneau_unsupervised_2020} we use frequently for our experiments. Then we introduce our proposed metrics for measuring the \textit{vocabulary allocation} and \textit{vocabulary overlap} of a tokenizer. We introduce the types of experiments we will conduct. Namely we will train different tokenizers and evaluate them against our metrics. Moreover, we will also use the tokenizers to train masked language models to verify that our metrics are useful for assessing the tokenizer quality for use in language models. We will also describe in detail the evaluation procedures and all evaluation settings and tasks. 
+
+% \xxx{TODO - WIP}
+% In this chapter, we explain the methodology for experiments conducted in this thesis. We answer our research questions stated in the \autoref{chap:introduction} in the following manner. In the \autoref{sec:tokenizer_metrics}, we introduce metrics for measuring the quality of tokenizers. We use these metrics to investigate the differences between tokenizers (\textbf{Q1}, ). We then validate the usefulness of our metrics by training masked language models using the tokenizers and evaluating them on a set of downstream tasks to see whether are our metrics good predictors of the model performance. (\textbf{Q2}). Then we use our metrics on a more granular level and investigate the differences 
 
 
 % For all experiments we use the CC100 dataset used in \citet{conneau_unsupervised_2020}. Using the data we create multilingual vocabularies with the same size of 120K unique tokens using different methods. We use intrinsic evaluation framework from \citet{limisiewicz_tokenization_2023} to evaluate the tokenizers. Then we use the tokenizers to train multilingual masked language models on the same data and evaluate them on the same set of downstream tasks. We compare the results of the intrinsic and extrinsic evaluation to see if the improvements in the intrinsic evaluation translate to improvements in the downstream tasks.
@@ -86,6 +95,7 @@ For $\alpha = 0.0$ we get a uniform distribution over the languages, for $\alpha
 For pretraining the language models, we use $\alpha = 0.3$ as suggested by \citet{conneau_unsupervised_2020-1}. For training the tokenizers, we always specify the alpha as a parameter of the tokenizer training procedure. 
 
 \section{Tokenizer metrics}
+\label{sec:tokenizer_metrics}
 
 % \xxx{lets write the motivation here and maybe move it to the background section later}  
 
