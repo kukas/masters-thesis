@@ -28,6 +28,8 @@ Tokenization is the crucial first step we \tomaszrep{take when tackling an NLP p
 
 It has been shown that the choice of tokenization method has a significant effect on the performance of the NLP models - whether we talk about monolingual language models \cite{bostrom_byte_2020}, multilingual models \cite{rust_how_2021} or machine translation models \cite{kudo_sentencepiece_2018,gowda_finding_2020}. In the context of multilingual language models, the tokenization methods handle more than a hundred languages at once. This is a challenging task, as the languages differ in their morphology, writing system and other properties. Another challenge is, as mentioned before, the fact that the languages are not equally represented in the training data. \citet{rust_how_2021} have shown that the low-resource languages are under-represented in the tokenizer vocabularies. This leads to performance loss, which can be mitigated by changing the vocabulary to one with more language-specific tokens. \cite{rust_how_2021}
 
+The unsatisfactory performance of existing multilingual tokenizers on low-resource languages has led to the development of novel tokenization methods. \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} all propose novel methods that aim to improve the multilingual vocabularies of the tokenizers. Their methods are based on separating the training corpus into isolated subsets (monolingual corpora or corpora composed of similar languages only) on which they run the standard tokenization methods. After creating these language-specific vocabularies, they merge them back into a single vocabulary. The authors show that using their methods leads to an overall improved performance, especially on low-resource languages.
+
 % \xxx{in the thesis annotation, we say that we look for an optimal tokenization method for multilingual language models. This of course depends on how we define optimal. I think I should connect the focus on low-resource languages with the definition of optimal.}
 
 % \xxx{rewrite the introduction so that the research question are a natural consequence of the introduction - the reader should be able to guess the research questions from the introduction}
@@ -45,13 +47,13 @@ It has been shown that the choice of tokenization method has a significant effec
 
 % - We show that all balancing methods improve the performance of the model on the word-level downstream tasks
 
-In this thesis, we ask what makes a good tokenization method for multilingual models, how to measure it and what factors influence it. Moreover, our focus is achieving better tokenization for all languages, especially the ones that have been shown to be underrepresented in the previous multilingual models \cite{rust_how_2021}. For this purpose, we propose a set of metrics for measuring whether tokenizers effectively represent meaningful language-specific tokens in the vocabulary (\textit{vocabulary allocation}) and whether the units they learn are shared across languages (\textit{vocabulary overlap}).
-\tomasz{We ask ... [First batch of research questions]}
-We show that our metrics are good predictors of the downstream performance of the model. 
+In this thesis, we ask what makes a good tokenization method for multilingual models, how to measure it and what factors influence it. Moreover, our focus is achieving better tokenization for all languages, especially the ones that have been shown to be underrepresented in the previous multilingual models \cite{rust_how_2021}. We fill a methodological gap by proposing a robust set of metrics for measuring the quality of tokenization methods in the multilingual setting. Our metrics measure whether tokenizers effectively represent meaningful language-specific tokens in the vocabulary (\textit{vocabulary allocation}) and whether the units they learn are shared across languages (\textit{vocabulary overlap}). The questions we address are: \textbf{Q1:} How do subword tokenizers differ in overlap and allocation of learned vocabularies? And \textbf{Q2:} Which properties of multilingual tokenizers affect the language model representation quality?
 
-After we establish our metrics, we ask what choices in the tokenization training influence the resulting tokenizer. We investigate the effect of the training data size, character coverage, and most importantly, the data imbalance between high-resource and low-resource languages present in the tokenizer training data.
-\tomasz{Specifically, we pose questions: ... [Second batch of research questions]}
-Our findings serve as a guideline for choosing the training parameters for the tokenizer training. To the best of our knowledge, this is the first work to systematically investigate the effect of the training parameters on the resulting tokenizer in the context of multilingual language models.
+After we establish our metrics, we investigate the unaddressed question of \textbf{Q3:} What is the reason that the standard tokenizer training method does not work well in the multilingual setting? To this end, we examine the effect of the training data size, character coverage, and most importantly, the data imbalance between high-resource and low-resource languages present in the tokenizer training data. We find that the data imbalance has a significant effect on the resulting tokenizer and by balancing the training data, we can achieve better tokenization for all languages.
+% and data imbalance on the resulting tokenizer?
+% we ask what choices in the tokenization training influence the resulting tokenizer. We investigate the effect of the training data size, character coverage, and most importantly, the data imbalance between high-resource and low-resource languages present in the tokenizer training data.
+% \tomasz{Specifically, we pose questions: ... [Second batch of research questions]}
+% Our findings serve as a guideline for choosing the training parameters for the tokenizer training. To the best of our knowledge, this is the first work to systematically investigate the effect of the training parameters on the resulting tokenizer in the context of multilingual language models.
 
 % 1. why does unigram yield bad tokenizers for multilingual models
 % 2. how to achieve better tokenizer with the standard method
@@ -63,10 +65,12 @@ Our findings serve as a guideline for choosing the training parameters for the t
 % - it is the allocation across languages
 %  
 
-With our expanded knowledge of the standard tokenization methods and their properties, we turn to three existing methods by \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} proposed for improving tokenization for all training languages. 
-\tomasz{We ask: [Q4]}
-We find that the three works report empirical improvements of their methods but compare themselves to highly unbalanced baselines. Because we find that data balance is an important factor determining the quality of the resulting tokenizer, we investigate what are the differences between the methods we replicate and how exactly they improve the tokenization, compared to balanced and unbalanced baselines.
-\tomasz{For this purpos, we ask: [Q5]}
+With our expanded knowledge of the standard tokenization methods and their properties, we turn to the three existing methods by \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} proposed for improving tokenization for all training languages. We find that the three works report empirical improvements of their methods but compare themselves to highly unbalanced baselines. We therefore ask \textbf{Q4:} What is the effect of using the reproduced methods on the representation of low-resource languages? And
+\textbf{Q5:} How do the reproduced methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
+
+% \tomasz{We ask: [Q4]}
+%  Because we find that data balance is an important factor determining the quality of the resulting tokenizer, we investigate what are the differences between the methods we replicate and how exactly they improve the tokenization, compared to balanced and unbalanced baselines.
+% \tomasz{For this purpos, we ask: [Q5]}
 
 Through in-depth analysis, we find that the three methods we reproduce \cite{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} improve tokenization by balancing the \textit{vocabulary allocation} between the languages. We further show, that in our setting, similar results can be achieved by a simpler method of uniform sampling of languages during the tokenizer training. 
 
@@ -95,33 +99,33 @@ Additionally, the thesis continues in the multilingual tokenization research by:
 % for the first time, we study the effects of data imbalance on tokenizer training and conclude that it is a very important parameter
 % methodology for comparing multilingual tokenizers
 
-\section{Research Questions}
+% \section{Research Questions}
 
-\tomasz{The reserach questions sound good. 
-I would incoprorate them in conrinous text, see my comments above (they can be still listed here).
-I understand that each group of questions will have a dedicated chapter?}
+% \tomasz{The reserach questions sound good. 
+% I would incoprorate them in conrinous text, see my comments above (they can be still listed here).
+% I understand that each group of questions will have a dedicated chapter?}
 
-In this thesis, we answer the following research questions. We divide them into three sections, each corresponding to the three main parts of the thesis.
-\subsubsection{Validity of the metrics}
-\begin{itemize}
-    \item \textbf{Q1:} How do sub-word tokenizers differ in overlap and allocation of learned vocabularies?
-    \item \textbf{Q2:} Which properties of multilingual tokenizers affect the LM’s representation quality?
-\end{itemize}
+% In this thesis, we answer the following research questions. We divide them into three sections, each corresponding to the three main parts of the thesis.
+% \subsubsection{Validity of the metrics}
+% \begin{itemize}
+%     \item \textbf{Q1:} How do sub-word tokenizers differ in overlap and allocation of learned vocabularies?
+%     \item \textbf{Q2:} Which properties of multilingual tokenizers affect the LM’s representation quality?
+% \end{itemize}
 
-\subsubsection{Influence of tokenizer parameters on the quality of tokenization}
-\tomasz{It's a bit weird that we have subindexes only here. Consider dropping them or adding them everywhere for consistency.}
-\begin{itemize}
-    \item \textbf{Q3:} What parameter choices lead to better tokenization?
-    \item \textbf{Q3.1:} How does the size of the training corpus affect the quality of tokenization?
-    \item \textbf{Q3.2:} How does the alphabet size affect the quality of tokenization?
-    \item \textbf{Q3.3:} How does the data imbalance affect the quality of tokenization?
-\end{itemize}
+% \subsubsection{Influence of tokenizer parameters on the quality of tokenization}
+% \tomasz{It's a bit weird that we have subindexes only here. Consider dropping them or adding them everywhere for consistency.}
+% \begin{itemize}
+%     \item \textbf{Q3:} What parameter choices lead to better tokenization?
+%     \item \textbf{Q3.1:} How does the size of the training corpus affect the quality of tokenization?
+%     \item \textbf{Q3.2:} How does the alphabet size affect the quality of tokenization?
+%     \item \textbf{Q3.3:} How does the data imbalance affect the quality of tokenization?
+% \end{itemize}
 
-\subsubsection{Analysis of tokenization methods for multilingual models}
-\begin{itemize}
-    \item \textbf{Q4:} What is the effect of using the reproduced methods on the representation of low-resource languages?
-    \item \textbf{Q5:} How do the reproduced methods improve the representation of low-resource languages over the standard method of training the tokenizer on the joint corpus?
-\end{itemize}
+% \subsubsection{Analysis of tokenization methods for multilingual models}
+% \begin{itemize}
+%     \item \textbf{Q4:} What is the effect of using the reproduced methods on the representation of low-resource languages?
+%     \item \textbf{Q5:} How do the reproduced methods improve the representation of low-resource languages over the standard method of training the tokenizer on the joint corpus?
+% \end{itemize}
 
 % Section Validity of the metrics
 % - How do sub-word tokenizers differ in overlap and allocation of learned vocabularies?
