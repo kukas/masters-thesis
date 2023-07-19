@@ -1,15 +1,15 @@
 \begin{table}
-\caption{In this table, we compare the Huggingface and Sentencepiece implementations of the Unigram and BPE algorithms. The Huggingface Unigram tokenizer is a clear outlier in terms of all metrics. We can see that this is a problem in the implementation as the corresponding Sentencepiece tokenizer \textit{unigram\_alpha0.25\_alphabet} scores much higher. Interestingly, we found that the BPE implementation (\textit{huggingface\_bpe\_alpha0.25}) is better in Huggingface than in Sentencepiece (\textit{bpe\_alpha0.25}).}
+\caption{In this table, we compare the Huggingface and Sentencepiece implementations of the Unigram and BPE algorithms. The Huggingface Unigram tokenizer is a clear outlier in terms of all metrics. We can see that this is a problem in the implementation as the corresponding \textit{Sentencepiece Unigram $\alpha$=0.25, with 100\% alphabet coverage} scores much higher on our metrics. Interestingly, we found that the BPE implementation (\textit{Huggingface BPE $\alpha$=0.25}) seems to be better in Huggingface than in Sentencepiece (\textit{Sentpiece. BPE $\alpha$=0.25}).}
 \label{tab:hugg_vs_sentpiece}
 \begin{tabular}{lrrrrr}
 \toprule
 Tokenizer & Alphabet & \# UNKs & CPT & AR & JSD \\
 \midrule
-huggingface\_bpe\_alpha0.25 & 1000 & 14040.1 & 3.713 & 1253.7 & 0.783 \\
-unigram\_alpha0.3 & 2666 & 923.5 & 3.702 & 1190.7 & 0.768 \\
-bpe\_alpha0.25 & 1215 & 7235.6 & 3.666 & 1212.9 & 0.774 \\
-unigram\_alpha0.25\_alphabet & 12577 & 4.5 & 3.629 & 1125.5 & 0.767 \\
-huggingface\_unigram\_alpha0.25 & 12616 & 4.5 & 3.204 & 1010.5 & 0.745 \\
+Huggingface BPE $\alpha$=0.25 & 1000 & 14040.1 & 3.713 & 1253.7 & 0.783 \\
+Sentpiece. BPE $\alpha$=0.25 & 1215 & 7235.6 & 3.666 & 1212.9 & 0.774 \\
+\makecell[l]{Sentpiece. Unigram $\alpha$=0.3, \\ ~~~99.95\% alphabet coverage} & 2666 & 923.5 & 3.702 & 1190.7 & 0.768 \\
+\makecell[l]{Sentpiece. Unigram $\alpha$=0.25, \\ ~~~100\% alphabet coverage} & 12577 & 4.5 & 3.629 & 1125.5 & 0.767 \\
+Huggingface Unigram $\alpha$=0.25 & 12616 & 4.5 & 3.204 & 1010.5 & 0.745 \\
 \bottomrule
 \end{tabular}
 \end{table}

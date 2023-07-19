@@ -1,0 +1,15 @@
+\begin{table}
+\centering
+\caption{Results of extrinsic evaluation for the Huggingface tokenizers. We observe significant changes for different tokenization methods. We report the F1 score for NER, POS and UD. XNLI is reported as accuracy. The scores are macro averages over all languages.}
+\label{tab:in_lang_avg_20l}
+    \small
+    \begin{tabular}{llllllll}
+    \toprule
+    Tokenizer    &               NER &               POS &                UD &              XNLI \\
+    \midrule
+    Huggingface BPE       &  66.3 $_{\pm0.2}$ &  67.3 $_{\pm0.4}$ &  54.5 $_{\pm0.5}$ &  53.5 $_{\pm0.3}$ \\
+    TokMix    &  65.4 $_{\pm0.3}$ &  66.5 $_{\pm0.4}$ &  53.9 $_{\pm0.5}$ &  52.3 $_{\pm0.3}$ \\
+    Huggingface Unigram   &  58.9 $_{\pm0.2}$ &  54.0 $_{\pm0.4}$ &  43.7 $_{\pm0.4}$ &  53.2 $_{\pm0.3}$ \\
+    \bottomrule
+    \end{tabular}
+\end{table}

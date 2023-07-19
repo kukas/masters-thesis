@@ -1,13 +1,13 @@
 \begin{table}
-\caption{In the first batch of experiments, we compare the Huggingface Unigram, Huggingface BPE, and our TokMix method based on merging Huggingface Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores ($-0.4$ CPT and $-153$ AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap (JSD decrease by $-0.03$) between the languages for Unigram.  The scores are macro averages over all languages, computed over a holdout portion of the CC100 corpus. We sample 10k lines from each language which we have empirically found to be enough to get representative results.}
+\caption{In the first batch of experiments, we compare the Huggingface Unigram, Huggingface BPE, and our TokMix method based on merging Huggingface Unigram tokenizers. Huggingface Unigram has significantly lower vocabulary allocation scores ($-0.4$ CPT and $-153$ AR) than BPE and TokMix. This means that Unigram uses shorter tokens and the capacity of the vocabulary is used less uniformly. Moreover, the vocabulary has more overlap between the languages for Unigram (JSD decrease by $-0.03$).  The scores are macro averages over all languages, computed over a holdout portion of the CC100 corpus. We sample 10k lines from each language which we have empirically found to be enough to get representative results.}
 \label{tab:20l_metrics}
 \begin{tabular}{lrrrrr}
 \toprule
 Tokenizer & Alphabet & \# UNKs & CPT & AR & JSD \\
 \midrule
-huggingface\_bpe\_alpha0.25 & 1000 & 14040.1 & 3.713 & 1253.7 & 0.783 \\
-TokMix\_alpha0.25 & 2497 & 1203.2 & 3.691 & 1163.4 & 0.773 \\
-huggingface\_unigram\_alpha0.25 & 12616 & 4.5 & 3.204 & 1010.5 & 0.745 \\
+Huggingface BPE, $\alpha$=0.25 & 1000 & 14040.1 & 3.713 & 1253.7 & 0.783 \\
+TokMix, $\alpha$=0.25 & 2497 & 1203.2 & 3.691 & 1163.4 & 0.773 \\
+Huggingface Unigram, $\alpha$=0.25 & 12616 & 4.5 & 3.204 & 1010.5 & 0.745 \\
 \bottomrule
 \end{tabular}
 \end{table}
