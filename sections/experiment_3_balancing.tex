@@ -437,3 +437,144 @@ We argue that this is the most natural way to merge the tokenizers and so we ass
 % Specifically, both methods use the same Sentencepiece tokenizer implementation as used in the replications. We use the Unigram LM as in \citet{conneau_unsupervised_2020}, set the vocabulary size to 120k and leave the rest of the parameters default. The main difference is the training data where $\alpha=0.0$ uses 1M lines per language and $alpha=0.3$ uses a sample of 10M lines from the CC100 with the language balance factor $\alpha=0.3$. 
 
 % The next method we propose is based 
+
+
+
+\section{Comparison of balancing methods}
+\label{sec:comparison_balancing_methods}
+
+\input{tables/all_tokenizers_metrics.tex}
+
+In this section, we compare the tokenizers we replicated following the works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023}. For each of the clustering methods (Chung, Liang), we create 4 variants with different numbers of clusters (4, 8, 16, 20) as that is the main hyperparameter of the methods. For Zheng, we create one variant by greedily maximizing the ALP metric across the 20 languages. We present the results alongside the rest of the experiments in this chapter to provide context and be better able to interpret the differences between the methods.
+
+In \autoref{tab:all_tokenizers_metrics}, we compare overall metrics for all tokenizer experiments\footnote{Note that for Sentencepiece Unigram with $\alpha=0.0\text{ and }0.3$ we retrain the tokenizers on 20M and 10M lines of data respectively (compared to 2M and 5M from \autoref{tab:data_balance_metrics}) to match the data provided to the replicated methods. This does not increase the metrics by a lot as observed in \autoref{sec:data_size}. Nevertheless, we wanted to match the data sizes between the reproduced methods and the Unigram baselines.}. We sort the table by the CPT metric. We see that the unbalanced tokenizers ($\alpha=1.0, 0.7$) are placed at the bottom of the results along with the underperforming Huggingface Unigram implementation. We see that generally, the standard tokenizers trained on a balanced dataset provide the best results on our tokenizer metrics. Next, we see the clustering methods of Chung and Liang with 20 and 16 clusters along with the Zheng method. Only then we see the standard tokenizers trained on less balanced or unbalanced datasets and clustering methods with a lower number of clusters. We visualize our vocabulary allocation metrics on a scatterplot in \autoref{fig:all_tokenizers_AR_vs_CPT} to better observe the differences between the tokenizers and explore the relationship between CPT and AR. Each point on the scatterplot is one tokenizer and its position is determined by the CPT and AR metrics. We connect related experiments with a line and color-code them. Here we can see that the tokenizers with high CPT often have high AR. Nevertheless, we also have tokenizers with low AR and high CPT but never the other way around. Our intuition is that it is not possible to construct a tokenizer with a high number of useful tokens which are all very short. With the context of different tokenization methods, we can see the degree of Huggingface Unigram's underperformance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/all_tokenizers_AR_vs_CPT.pdf}
+    \caption{We visualize the overall vocabulary allocation metrics for all tokenizers from Table \ref{tab:all_tokenizers_metrics}. We observe that the vocabulary allocation scores are related --- higher AR usually means higher CPT.  We also observe that Huggingface Unigram is a clear outlier, although a combination of separate, monolingual Huggingface Unigrams (TokMix) approaches the performance of the Sentencepiece Unigram with the corresponding data imbalance ($\alpha=0.3$). We see that the balancing methods overperform the unbalanced Unigrams ($\alpha=1.0$, $\alpha=0.7$) in terms of CPT but perform similarly or worse to the simple case of running the Sentencepiece Unigram trainer on a balanced set $\alpha=0.0$.}
+    \label{fig:all_tokenizers_AR_vs_CPT}
+\end{figure}
+
+Crucially, we see that the reproduced methods of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} do improve over the unbalanced baselines $\alpha=1.0, 0.7, 0.5$ on the CPT metric, especially with a higher number of clusters but do not outperform the simple case of training the Sentencepiece Unigram on a balanced dataset $\alpha=0.0$. We also observe that the clustering methods with a higher number of clusters along with Zheng are close to each other on the CPT-AR plot. We assume this is because, with higher $k$, the clustering methods reduce to the Zheng method (training separate tokenizers for each language). Similarly, with a lower number of clusters, the methods are much closer to the vanilla Sentencepiece Unigram trained on an unbalanced dataset.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/all_tokenizers_AR_vs_JSD.pdf}
+    \caption{We visualize the tokenizers from Table \ref{tab:all_tokenizers_metrics} in terms of Average Rank and Jensen-Shannon Divergence. Here we can see that all methods based on Sentencepiece result in similar overlap independent of the allocation. This is interesting because the replicated balancing methods (Chung, Zheng, Liang) work by splitting the data and training separate tokenizers. Nevertheless, after merging the separate subtokenizers they all seem to end up with similar vocabulary overlaps. The highest vocabulary isolation is surprisingly achieved by the Huggingface BPE tokenizer, which is contrary to the hypothesis stated by \citet{chung_improving_2020,zheng_allocating_2021} that the tokenizers trained on the concatenation of all data tend to select subwords shared across all languages.}
+    \label{fig:all_tokenizers_AR_vs_JSD}
+\end{figure}
+
+We also explore the relationship between vocabulary allocation and vocabulary overlap on the \autoref{fig:all_tokenizers_AR_vs_JSD}\footnote{The CPT-JSD plot is similar but is less readable therefore we present the relationship between AR and JSD}. We see that the differences between all methods based on Sentencepiece are small compared to the differences between Huggingface tokenizers. This is surprising because one of the motivations for the method of Chung and Liang is to promote overlap between similar languages while minimizing the overlap between distant languages. We would therefore expect the overall overlap to decrease, as the number of spurious token sharing decreases. Nevertheless, we observe that the resulting overlap is lower or similar to our Sentencepiece Unigram tokenizers. Similarly, the Zheng method works by training separate tokenizers for each language and then combining them into one. We would expect the overlap to be even lower than the original Sentencepiece Unigram but we observe that the overlap is comparable. 
+Surprisingly, the lowest vocabulary overlap (highest JSD) is achieved by the Huggingface BPE trained on a combined corpus. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/zheng_vs_alphas.pdf}
+    \caption{We zoom into the results of the Zheng method and compare the vocabulary allocation across the individual languages represented by this tokenizer against the backdrop of the vanilla Unigram tokenizers trained with different data imbalances from \ref{fig:data_balance_vs_allocation_per_lang}. We observe a striking similarity between the vocabulary allocation of the Zheng tokenizer and the Unigram tokenizer with $\alpha=0.0$, especially in terms of characters per token. This comes as a large surprise because the Zheng method works by training a separate tokenizer for each language and then merging them. Despite the different methods of obtaining the vocabulary, the resulting tokenizers are very similar across the languages.}
+    \label{fig:zheng_vs_alphas}
+\end{figure}
+
+We investigate the differences between the balanced Unigram and the replicated methods in more detail by examining the CPT and AR metrics computed \textbf{per language}. We use the data balance experiments from \autoref{sec:tokenizer_training_with_data_imbalance} for comparison. We start by comparing the Zheng method with the increasingly imbalanced Unigram tokenizers in \autoref{fig:zheng_vs_alphas}. We plot the increase or decrease in vocabulary allocation metrics for each language sorted by the data available. Remarkably, we see that the Zheng method is strikingly similar in terms of CPT and AR per language to the Unigram tokenizer trained on the balanced set $\alpha=0.0$. The similarity seems to be higher in the CPT metric although the AR metric is also very similar, especially for the highest and lowest resource languages. We find this result quite surprising because of the distinctness of the Zheng method --- it trains a separate tokenizer for each language and then merges the vocabularies together. Nevertheless, the resulting tokenizers are very similar to the Unigram tokenizer trained on the balanced set. This result seems to validate the choice of the ALP metric for the selection of vocabulary sizes in the Zheng method (see \autoref{fig:zheng_vs_alphas_alp}) but it also calls into question the necessity of the separate training of tokenizers for each language. One advantage of the Zheng method is that splitting the data into separate languages lowers the memory requirements for the training of the separate Sentencepiece Unigram. However, this comes at a cost of higher overall compute time because of the need for training hundreds of tokenizers to be able to select the ones that maximize the overall ALP after merging them.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/zheng_vs_alphas_alp.pdf}
+    \caption{Intrigued by the similarity between the Zheng tokenizer and the Unigram tokenizer with $\alpha=0.0$ from Figure \ref{fig:zheng_vs_alphas} we also look at the ALP metric which is used for the selection of vocabulary sizes in the Zheng method. Here we see that the greedy optimization of ALP across languages indeed results in a similar vocabulary allocation as the Unigram tokenizer with $\alpha=0.0$.}
+    \label{fig:zheng_vs_alphas_alp}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/chung_vs_alphas.pdf}
+    \caption{Here we inspect the language-level vocabulary allocation of the Chung method. Similarly to the Zheng method, the Chung method also performs similarly to the Unigram tokenizer with $\alpha=0.0$. Unfortunately, we believe this is an artifact of the choice of our training data for the Chung method. We use a balanced dataset ($\alpha=0.0$) for training the cluster-specific tokenizers. The balance of the data seems to be more important than the clustering step. After merging the cluster-specific tokenizers, the resulting tokenizer is very similar to the Unigram tokenizer with $\alpha=0.0$.}
+    \label{fig:chung_vs_alphas}
+\end{figure}
+
+Next, we inspect the Chung method and compare it in detail to our Unigram tokenizers in \autoref{fig:chung_vs_alphas}. For comparison, we select a run with a low number of clusters (k=4) and a high number of clusters (k=16). We see that the different numbers of clusters yield different results. In the case of a higher number of clusters, we see that the tokenizer exhibits a similar trend in CPT and AR across the languages as the balanced Unigram tokenizer with $\alpha=0.0$ albeit with some deviations. In the case of a lower number of clusters, the metrics per language seem to be more distinct compared to our Unigram tokenizers. 
+
+We look at the CPT per language for k=16 more closely and identify the languages where the Chung tokenizer differs significantly from the Unigram tokenizer with $\alpha=0.0$. We see that the CPT drops significantly for Bulgarian (bg), Urdu (ur), Marathi (mr), and to some degree French (fr). On the other hand, we see smaller improvements for English (en), Vietnamese (vi), Spanish (es), Thai (th), Hindi (hi), and Tamil (ta). We compare this to the cluster assignments in \autoref{tab:chung_clusters_k16}. Revealingly, we observe that all languages with the large drop in CPT have been assigned to a cluster with another, higher-resource language. Bulgarian is assigned with Russian (8th largest corpus versus 3rd largest corpus), Urdu with Arabic (17th vs. 13th), Marathi with Hindu (18th vs. 14th) and French with English (4th vs. 1st)
+
+We continue with a similar analysis for the 4 clusters. We see that the CPT for Bulgarian (bg), Turkish (tr), Arabic (ar), and Swahili (sw) is lower than any of our Unigram tokenizers. On the other hand, we see significant improvements for Thai (th), Hebrew (he), Greek (el), and Hindi (hi) over our Unigram tokenizers. Additionally, Marathi (mr) achieves the highest CPT increase over the unbalanced Unigram baseline, although the increase stays in the range of the $\alpha=0.5$ Unigram tokenizer. We again look at the cluster assignments in \autoref{tab:chung_clusters_k4}. We observe that Bulgarian and Arabic are assigned to a cluster with higher-resource Russian (3rd) and Chinese, which could explain the decrease in CPT for the two. Similarly, Swahili and Turkish which use the Latin script are assigned to a cluster with higher resource English (largest corpus) and Vietnamese (2nd largest). On the other hand, we see that Thai, Hebrew, and Greek are assigned to a cluster with lower-resource languages --- Tamil (ta), Georgian (ka), Urdu (ur), and Telugu (te). As we have observed, Thai, Hebrew, and Greek benefit from this assignment while the lower-resource languages seem to have a lower CPT than the $\alpha=0.7$ Unigram and therefore approach the unbalanced baseline.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/liang_vs_alphas.pdf}
+    \caption{We inspect the language-level vocabulary allocation of the Liang method. We see similarities to the Chung method in \autoref{fig:chung_vs_alphas}. The main differences seem to be the improved Chinese and Arabic for 4 clusters and worse Hebrew and better Urdu for 16 clusters. Overall the results are similar.}
+    \label{fig:liang_vs_alphas}
+\end{figure}
+
+We look at the \citet{liang_xlm-v_2023} replication results in \autoref{fig:liang_vs_alphas}. We see that despite a slightly different clustering method and per-cluster vocabulary size selection, the Liang method exhibits similar patterns we observed in the Chung method.
+
+Overall, we infer that the Chung and Liang methods are sensitive to cluster assignments. Because the training data are merged per cluster, if a low-resource language gets assigned to a cluster with a high-resource language, the language imbalance acts in favor of the high-resource language. Bearing this in mind, we know from our experiments in \autoref{sec:tokenizer_training_with_data_imbalance} presented previously, that the benefit of adding more data to the high-resource language is lower than the cost that incurs on the low-resource language. We believe this is the cause of the lower overall CPT and AR for the clustering methods.
+
+
+\section{Comparison of balancing methods on downstream tasks}
+
+To validate our previous assessment from \autoref{sec:comparison_balancing_methods}, we select two replicated methods by \citet{chung_improving_2020,zheng_allocating_2021}. For the clustering method, we select a low- and high- number of clusters $k=4\text{ and }16$. We compare these replicated tokenization methods to the standard Unigram tokenizers trained on differently balanced datasets with $\alpha=1.0, 0.3\text{ and }0.0$
+
+For each of the six tokenizers, we pretrain a masked language model and probe it on three tasks - natural language inference (NLI), part of speech tagging (POS), and named entity recognition (NER). We run the probe training with three different seeds on each language and report the average results\footnote{Note that even though the probe training is done with three different random seeds, the model pretraining was done only once. The variance between pretraining runs is therefore not measured and the error bars should be interpreted as such.}. We note that the models differ only in the tokenizer used. The architecture and training data are fixed across the pretraining and finetuning runs.
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{figures/probe_overall_inlanguage.pdf}
+      \caption{In-language results}
+      \label{fig:probe_overall_inlanguage}
+    \end{subfigure}%
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{figures/probe_overall_crosslanguage.pdf}
+      \caption{Cross-language results}
+      \label{fig:probe_overall_crosslanguage}
+    \end{subfigure}
+    \caption{We select the replicated methods by \citet{chung_improving_2020,zheng_allocating_2021} and compare them with the vanilla Unigram tokenizers. For comparison, we choose the unbalanced Unigram tokenizer with $\alpha=1.0$ and then two stronger baselines with $\alpha=0.0$ and $\alpha=0.3$ trained on more balanced data. We then pretrain masked language models that differ only in the tokenizer they use and assess the performance of these models on the downstream tasks using probing. We test two settings --- in-language performance, where the model is trained on each of the available languages and then evaluated on the same language, and cross-language performance, where the model is also trained on each language but evaluated on all \textit{but} the training language. The results are a macro average over all the languages (in-language results) or all language pairs (cross-language results). For each model, language, and task we do 3 probe training runs with different random seeds. The error bars represent one standard deviation computed with bootstrapping by randomly sampling seeds for each language.}
+    \label{fig:probe_overall}
+\end{figure}
+
+In \autoref{fig:probe_overall}, we report the overall in-language and cross-language results for the models. We observe the clearest regularity in cross-language performance for word-level tasks (NER and POS), where all balancing methods improve over the unbalanced $\alpha=1.0$ model. Next, we see higher POS in-language scores for the Chung methods and higher NER in-language scores for the balanced unigrams ($\alpha=0.0\text{ and }0.3$). For in-language NLI, we do not see any systematic effect --- the differences between the models are small ($<1$ percentage point) and the outlier behavior of $\alpha=0.3$ compared to $\alpha=1.0\text{ and }0.0$ suggests that the variance is caused by the finetuning rather than any tokenizer effect.
+
+We inspect the results more closely on the language level. We again compare the performance of the more balanced models to the unbalanced model by plotting the difference in accuracy and F1 score for the tasks by language. The languages are sorted in descending order based on the amount of available data. 
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/probe_detailed_inlanguage_over_baseline.pdf}
+    \caption{We zoom in on the in-language results from Figure \ref{fig:probe_overall_inlanguage} and compare the performance of the balanced tokenizers against the unbalanced Unigram tokenizer with $\alpha=1.0$ over all tested languages for the tasks. In the case of the word-level tasks, especially in the case of named entity recognition, we observe a clear trend in line with our tokenizer investigations in \ref{fig:chung_vs_alphas}. The balancing methods improve the language representations for word-level tasks. For the sentence-level tasks, we do not observe any systematic effects. This might be in part because the NLI task does not include 4 of our low-resource languages. The error bands are one standard deviation computed from the three probe training runs with different random seeds.}
+    \label{fig:probe_overall_inlanguage_over_baseline}
+\end{figure}
+
+In \autoref{fig:probe_overall_inlanguage_over_baseline}, we see the in-language results laid out by language. We see a large effect of the probe training language on the NER F1 score and to some degree an effect on the POS F1. We do not see a systematic effect on NLI. For NER, we see the effect of the tokenizer language balance reminiscent of the results in \autoref{fig:zheng_vs_alphas} and \autoref{fig:chung_vs_alphas}. For high-resource languages, we observe a decrease in performance across the board. This is counterbalanced by a larger increase in performance for the low-resource languages. The effect seems to be largest for the $\alpha=0.0$ Unigram tokenizer,ě Zheng method and Chung with 16 clusters. For $\alpha=0.3$ Unigram and Chung with 4 clusters, we see a similar effect but with a smaller magnitude, which is in line with our observations in \autoref{fig:chung_vs_alphas}. In the case of POS, we do see more variance in results towards the low-resource languages but the effect is not as clear as for NER. We see significant improvements with Zheng and Chung methods on Chinese which correspond to the AR improvement for Chinese for the Zheng method in \autoref{fig:zheng_vs_alphas} but we do not see any difference in Chinese tokenizer metrics in the case of Chung (\autoref{fig:chung_vs_alphas}). We also see some improvements in Hindi, Tamil, and Marathi. For Telugu, we see a surprising drop for all methods except Chung with 4 clusters. Note that the variance in the results is larger for the low-resource languages because of smaller test sets.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/probe_detailed_crosslanguage_over_baseline_lang_tgt.pdf}
+    \caption{Here we investigate in detail the cross-lingual results from Figure \ref{fig:probe_overall_crosslanguage} with comparison to the unbalanced Unigram tokenizer with $\alpha=1.0$. We observe that word-level task transfers behave in line with the tokenizer investigations in \ref{fig:chung_vs_alphas}. Moreover, it seems that both high-resource and low-resource languages benefit from the balancing methods, although the change is most clear on the low-resource side. For the sentence-level tasks, we do not observe any systematic effects. The value for each language and model is computed by averaging the difference in cross-lingual performance for the given \textit{target} language over the baseline. In other words for a given language L we compute the mean performance over all probe trainings done on languages other than L and then evaluate them on language L.}
+    \label{fig:probe_overall_crosslanguage_over_baseline}
+\end{figure}
+
+We turn our attention to the cross-language results in \autoref{fig:probe_overall_crosslanguage_over_baseline}. Here we again do not see any patterns in the NLI task, other than an overall drop in performance for Chung with 4 clusters, for which we do not have an explanation. On the other hand, we see clear patterns in NER and POS tasks. For both tasks, we see that the performance for low-resource languages is improved over the unbalanced baseline. Moreover, we see that the balancing has a net positive effect even for the high-resource languages, although the effect is not as pronounced as for the low-resource languages. In the NER task, we see that the Chung method with 4 clusters does not seem to improve on low-resource language as much as the other methods. 
+
+Lastly, we plot the differences in tokenizer metrics against the differences in downstream task scores in scatter matrices. In \autoref{fig:probe_overall_inlanguage_scattermatrix} we show the in-language results and in \autoref{fig:probe_overall_crosslanguage_scattermatrix} we show the cross-language results. In the case of in-language results, we see that for the NER and POS tasks, there is a significant Spearman correlation between the differences in tokenizer metrics and the differences in task performance (0.84 and 0.34 Spearman correlation respectively). For the NLI task, we do not observe any significant correlations. This is in line with our observations from the language-level results (\autoref{fig:probe_overall_inlanguage_over_baseline}). In the case of cross-language results, we observe significant, low, negative Spearman correlations between JSD and word-level tasks NER and POS (-0.21 and -0.22 respectively). We also see significant correlations between CPT/AR and all downstream tasks (0.14 for NLI, 0.39 for NER, and 0.29 for POS)\footnote{Because for cross-lingual transfer we test pairs of languages, we compute the combined CPT for the pair of languages as an average between the CPT of the source and target languages.}.
+
+Collecting all our observations together, we see that the tokenizers that aim to balance low-resource and high-resource languages do influence the results of downstream tasks compared to an unbalanced tokenizer. We see that the effect varies by task and language. Generally, we see a high influence on word-level tasks (NER and POS) and no significant influence on NLI. In the case of in-language results, the effect of increasing the vocabulary allocation for low-resource languages and decreasing allocation for high-resource languages is clear for the NER task (\autoref{fig:probe_overall_inlanguage_over_baseline}). In the case of cross-lingual transfer, this effect is clear on both word-level tasks and, interestingly, is a net positive even for the high-resource tasks (\autoref{fig:probe_overall_crosslanguage_over_baseline}). For all cases where the balancing effect is clear (NER in-language, NER/POS cross-language), the best overall performance is achieved by the Unigram tokenizer trained on a balanced train set with $\alpha=0.0\text{ and }0.3$ (\autoref{fig:probe_overall}). For in-language POS, we see the best performance for the Chung method. To quantify the strength of the influence of tokenizer improvement on task improvement, we plot the metrics and downstream results in a scatterplot matrix and compute Spearman correlations between them. For all cases where the balancing effect is clear, we see significant correlations between the differences in tokenizer metrics and the differences in downstream task performance (\autoref{fig:probe_overall_inlanguage_scattermatrix} and \autoref{fig:probe_overall_crosslanguage_scattermatrix}). In general, the correlations we observe suggest that improving vocabulary allocation (CPT, AR) has a positive effect on in-language and cross-language performance on word-level tasks. Moreover, higher vocabulary overlap (lower JSD) also seems to have a positive effect on word-level tasks, although the effect is smaller. 
+% Moreover, we also observe significant correlations between inlanguage POS and CPT/AR and significant, low correlation between crosslanguage NLI and CPT/AR
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/probe_detailed_inlanguage_scattermatrix.pdf}
+    \caption{We visualize the in-language results from Figure \ref{fig:probe_overall_inlanguage} in a scatter matrix. We \tomaszrep{center the results for each language and then plot the differences from the mean performance against the differences in our tokenizer metrics}{substract mean result across three tokenization mwethods from per-language results}. We see significant Spearman correlations for the NER and POS tasks, although for POS the correlation is low. For the NLI task, we do not observe any significant correlations.}
+    \label{fig:probe_overall_inlanguage_scattermatrix}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/probe_detailed_crosslanguage_scattermatrix.pdf}
+    \caption{We visualize the cross-language results from Figure \ref{fig:probe_overall_crosslanguage} in a scatter matrix. We \tomaszrep{center the results for each language and then plot the differences from the}{substract mean performance across the three models from the language pairs results} of vocabulary overlap metric (JSD) and the combined CPT/AR of the source and target languages. We see significant, very low negative correlations between JSD and F1 scores for the NER and POS tasks and higher, significant correlations between combined CPT and F1 scores. This suggests that the word-level tasks benefit only very slightly from an increase in overlap (decrease in JSD) and an increase in token length in source and target languages. For the NLI task, we observe a significant, low correlation between combined CPT/AR and NLI accuracy. This suggests that the cross-lingual transfer for sentence-level tasks benefits from an increase in token length in source and target languages.}
+    \label{fig:probe_overall_crosslanguage_scattermatrix}
+\end{figure}
