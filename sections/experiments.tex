@@ -110,7 +110,7 @@ Then provide \textbf{some} details how they should answer the question.}
     \bottomrule
     \end{tabular}
     %}{  % uncomment if you use the \floatbox (as above), erase otherwise
-    \caption{List of languages used in the experiments. \xxx{TODO: add the language sizes.}}
+    \caption{List of languages used in the experiments. \xxx{TODO: add the language sizes.} \tomasz{and language families if you have time}}
     %}  % uncomment if you use the \floatbox
     \label{tab:languages}
 \end{table}
@@ -119,7 +119,7 @@ For training the vocabularies and the masked language models we follow our relat
 
 This unlabeled, multilingual dataset was created from the Common Crawl corpus using an automatic pipeline. The data was deduplicated and language-identified. Then for each monolingual corpus the data was filtered using Kneser-Ney language models trained on Wikipedia. Documents with perplexity under a certain language-specific threshold were filtered out. The data processing pipeline is described in detail in \citet{wenzek_ccnet_nodate}. A reproduction of the dataset is available at \url{https://data.statmt.org/cc-100/}.
 
-For the purposes of this thesis, we select 20 out of 116 languages following \citet{limisiewicz_tokenization_2023} and download 10\% of the data for each language. The reason for selecting a subset of the languages available and using only part of the data is our computational constraints. First, by limiting the amount of data, we can train the models faster. Second, by limiting the number of languages, we can scale down the vocabulary size. Because a large amount of the model parameters is in the embedding matrix, the vocabulary size has a large impact on the model size. This in turn, affects the training time and the memory requirements. We use the same 20 languages for all experiments in this thesis.
+For the purposes of this thesis, we select 20 out of 116 languages following \citet{limisiewicz_tokenization_2023} and download 10\% of the data for each language. The reason for selecting a subset of the languages available and using only part of the data is our computational constraints. First, by limiting the amount of data, we can train the models faster. Second, by limiting the number of languages, we can scale down the vocabulary size. Because a large amount of the model parameters is in the embedding matrix, the vocabulary size has a large impact on the model size. This in turn, affects the training time and the memory requirements. We use the same \tomasz{diverse set of }20 languages for all experiments in this thesis.
 
 The exact choice of the language subset is motivated by the downstream evaluation datasets. We use the 15 languages covered by XNLI and add 5 more. The languages are selected to cover a wide range of language families and scripts. The full list of languages is shown in \autoref{tab:languages}.
 
@@ -203,7 +203,7 @@ With the tokenizers replicated and trained, we will train the language models to
 
 We use the Huggingface framework \cite{wolf_transformers_2020} for pretraining the language model. We follow \citet{conneau_unsupervised_2020} and pretrain the language model with the Masked Language Model objective. The model architecture is based on a scaled-down version of XLM-R\textsubscript{Base} \cite{conneau_unsupervised_2020}. The size of embeddings is kept at 768, the number of attention layers is reduced from 12 to 8, the number of attention heads is reduced from 12 to 6. The maximum sequence length is set to 128 tokens. The total number of parameters is roughly two times smaller than the original XLM-R\textsubscript{Base}.
 
-The models are pretrained for 10k steps with batchsize 8192 achieved by using gradient accumulation. This amounts to $\approx 1.6$ epochs over our training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$. We use the AdamW optimizer.
+The models are pretrained for 10k steps with the batch size 8192 achieved by using gradient accumulation. This amounts to $\approx 1.6$ epochs over our training dataset. The learning scheduler is linear with warmup for the first 500 steps. The learning rate is set to $5e-4$. We use the AdamW optimizer.
 
 \section{Model probing}
 \label{sec:model_probing}

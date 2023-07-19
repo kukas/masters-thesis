@@ -93,3 +93,6 @@ We explore the reason for the decreasing performance of the tokenizers trained o
     \caption{We examine the impact of the language imbalance on the Sentencepiece Unigram tokenizer training. We train five tokenizers with an increasing language imbalance controlled by the $\alpha$ parameter. Then we look at the effect on the vocabulary allocation metrics per language. We \tomaszrep{center}{substract ...} the results using the most unbalanced tokenizer with $\alpha=1.0$. As expected, the more balanced tokenizers have higher vocabulary allocation scores for low-resource languages and lower scores for high-resource languages. Interestingly, the effect varies across languages. For example, the vocabulary allocation of high-resource Vietnamese or French is not as affected by the decrease in training data as English or Russian.}
     \label{fig:data_balance_vs_allocation_per_lang}
 \end{figure}
+
+
+\tomasz{Again, I suggest writing short Findings/Conclusion Section listing the optimal parameter choices for tokenization.}
