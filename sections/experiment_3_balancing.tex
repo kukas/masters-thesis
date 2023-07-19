@@ -443,11 +443,42 @@ We argue that this is the most natural way to merge the tokenizers and so we ass
 \section{Comparison of balancing methods}
 \label{sec:comparison_balancing_methods}
 
+% By comparing the balancing tokenizers, we aim to answer (\textbf{Q4}) what is the effect of using the balancing methods on the representation of low-resource languages? And (\textbf{Q5}) how do the balancing methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
+In this section we investigate (\textbf{Q4}) what is the effect of using the balancing methods on the representation of low-resource languages and (\textbf{Q5}) how the balancing methods compare to the standard method of training the tokenizer on a balanced and unbalanced joint corpus.
+
+Our experimental setup consists of comparing the reproduced, vocabulary balancing tokenizers by \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} with the standard Sentencepiece Unigram. We train the Unigram tokenizer on imbalanced and balanced data as we have found this important in \autoref{sec:tokenizer_training_with_data_imbalance}. For additional context, we also add the tokenizers from \autoref{chap:experiment_1_validity} for assessing the overall tokenizer metrics.
+
+To answer \textbf{Q4} and \textbf{Q5}, we assess the tokenizers by using our proposed \textit{vocabulary allocation} and \textit{vocabulary overlap} metrics. We look at the overall macro averages and also more closely on the metrics computed per language. 
+
+We then select a representative subset of the reproduced tokenizers and compare them extrinsically by training masked language models. We evaluate the models in the in-language and cross-language setting on a selection of downstream tasks and assess the overall differences between tokenizers. We also assess more closely how the differences in the tokenizer representations across languages affect the language-specific performances of the models.
+
+\section{Method}
+
+In this chapter, we compare the following tokenizers:
+
+\begin{itemize}
+    \item \textbf{Sentencepiece Unigram} with $\alpha=0.0, 0.3, 0.5, 0.7, 1.0$ (see \autoref{sec:tokenizer_training_with_data_imbalance})
+    \item \textbf{\citet{chung_improving_2020}} with 4, 8, 16, 20 clusters
+    \item \textbf{\citet{zheng_allocating_2021}} with the maximized ALP metric
+    \item \textbf{\citet{liang_xlm-v_2023}} with 4, 8, 16, 20 clusters
+\end{itemize}
+
+For additional context, we also include the following tokenizers from \autoref{chap:experiment_1_validity}:
+\begin{itemize}
+    \item \textbf{Huggingface BPE} with $\alpha=0.25$
+    \item \textbf{Huggingface Unigram} with $\alpha=0.25$
+    \item \textbf{TokMix} with $\alpha=0.25$
+    \item \textbf{Sentencepiece BPE} with $\alpha=0.25$
+\end{itemize}
+
+We note that for Sentencepiece Unigram with $\alpha=0.0\text{ and }0.3$ we retrain the tokenizers on 20M and 10M lines of data respectively (compared to 2M and 5M from \autoref{tab:data_balance_metrics}) to match the data provided to the replicated, balancing methods. This does not increase the metrics by a lot as observed in \autoref{sec:data_size}. Nevertheless, we decided to match the data sizes between the balancing methods and the Unigram baselines.
+
+
+\section{Results}
+
 \input{tables/all_tokenizers_metrics.tex}
 
-In this section, we compare the tokenizers we replicated following the works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023}. For each of the clustering methods (Chung, Liang), we create 4 variants with different numbers of clusters (4, 8, 16, 20) as that is the main hyperparameter of the methods. For Zheng, we create one variant by greedily maximizing the ALP metric across the 20 languages. We present the results alongside the rest of the experiments in this chapter to provide context and be better able to interpret the differences between the methods.
-
-In \autoref{tab:all_tokenizers_metrics}, we compare overall metrics for all tokenizer experiments\footnote{Note that for Sentencepiece Unigram with $\alpha=0.0\text{ and }0.3$ we retrain the tokenizers on 20M and 10M lines of data respectively (compared to 2M and 5M from \autoref{tab:data_balance_metrics}) to match the data provided to the replicated methods. This does not increase the metrics by a lot as observed in \autoref{sec:data_size}. Nevertheless, we wanted to match the data sizes between the reproduced methods and the Unigram baselines.}. We sort the table by the CPT metric. We see that the unbalanced tokenizers ($\alpha=1.0, 0.7$) are placed at the bottom of the results along with the underperforming Huggingface Unigram implementation. We see that generally, the standard tokenizers trained on a balanced dataset provide the best results on our tokenizer metrics. Next, we see the clustering methods of Chung and Liang with 20 and 16 clusters along with the Zheng method. Only then we see the standard tokenizers trained on less balanced or unbalanced datasets and clustering methods with a lower number of clusters. We visualize our vocabulary allocation metrics on a scatterplot in \autoref{fig:all_tokenizers_AR_vs_CPT} to better observe the differences between the tokenizers and explore the relationship between CPT and AR. Each point on the scatterplot is one tokenizer and its position is determined by the CPT and AR metrics. We connect related experiments with a line and color-code them. Here we can see that the tokenizers with high CPT often have high AR. Nevertheless, we also have tokenizers with low AR and high CPT but never the other way around. Our intuition is that it is not possible to construct a tokenizer with a high number of useful tokens which are all very short. With the context of different tokenization methods, we can see the degree of Huggingface Unigram's underperformance.
+In \autoref{tab:all_tokenizers_metrics}, we compare overall metrics for all tokenizer experiments. We sort the table by the CPT metric. We see that the unbalanced tokenizers ($\alpha=1.0, 0.7$) are placed at the bottom of the results along with the underperforming Huggingface Unigram implementation. We see that generally, the standard tokenizers trained on a balanced dataset provide the best results on our tokenizer metrics. Next, we see the clustering methods of Chung and Liang with 20 and 16 clusters along with the Zheng method. Only then we see the standard tokenizers trained on less balanced or unbalanced datasets and clustering methods with a lower number of clusters. We visualize our vocabulary allocation metrics on a scatterplot in \autoref{fig:all_tokenizers_AR_vs_CPT} to better observe the differences between the tokenizers and explore the relationship between CPT and AR. Each point on the scatterplot is one tokenizer and its position is determined by the CPT and AR metrics. We connect related experiments with a line and color-code them. Here we can see that the tokenizers with high CPT often have high AR. Nevertheless, the balancing methods seem to have generally lower AR while having a comparable CPT to the other methods. \footnote{We also observe that there are no tokenizers with low CPT but high AR Our intuition is that it is not possible to construct a tokenizer with a high number of useful tokens which are all very short.}With the context of different tokenization methods, we can see the degree of Huggingface Unigram's underperformance.
 
 \begin{figure}[H]
     \centering
@@ -456,7 +487,7 @@ In \autoref{tab:all_tokenizers_metrics}, we compare overall metrics for all toke
     \label{fig:all_tokenizers_AR_vs_CPT}
 \end{figure}
 
-Crucially, we see that the reproduced methods of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} do improve over the unbalanced baselines $\alpha=1.0, 0.7, 0.5$ on the CPT metric, especially with a higher number of clusters but do not outperform the simple case of training the Sentencepiece Unigram on a balanced dataset $\alpha=0.0$. We also observe that the clustering methods with a higher number of clusters along with Zheng are close to each other on the CPT-AR plot. We assume this is because, with higher $k$, the clustering methods reduce to the Zheng method (training separate tokenizers for each language). Similarly, with a lower number of clusters, the methods are much closer to the vanilla Sentencepiece Unigram trained on an unbalanced dataset.
+Crucially, we see that the reproduced methods of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} do improve over the unbalanced baselines $\alpha=1.0, 0.7, 0.5$ on the CPT metric, especially with a higher number of clusters. On the other hand, they do not outperform the simple case of training the Sentencepiece Unigram on a balanced dataset $\alpha=0.0$. We also observe that the clustering methods with a higher number of clusters along with Zheng are close to each other on the CPT-AR plot. We assume this is because, with higher $k$, the clustering methods reduce to the Zheng method (training separate tokenizers for each language). Similarly, with a lower number of clusters, the methods are much closer to the vanilla Sentencepiece Unigram $\alpha=1.0$ trained on the unbalanced dataset. We hypothesize that with low amount of clusters, the original data balance starts to take precedence over the cluster assignments.
 
 \begin{figure}
     \centering
@@ -465,8 +496,9 @@ Crucially, we see that the reproduced methods of \citet{chung_improving_2020,zhe
     \label{fig:all_tokenizers_AR_vs_JSD}
 \end{figure}
 
-We also explore the relationship between vocabulary allocation and vocabulary overlap on the \autoref{fig:all_tokenizers_AR_vs_JSD}\footnote{The CPT-JSD plot is similar but is less readable therefore we present the relationship between AR and JSD}. We see that the differences between all methods based on Sentencepiece are small compared to the differences between Huggingface tokenizers. This is surprising because one of the motivations for the method of Chung and Liang is to promote overlap between similar languages while minimizing the overlap between distant languages. We would therefore expect the overall overlap to decrease, as the number of spurious token sharing decreases. Nevertheless, we observe that the resulting overlap is lower or similar to our Sentencepiece Unigram tokenizers. Similarly, the Zheng method works by training separate tokenizers for each language and then combining them into one. We would expect the overlap to be even lower than the original Sentencepiece Unigram but we observe that the overlap is comparable. 
-Surprisingly, the lowest vocabulary overlap (highest JSD) is achieved by the Huggingface BPE trained on a combined corpus. 
+We also explore the relationship between vocabulary allocation and vocabulary overlap on the \autoref{fig:all_tokenizers_AR_vs_JSD}. We see that the differences between all methods based on Sentencepiece are small compared to the differences between Huggingface tokenizers. This is surprising because the assumption shared by all authors of the balancing methods is that by training separate tokenizers, we achieve lower overlap between unrelated languages. Nevertheless, we see that the overall overlap is largely similar and more influenced by the choice of implementation. If we ignore the outliers, we still see a counterintuitive trend where the Zheng method and higher number of clusters have a \textit{larger overlap} (lower JSD) than the standard tokenizers and clustering methods with lower number of clusters.
+% This is surprising because one of the motivations for the method of Chung and Liang is to promote overlap between similar languages while minimizing the overlap between distant languages. We would therefore expect the overall overlap to decrease, as the number of spurious token sharing decreases. Nevertheless, we observe that the resulting overlap is lower or similar to our Sentencepiece Unigram tokenizers. Similarly, the Zheng method works by training separate tokenizers for each language and then combining them into one. We would expect the overlap to be even lower than the original Sentencepiece Unigram but we observe that the overlap is comparable. 
+% Surprisingly, the lowest vocabulary overlap (highest JSD) is achieved by the Huggingface BPE trained on a combined corpus. 
 
 \begin{figure}
     \centering
@@ -475,7 +507,11 @@ Surprisingly, the lowest vocabulary overlap (highest JSD) is achieved by the Hug
     \label{fig:zheng_vs_alphas}
 \end{figure}
 
-We investigate the differences between the balanced Unigram and the replicated methods in more detail by examining the CPT and AR metrics computed \textbf{per language}. We use the data balance experiments from \autoref{sec:tokenizer_training_with_data_imbalance} for comparison. We start by comparing the Zheng method with the increasingly imbalanced Unigram tokenizers in \autoref{fig:zheng_vs_alphas}. We plot the increase or decrease in vocabulary allocation metrics for each language sorted by the data available. Remarkably, we see that the Zheng method is strikingly similar in terms of CPT and AR per language to the Unigram tokenizer trained on the balanced set $\alpha=0.0$. The similarity seems to be higher in the CPT metric although the AR metric is also very similar, especially for the highest and lowest resource languages. We find this result quite surprising because of the distinctness of the Zheng method --- it trains a separate tokenizer for each language and then merges the vocabularies together. Nevertheless, the resulting tokenizers are very similar to the Unigram tokenizer trained on the balanced set. This result seems to validate the choice of the ALP metric for the selection of vocabulary sizes in the Zheng method (see \autoref{fig:zheng_vs_alphas_alp}) but it also calls into question the necessity of the separate training of tokenizers for each language. One advantage of the Zheng method is that splitting the data into separate languages lowers the memory requirements for the training of the separate Sentencepiece Unigram. However, this comes at a cost of higher overall compute time because of the need for training hundreds of tokenizers to be able to select the ones that maximize the overall ALP after merging them.
+\subsection{Per language analysis}
+
+We investigate the differences between the balanced Unigram and the replicated methods in more detail by examining the CPT and AR metrics computed \textbf{per language}. This way we can better assess how the methods improve the low-resource languages.
+
+We start by comparing the Zheng method with the increasingly imbalanced Unigram tokenizers in \autoref{fig:zheng_vs_alphas}. We plot the increase or decrease in vocabulary allocation metrics for each language sorted by the data available. Remarkably, we see that the Zheng method is strikingly similar in terms of CPT and AR per language to the Unigram tokenizer trained on the balanced set $\alpha=0.0$. The similarity seems to be higher in the CPT metric although the AR metric is also very similar, especially for the highest and lowest resource languages. We find this result quite surprising because of the distinctness of the Zheng method --- it trains a separate tokenizer for each language and then merges the vocabularies together. Nevertheless, the resulting tokenizer is very similar to the Unigram tokenizer trained on the joint, balanced set. 
 
 
 \begin{figure}[H]
