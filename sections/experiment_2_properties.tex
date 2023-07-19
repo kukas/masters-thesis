@@ -4,21 +4,28 @@
 % \textbf{Q3:} What is the reason that the standard tokenizer training method does not work well in the multilingual setting? 
 
 % motivation
-In this chapter, we propose and conduct a series of experiments to answer (\textbf{Q3}) what is the reason that the standard tokenizer training method does not work well in the multilingual setting? Our goal is explore why was the Unigram algorithm found to be unsuitable for multilingual tokenization by our related work.
+In this chapter, we propose and conduct a series of experiments to answer (\textbf{Q3}) what is the reason that the standard tokenizer training method does not work well in the multilingual setting?
+ Our goal is \tomasz{to} explore why was the Unigram algorithm found to be unsuitable for multilingual tokenization by our related work.
+ \tomasz{Based on the results it's not only Unigram you explore here. So mention also BPE or subword tokenization in general.}
 
 % overview
 To answer the question, we first investigate the differences in implementation between the Huggingface implementation we use in the previous \autoref{chap:experiment_1_validity} and the original Sentencepiece. Next, we look at the influence of the training data size, the alphabet size, and finally the language imbalance in the training data. In the last experiment, we will examine closely the effect of the data imbalance on the tokenizers quality per language.
 
 % method
 \section{Method}
+\tomasz{Again, call it differently.}
 
-As shown in the previous \autoref{chap:experiment_1_validity}, we observe that the Huggingface Unigram tokenizer leads to significantly worse metrics than the other tokenizers. We investigate this difference by turning to the original Sentencepiece implementation of the algorithm and running a comparable experiment. For comparison, we also train a comparable BPE tokenizer using the Sentencepiece library. We evaluate the tokenizers using our metrics.
+As shown in the previous \autoref{chap:experiment_1_validity}, we observe that the Huggingface Unigram tokenizer leads to significantly worse metrics than the other tokenizers.
+ We investigate this difference by turning to the original Sentencepiece implementation of the algorithm and running a comparable experiment.
+ \tomasz{It would be good to include links to Huggingface and Sentencepiece implementations here.}
+ For comparison, we also train a comparable BPE tokenizer using the Sentencepiece library. We evaluate the tokenizers using our metrics.
 
 % We use the Sentencepiece library \cite{kudo_sentencepiece_2018} to train the Unigram and BPE tokenizers. We use the same hyperparameters as in the previous \autoref{chap:experiment_1_validity} for the Huggingface tokenizers. 
 
-Next we train a series of Unigram tokenizers on different amounts of data and see how the data amount influences the tokenizers quality. We sample $N = 1\,000, 10\,000, 100\,000, 1\,000\,000, 1\,500\,000, 2\,000\,000$ lines for each of the 20 languages, concatenate the samples and create a balanced corpora of different sizes. We then evaluate the tokenizers using our metrics.
+Next, we train a series of Unigram tokenizers on different amounts of data and see how the data amount influences the tokenizers' quality. We sample $N = 1\,000, 10\,000, 100\,000, 1\,000\,000, 1\,500\,000, 2\,000\,000$ lines for each of the 20 languages, concatenate the samples and create a balanced corpora of different sizes. We then evaluate the tokenizers using our metrics.
 
-We proceed with a similar analysis for the alphabet size. The alphabet of a tokenizer is the set of characters that are included in the vocabulary. We train a series of Sentencepiece Unigram tokenizers with the character coverage parameter set to 98\%, 99.5\%, 99.95\%, 99.995\%, 99.9995\%, and 100.0\% on data sampled with $\alpha=0.3$ from CC100. The character coverage parameter determines, how many distinct Unicode characters are included in the vocabulary of the tokenizer.
+We proceed with a similar analysis for the alphabet size. The alphabet of a tokenizer is the set of characters that are included in the vocabulary.
+ We train a series of Sentencepiece Unigram tokenizers with the character coverage parameter \tomasz{what is CP? I think it was not defined?} set to 98\%, 99.5\%, 99.95\%, 99.995\%, 99.9995\%, and 100.0\% on data sampled with $\alpha=0.3$ from CC100. The character coverage parameter determines, how many distinct Unicode characters are included in the vocabulary of the tokenizer.
 
 Finally, for the data balance experiment, we train 5 tokenizers with an increasingly imbalanced corpus with $\alpha = 0.0, 0.3, 0.5, 0.7, 1.0$ sampled from the CC100 with 20 languages. \footnote{For $\alpha = 0.0, 0.3, 0.5, 0.7$ we make sure to sample at least 100k lines per language as we have found this to be important in \autoref{sec:data_size}. We note that the data imbalance for $\alpha=1.0$ is so large, that we needed to settle for 30k-70k training lines for the five least resourceful languages (ka, ur, te, mr, sw) because of memory constraints.} On one extreme we have the $\alpha=1.0$, where all data available for each language is combined. On the other, we have $\alpha=0.0$, where the data is sampled per line from each language with the same probability. We use the Sentencepiece Unigram tokenizer with the default settings. Specifically, we use the default character coverage of 99.95\%. As usual, we evaluate the tokenizers on a balanced validation set sampled from a holdout portion of the CC100 corpus. 
 
@@ -29,6 +36,7 @@ Finally, for the data balance experiment, we train 5 tokenizers with an increasi
 
 \section{The choices that influence the tokenizers quality}
 % \tomasz{Desceibe potential sources of differences between tokenizers in experiment part. Here just write the results.}
+\tomasz{Call it ``Results''}
 
 \subsection{Choice of implementation}
 \label{sec:implementation}
@@ -54,7 +62,7 @@ We are interested in how much data is needed for the tokenizer training. We pres
 
 \input{tables/coverage_influence.tex}
 
-% Because we  observe a large difference in the alphabet size between Huggingface tokenizers (implied by the use of the default trainer settings of the library), we investigate the influence of this parameter on our tokenizer metrics. 
+% Because we observe a large difference in the alphabet size between Huggingface tokenizers (implied by the use of the default trainer settings of the library), we investigate the influence of this parameter on our tokenizer metrics. 
 We are also interested in the influence of the alphabet size on our metrics. As we have seen in \autoref{tab:hugg_vs_sentpiece}, large alphabet size influences the vocabulary allocation metrics.
 % We train the Sentencepiece Unigram tokenizers with different character coverage (98\%, 99.5\%, 99.95\%, 99.995\%, 99.9995\%, and 100.0\%) on data sampled with $\alpha=0.3$ from CC100. 
 We show the results in \autoref{tab:coverage_influence}. 
@@ -82,6 +90,6 @@ We explore the reason for the decreasing performance of the tokenizers trained o
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/ar_cpt_vs_alpha.pdf}
-    \caption{We examine the impact of the language imbalance on the Sentencepiece Unigram tokenizer training. We train five tokenizers with an increasing language imbalance controlled by the $\alpha$ parameter. Then we look at the effect on the vocabulary allocation metrics per language. We center the results using the most unbalanced tokenizer with $\alpha=1.0$. As expected, the more balanced tokenizers have higher vocabulary allocation scores for low-resource languages and lower scores for high-resource languages. Interestingly, the effect varies across languages. For example, the vocabulary allocation of high-resource Vietnamese or French is not as affected by the decrease in training data as English or Russian.}
+    \caption{We examine the impact of the language imbalance on the Sentencepiece Unigram tokenizer training. We train five tokenizers with an increasing language imbalance controlled by the $\alpha$ parameter. Then we look at the effect on the vocabulary allocation metrics per language. We \tomaszrep{center}{substract ...} the results using the most unbalanced tokenizer with $\alpha=1.0$. As expected, the more balanced tokenizers have higher vocabulary allocation scores for low-resource languages and lower scores for high-resource languages. Interestingly, the effect varies across languages. For example, the vocabulary allocation of high-resource Vietnamese or French is not as affected by the decrease in training data as English or Russian.}
     \label{fig:data_balance_vs_allocation_per_lang}
 \end{figure}
