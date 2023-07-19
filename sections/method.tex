@@ -264,7 +264,7 @@ In step \ref{eq:alp_entropy_last_step} we express the total number of tokens in 
 
 % By analysis of ALP we see that the metric is composed of two metrics that are already well defined. Strangely, the metrics are multiplied together even though the effects of the metrics go against each other. On one hand the lower the token length the better (lower tokenized sentence length means longer and more meaningful tokens), on the other hand arguably, the higher entropy the better (more uniform distribution is better than very unbalanced distribution). It is not clear why would we want to multiply these two metrics together. The authors do not provide this analysis and discussion. \xxx{now interpretaion occured to me: the best ALP is achieved when we have short tokens that are balanced. So actually it could be interesting. But still the authors do not provide this analysis.}
 
-By examination of ALP, it becomes evident that the metric is a composition of two already well-established metrics. Interestingly, these metrics are multiplied together, even though they seem to be inversely related. On the one hand, shorter token lengths are generally considered to be better (as a shorter tokenized sentence length means longer and more meaningful tokens), while on the other, a higher entropy is often deemed more desirable (a more uniform distribution is preferable to a more skewed one). One interpretation could be that high ALP is achieved when the vocabulary consists of a large number of short tokens that are similarly useful (have a uniform distribution). The authors, unfortunately, do not provide an analysis or discussion to shed light on this aspect.
+By examination of ALP, it becomes evident that the metric is a composition of two already well-established metrics. Interestingly, these metrics are multiplied together, even though they seem to be inversely related. On the one hand, shorter token lengths are generally considered to be better (as a shorter tokenized sentence length means longer and more meaningful tokens), while on the other, a higher entropy is often deemed more desirable (a more uniform distribution is preferable to a more skewed one). One interpretation could be that high ALP is achieved when the vocabulary consists of a large number of short tokens that are similarly useful (have a uniform distribution). The authors, unfortunately, do not provide an analysis or discussion to shed light on this aspect. \xxx{We also note that the two metrics have different units, if we would want to combine them, it would be useful to add some factor that would determine which of the two metrics we deem more important.}
 
 In comparison to our average rank, ALP measures the number of used tokens and the uniformity of the distribution thanks to the entropy in the equation. On the other hand, the ALP metric is punished by the length of the tokens, which is counterintuitive. We therefore stick to our AR metric, which is more intuitive and does not suffer from this issue.
 
@@ -402,11 +402,12 @@ The second type of experiment is comparing different tokenizers on downstream ta
 
 For the intrinsic evaluation of a set of tokenizers, we compute the metrics we introduced in the previous section on the validation sets from all the languages $L$. We compute the metrics for each tokenizer and validation language separately. Then, we compare the per language metrics between the tokenizers. Because the metrics are generally different for different languages (for example the characters per token for Chinese will be always smaller than the characters per token for English), we will compare the relative differences between the tokenizers rather than the absolute values.
 
-We will also compute the overall metrics for the whole set of languages $L$. We do this by averaging the metrics over all the languages. We use the macro average over languages, which means that we average the metrics for each language with the same weight. We use the macro average because we want to assess equally the \tomaszrep{improvements over}{impact on} the high-resource and low-resource languages. This is a choice we make to assess each language equally. Different weighting schemes might be more appropriate for different applications.
+We will also compute the overall metrics for the whole set of languages $L$. We do this by averaging the metrics over all the languages. We use the macro average over languages, which means that we average the metrics for each language with the same weight. We use the macro average because we want to assess equally the \tomaszrep{improvements over}{impact on} the high-resource and low-resource languages. This is a choice we make to assess each language equally. Different weighting schemes might be more appropriate for different applications. Equal weighting across languages is also in line with how are multilingual models evaluated in the related work \cite{ruder_xtreme-r_2021}.
 
 The JSD metric which measures the \textit{vocabulary overlap} is defined between a pair of languages, measuring the overlap between the two. We compute the overall overlap by considering the JSD values for all pairs \tomasz{of languages:} $l_1, l_2 \in L, l_1 \neq l_2$.
 
 \subsection{Extrinsic evaluation}
+\label{sec:extrinsic_evaluation}
 %     - extrinsic evaluation
 %         - in-language / cross-language
 %             - overall - why macroaverage, per-language, how to do per-language in cross-lingual where there are pairs (we focus on target results)
@@ -456,6 +457,7 @@ Moreover, we will compute the cross-language performance per language $l$ of the
 When considering the results per language in both evaluation schemes, it is useful to consider only the relative differences between the models rather than absolute values. The performance of the models for a given language is influenced by eg. by the amount of training data available for the language. Therefore, when interpreting the results per language, we will choose a reference model and compute the relative difference between the performance of the reference model and the other models.
 
 \subsubsection{Correlation between intrinsic and extrinsic evaluation}
+\label{sec:correlation_intrinsic_extrinsic}
 
 To support the claim that intrinsic evaluation is a good proxy for extrinsic evaluation, we will compute the correlation between intrinsic and extrinsic evaluation. Because the tokenizer metrics and model performance are influenced by the evaluation language as mentioned in the previous paragraph and in \autoref{sec:intrinsic_evaluation}, we center the tokenizer metrics and downstream task results by subtracting the mean for each language in the in-language setting or pair of languages in the cross-lingual setting. In both cases, means are computed across all tokenizers. We present Spearman’s correlation coefficient and the associated p-value.
 
@@ -512,3 +514,426 @@ We compute the cosine similarity between sentence representations across languag
 \subsection{Tokenizers}
 \subsection{Model Pretraining}
 \subsection{Probing}
+
+
+\section{Reproducing the vocabulary balancing methods}
+\label{sec:reproducing_the_vocabulary_balancing_methods}
+% - replication of the previous balancing work
+%     - the code is not available for Chung and Liang, for Zheng we reimplement even though the code is available
+%     - therefore we follow all papers closely
+%     - Chung
+%         - reproductions of chung are available in the paper Overlap-based Vocabulary Generation Improves Cross-lingual Transfer Among Related Languages
+%             - they do not replicate the results of Chung
+%         - we run training with 8k vocab size, unigram, coverage 0.9995 (default in Sentencepiece) for each language
+%             - this is specified in the paper
+%             - we use 1M lines for each language which we have shown to be enough in preliminary experiments
+%         - we compute the binary vectors for each language and normalize them to unit length
+%         - we compute clusters using k-means, with k=4, 8, 12, 16, 20 (=all languages)
+%         - train the tokenizers on the clusters
+%             - target vocab size is 120k, again use Sentencepiece defaults
+%             - to reach the vocab size we train also +10\%, +20\%, +30\% of the target size and then prune
+%         - then we merge the tokenizers
+
+%     - Liang
+%         - we follow the same procedure as in Chung
+%         - compute negative log-likelihoods for each token over the corpus and use the euclidean distance to compute the similarity
+%         - but we use the sizes from Zheng
+
+In this section, we describe our reproduction of the existing methods for balancing the low- and high- resource languages in the vocabulary. As the code for two out of three of the methods is not available, we follow and reimplement the original papers closely and describe the differences in our implementation.
+
+The methods of \citet{chung_improving_2020} and \citet{liang_xlm-v_2023} follow a three step process: 1) grouping the languages into clusters by similarity, 2) running the Unigram LM tokenizer training on the clustered corpora and 3) combining the cluster-vocabularies into a single, multilingual vocabulary. Because of their similarity, we refer to the two as the clustering methods. The method of \citet{zheng_allocating_2021} works in two steps: 1) training the Unigram LM tokenizers for each language separately and 2) selecting the best vocabulary size for each language and combining the vocabularies into a single, multilingual vocabulary.
+
+As we can see the methods share the last merging step and differ in the clustering approaches. We therefore describe the clustering approaches first, then we describe the Zheng method and finally we describe the merging step common for all methods.
+
+\subsection{Reproducing the clustering methods}
+% \tomasz{General remark: It's better to keep experiments definition (i.e. hypothesis statement and experiment overview.) separated from implementation details.
+% The later are important bu shouldn't steal attention of the reader from the story.}
+
+The first step for the Chung and Liang methods is to train monolingual Unigram LM tokenizers for each language $l$ from the set of 20 languages $L$. As specified in \citet{chung_improving_2020}, we use the default Sentencepiece settings. Namely, we use the Unigram LM model, character coverage of 99.95\%, number of seed sentencepieces is 1M. \xxx{add all parameters to appendix?}. 
+For training the monolingual tokenizers, we use 1M lines for each language which we have shown to be enough in preliminary experiments \autoref{sec:data_size}. This choice also corresponds to the \citet{zheng_allocating_2021} method, which uses 1M lines for each language. The vocabulary size differs between Chung and Liang and so we train two sets of monolingual tokenizers, with 8k and 30k vocabulary sizes respectively.
+
+We arrive at $|L|$ vocabularies $V^l$. Next, we take the union of all vocabularies $V^L = \bigcup_{l \in L} V^l$ and compute the "vector representation" $\vec{v}^l$ for each language $l$ as described in \autoref{sec:chung} and \autoref{sec:liang}. For Chung, we compute a binary vector of size $|V^L|$, where each element $\vec{v}^l_i$ is 1 if the token $i$ is in the vocabulary $V^l$ of language $l$ and 0 otherwise. For Liang, we compute a vector of size $|V^L|$, where each element $\vec{v}^l_i$ is the negative log-likelihood of the token $i$ in the language $l$ as computed by the Sentencepiece training algorithm. We set the log-likelihood of the tokens not in the vocabulary to 0 as inferred from the Figure 1 in \cite{liang_xlm-v_2023}. We discuss this choice in more detail in the discussion \autoref{sec:language_vectors}.
+
+With the vector representations $\vec{v}^l$ we can cluster the languages into $k$ clusters $C^k$ using the k-means algorithm. We use the implementation from \texttt{scikit-learn} \cite{pedregosa_scikit-learn_2011} with the default parameters. \citet{chung_improving_2020} reports using the cosine distance for the k-means algorithm. We normalize the language representation vectors to unit length, to achieve the same effect. In the case of Liang, we stick to Euclidean distance as the authors do not mention using a different metric. We experiment with $k \in \{4, 8, 16, 20\}$. Note that $k=20$ corresponds to separating each language into a separate cluster which is similar to the method \textsc{TokMix} we introduce in \citet{limisiewicz_tokenization_2023} and \citet{zheng_allocating_2021} we replicate next.
+
+Then, given a clustering of languages $C$, for each cluster $c_j \in C$ we create a new training corpus by concatenating all of the CC100 data belonging to the cluster\footnote{Because of computational constraints, we cap the total number of lines per cluster to 20M. If the cluster corpus exceeds the total number of lines, we subsample the available data with $\alpha=1.0$}. We run the Sentencepiece algorithm again on these clustered corpora to arrive at cluster-specific vocabularies $V^{c_j}$. The vocabulary size for each cluster is determined following the Chung and Liang methods. For both methods, we want to arrive at the final size of 120k tokens after merging the cluster-specific vocabularies. Therefore we need to determine the size of each cluster vocabulary $|V^{c_j}|$ such that $\sum_{j=1}^k |V^{c_j}| = 120k$. The Chung method sets the size of the cluster vocabulary to be proportional to the size of the union over the monolingual vocabularies $|\bigcup_{l \in c_j} V^l|$ to determine the size of each cluster vocabulary as follows:
+
+\begin{equation}
+    |V^{c_j}| = \frac{|\bigcup_{l \in c_j} V^l|}{\sum_{i=1}^k |\bigcup_{l' \in c_i} V^{l'}|} \cdot 120k
+\end{equation}
+
+The Liang method proposes to set the size of the cluster vocabulary to be proportional to the sum of the vocabulary allocations from \citet{zheng_allocating_2021} for the languages belonging to the cluster. We use the allocations we reproduce in \autoref{subsec:reproducing_vocap}.
+\footnote{
+    Here we slightly improve the methods of Chung and Liang. By following the original method as described above, the final size of the vocabulary will be lower than the target we set. This is because the cluster vocabularies $V^{c_j}$ will contain overlapping tokens and merging will remove these duplicates. This negative effect becomes larger with the increasing number of clusters $k$. Therefore, on top of training the prescribed cluster vocabulary of size $|V^{c_j}|$, we also train slightly larger vocabularies $V_q^{c_j'}$ of size $|V_q^{c_j}| = q|V^{c_j}|$ for $q = 1.1, 1.2, 1.3$. We then select the minimum $q$ that results in a vocabulary size of at least 120k tokens after merging the cluster vocabularies. After that, we trim the vocabulary if needed. This improvement is done to ensure the final vocabulary size is exactly 120k tokens and the comparison between the methods is fair.
+}
+
+After the tokenizers are trained, we merge the vocabularies using the method described in \autoref{subsec:merging_tokenizers}. 
+
+The resulting clusters and the corresponding per-cluster vocabulary sizes are found in Tables \ref{fig:cluster_assignments_k4}, \ref{fig:cluster_assignments_k8}, \ref{fig:cluster_assignments_k16}, and \ref{fig:cluster_assignments_k20}.
+
+\begin{figure}[p]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            zh, ar, ru, bg & 27425 \\
+            el, ur, ta, te, th, he, ka & 48841 \\
+            en, es, tr, sw, vi, fr, de & 43622 \\
+            hi, mr & 12108 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k4}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+        \toprule
+        Languages & Size \\
+        \midrule
+        el, zh, ar, ur, ta, te, th, he, ka & 61285 \\
+        en, es, tr, sw, vi, fr, de & 43370 \\
+        hi, mr & 10370 \\
+        ru, bg & 16970 \\
+        \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k4}
+    \end{subtable}
+
+    \caption{Cluster assignments for 4 clusters}
+    \label{fig:cluster_assignments_k4}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            el & 7458 \\
+            ru, bg & 12975 \\
+            ta, te & 14318 \\
+            en, es, tr, sw, th, ka, vi, fr, de & 56509 \\
+            ar, ur & 13788 \\
+            hi, mr & 12030 \\
+            zh & 7458 \\
+            he & 7458 \\
+            \bottomrule
+            \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k8}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            en, fr & 12256 \\
+            es, tr, sw, de & 27342 \\
+            ru, bg & 16970 \\
+            ar, ur & 12256 \\
+            vi & 3770 \\
+            hi, mr & 10370 \\
+            el, ta, te, th, he, ka & 37713 \\
+            zh & 11313 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k8}
+    \end{subtable}
+
+    \caption{Cluster assignments for 8 clusters}
+    \label{fig:cluster_assignments_k8}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lrlr}
+            \toprule
+            Langs. & Size & Langs. & Size \\
+            \midrule
+            ar, ur & 14020 & zh & 7582 \\
+            tr & 7582 & he & 7582 \\
+            en, fr & 13549 & ta & 7582 \\
+            hi, mr & 12232 & sw & 7582 \\
+            ru, bg & 13194 & ka & 7582 \\
+            vi & 7582 & th & 7582 \\
+            te & 7582 & es & 7582 \\
+            el & 7582 & de & 7582 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k16}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.49\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lrlr}
+            \toprule
+            Langs. & Size & Langs. & Size \\
+            \midrule
+            de & 8228 & te & 7200 \\
+            ar & 7200 & vi & 4113 \\
+            en, fr & 13370 & el & 10285 \\
+            hi, mr & 11313 & ta & 4113 \\
+            ru, bg & 18513 & zh & 12342 \\
+            ka & 8228 & sw & 6170 \\
+            he & 5142 & es & 7200 \\
+            tr, th & 14400 & ur & 6170 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k16}
+    \end{subtable}
+
+    \caption{Cluster assignments for 16 clusters}
+    \label{fig:cluster_assignments_k16}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7200 \\
+            bg & 7200 \\
+            de & 7200 \\
+            el & 7200 \\
+            en & 7200 \\
+            es & 7200 \\
+            fr & 7200 \\
+            he & 7200 \\
+            hi & 7200 \\
+            ka & 7200 \\
+            mr & 7200 \\
+            ru & 7200 \\
+            sw & 7200 \\
+            ta & 7200 \\
+            te & 7200 \\
+            th & 7200 \\
+            tr & 7200 \\
+            ur & 7200 \\
+            vi & 7200 \\
+            zh & 7200 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{chung_improving_2020}}
+        \label{tab:chung_clusters_k20}
+        
+
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7200 \\
+            bg & 8228 \\
+            de & 8228 \\
+            el & 10285 \\
+            en & 6170 \\
+            es & 7200 \\
+            fr & 7200 \\
+            he & 5142 \\
+            hi & 5142 \\
+            ka & 8228 \\
+            mr & 6170 \\
+            ru & 10285 \\
+            sw & 6170 \\
+            ta & 4113 \\
+            te & 7200 \\
+            th & 6170 \\
+            tr & 8228 \\
+            ur & 6170 \\
+            vi & 4113 \\
+            zh & 12342 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{liang_xlm-v_2023}}
+        \label{tab:liang_clusters_k20}
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.32\textwidth}
+        \centering
+        % ---
+        \begin{tabular}{lr}
+            \toprule
+            Languages & Size \\
+            \midrule
+            ar & 7000 \\
+            bg & 8000 \\
+            de & 8000 \\
+            el & 10000 \\
+            en & 6000 \\
+            es & 7000 \\
+            fr & 7000 \\
+            he & 5000 \\
+            hi & 5000 \\
+            ka & 8000 \\
+            mr & 6000 \\
+            ru & 10000 \\
+            sw & 6000 \\
+            ta & 4000 \\
+            te & 7000 \\
+            th & 6000 \\
+            tr & 8000 \\
+            ur & 6000 \\
+            vi & 4000 \\
+            zh & 12000 \\
+            \bottomrule
+        \end{tabular}
+        % ---
+        \caption{\citet{zheng_allocating_2021}}
+        \label{tab:zheng_allocations}
+    \end{subtable}
+
+
+    \caption{Allocated vocabulary sizes for 20 languages}
+    \label{fig:cluster_assignments_k20}
+\end{figure}
+% \input{./tables/chung_clusters_k20.tex}
+% \input{./tables/chung_clusters_k16.tex}
+% \input{./tables/chung_clusters_k8.tex}
+% \input{./tables/chung_clusters_k4.tex}
+
+% \input{./tables/liang_clusters_k20.tex}
+% \input{./tables/liang_clusters_k16.tex}
+% \input{./tables/liang_clusters_k8.tex}
+% \input{./tables/liang_clusters_k4.tex}
+
+\subsection{Reproducing the \textsc{VoCap} method}
+\label{subsec:reproducing_vocap}
+
+%     - Zheng
+%         - train monolingual tokenizers for all 20 languages with vocab sizes 1k ... 40k
+%         - load a sample of CC100 data for each language (50k lines per language)
+%         - tokenize the data with all of the monolingual tokenizers
+%         - compute the ALP for each language and vocabulary size
+%         - select the best vocabulary size for each language greedily
+%         - we also experiment with optimizing CPT instead of ALP
+%         - we also experiment with computing the CPT improvement on each merge step instead of precomputing it for all vocab sizes
+
+%         - they have this suspicious plot with ALP with Joint250k, Joint500k and VoCap500k and the differences are too much
+
+From the high level, the \textsc{VoCap} method works by selecting the best vocabulary size for each language and then merging the monolingual vocabularies. The best vocabulary size is determined by maximizing the overall \textit{Average Log Probability} metric defined in \autoref{eq:alp}. 
+
+To replicate the \textsc{VoCap} method, we first need to compute the \textsc{ALP} metric for each language $l$ and each vocabulary size $V \in {1000, ..., 40\,000}$. To that end, we train monolingual tokenizers using Sentencepiece with default settings for all 20 languages with vocabulary sizes from 1k to 40k.\footnote{The more effective way, not discussed by \citet{zheng_allocating_2021}, would be to modify the Sentencepiece unigram trainer code to produce a tokenizer after each prune iteration. That way we would get series of tokenizers with decreasing vocabulary size in one go, instead of running the trainer 40 times. As the computational cost of training the tokenizers is not high for our reduced set of 20 langugaes, we have not implemented this improvement.} We use 1M lines per language for training the monolingual tokenizers again, following \citet{zheng_allocating_2021}. Note that for Chinese the tokenizer vocabulary size starts at 5k due to the large number of unique logograms in the language. 
+
+% reference for 1M lines: https://github.com/bozheng-hit/VoCapXLM/blob/main/train_mono_spm.py#L73
+
+We then load a sample of CC100 data for each language (100k lines per language) and tokenize each monolingual corpus with the respective tokenizers of increasing vocabulary sizes. We are then able to compute the $\mathrm{ALP}(l, V)$ metric for each language $l$ and each vocabulary size $V$.
+
+Now we can proceed to greedily select the best vocabulary sizes. We start with selecting the lowest vocabulary size for each language (1k for all languages except Chinese where we start with 5k). We merge the selected vocabularies of the tokenizers as explained in \autoref{subsec:merging_tokenizers}. Then in each iteration, we check which language would benefit the most from increasing the vocabulary size by 1000. Concretely, we check the increase in ALP for each language and increase the vocabulary size for that language by merging the bigger vocabulary with the total vocabulary. We repeat this process until the total vocabulary size reaches 120k tokens. Any tokens over the limit are removed from the vocabulary.
+
+Contrary to \citet{zheng_allocating_2021}, we do not use the $\beta$ rescaling factor to account for the pretraining corpus size (we describe the $\beta$ parameter in related work \autoref{sec:zheng}). By setting $\beta$ to 0, we want to achieve the best ALP for each language regardless of its corpus size. This is because our goal is to balance the low-resource languages, not necessarily achieve the best performance on the downstream tasks.
+
+The final vocabulary sizes for each language are found in \autoref{tab:zheng_allocations}
+
+% Additionally, we also experiment with optimizing the \textsc{CPT} metric instead of \textsc{ALP}. We also experiment with computing the \textsc{CPT} improvement on each merge step instead of precomputing it for all vocab sizes, since the metric increase might be slightly different for the intermediate tokenizer. None of these modifications lead to substantially better results and so we stick to the original method. \xxx{rewrite this or remove it}
+
+\subsection{Merging the tokenizers}
+\label{subsec:merging_tokenizers}
+
+%     - merging the tokenizers
+%         - merging is not really described in the papers
+%         - of course we take the union of the vocabularies
+%         - but how to set the logits?
+%             - to illustrate that even this step should be documented, the probabilities of XLM-V vocabulary do not sum to one
+%     - reaching the target size
+%         - train +10\%, +20\% of the target size and then prune
+
+For all reproduced methods, the last step is to take several Unigram tokenizers and merge them into the final, multilingual tokenizer. Now we will describe how we merge tokenizers in our case. Unfortunately, the merging step is not described fully in any of the reproduced papers. In the case of the Unigram tokenizers, tokenizer $\tau$ consists of vocabulary (set of strings) $V_\tau \subset \Sigma^\star$ and the corresponding logits $L_\tau: \Sigma^\star \rightarrow \mathbb{R}$ so that $\sum_{t \in V_\tau} \exp(L_\tau(t)) = 1$. The logits are used for finding the most probable segmentation of an input sentence. 
+
+To create the merged vocabulary for input tokenizers $\tau_1, ... \tau_m$ we take the union over the vocabularies:
+
+\begin{equation}
+    V_\tau \coloneqq \bigcup_{i=1}^m V_{\tau_i}
+\end{equation}
+
+We set the merged logits to the log of the average probability of the token in the input tokenizers:
+
+\begin{equation}
+    \forall t \in V_\tau: L_\tau(t) \coloneqq \log(\frac{1}{m} \sum_{i}^m \exp(L_{\tau_i}(t)))
+\end{equation}
+
+If the token $t$ is not present in some of the input tokenizers, we consider the probability of the token for that tokenizer to be zero. 
+
+In this way the sum of the probabilities of the tokens in the merged vocabulary is one and thus the merged tokenizer is a valid Unigram tokenizer. We can see this by the following derivation. We assume that the input tokenizers $\tau_i$ are valid Unigram tokenizers and thus the sum of the probabilities of the tokens in the input tokenizers is one:
+
+\begin{equation}
+\begin{split}
+    \sum_{t \in V_\tau} \exp(L_\tau(t)) = \sum_{t \in V_\tau} \exp(\log(\frac{1}{m} \sum_{i}^m \exp(L_{\tau_i}(t)))) = \\
+    = \sum_{t \in V_\tau} \frac{1}{m} \sum_{i}^m \exp(L_{\tau_i}(t)) = \frac{1}{m} \sum_{i}^m \sum_{t \in V_\tau} \exp(L_{\tau_i}(t)) = \frac{1}{m} \sum_{i}^m 1 = 1
+\end{split}
+\end{equation}
+
+% \xxx{the second equality should be maybe more explained}
+
+We argue that this is the most natural way to merge the tokenizers and so we assume this is probably the way the other authors did the merging. By observing the logits in the tokenizer released by \citet{liang_xlm-v_2023}\footnote{\href{https://huggingface.co/facebook/xlm-v-base/blob/main/sentencepiece.bpe.model}{https://huggingface.co/facebook/xlm-v-base/blob/main/sentencepiece.bpe.model}}, we see that the authors do merge the logits in some way but the sum of the probabilities in the final tokenizer is $\approx 4.55$ (not counting the special tokens), which suggests some problems in the merging step. The tokenizer released by \citet{zheng_allocating_2021} seems to be merged correctly\footnote{\href{https://github.com/bozheng-hit/VoCapXLM/blob/main/VoCap\_500k/sentencepiece.bpe.model}{https://github.com/bozheng-hit/VoCapXLM/blob/main/VoCap\_500k/sentencepiece.bpe.model}}.
+
+% \xxx{We have also checked empirically, that the individual tokenizers perform similarly to the merged tokenizer and so the merging procedure seems to preserve the properties of the merged tokenizers.}
+
+% urls for the tokenizers:
+% https://github.com/bozheng-hit/VoCapXLM/blob/main/VoCap_500k/sentencepiece.bpe.model
+% https://huggingface.co/facebook/xlm-v-base/blob/main/sentencepiece.bpe.model
+
+
+% \section{Proposed methods}
+
+% - motivation for word-balancing:
+%     - we assume that there is a topic imbalance in the CC100 corpus
+%         - assume there is 99% of news and 1% biology
+%         - the name of the ministry of agriculture will be more common than the word "evolution"
+%             - but it is more useful to cover the most common words in biology than the uncommon words in news
+%         - by balancing the words we may achieve better coverage of the topics
+%     - we assume it is better to split roots of words and not have many inflected forms of the same word
+%         - if the word "evolution" occurs much more frequently than "evoluce", the model might learn "evolution" but will oversegment "evoluce"
+%         - by balancing the words we may arrive at a better segmentation because it will be more useful to split "evolution" into evolu + tion and evoluce into evolu + ce
+
+% We propose to compare the replicated methods with the original method from \citet{conneau_unsupervised_2020} with $\alpha=0.3$. Moreover, we also propose to simply use the balancing factor $\alpha=0.0$, which leads to data balance, that is equal in the number of lines across all languages. 
+% Specifically, both methods use the same Sentencepiece tokenizer implementation as used in the replications. We use the Unigram LM as in \citet{conneau_unsupervised_2020}, set the vocabulary size to 120k and leave the rest of the parameters default. The main difference is the training data where $\alpha=0.0$ uses 1M lines per language and $alpha=0.3$ uses a sample of 10M lines from the CC100 with the language balance factor $\alpha=0.3$. 
+
+% The next method we propose is based 
+
