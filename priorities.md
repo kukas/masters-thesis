@@ -1,3 +1,26 @@
+# meeting 2
+
+structure of the chapters
+- introduction
+- method -> 5.1 experiments, dont call it method
+- results 5.2
+    - subsection for each result separately
+- findings / conclusion
+    - what the results mean in the context of the research questions we posed
+
+
+names of the chapters
+- OK validation of metrics -> change it into something that has the gist of the research questions
+    - how tokenizer properties affect language modeling / tokenizer properties affect the performance of language models
+- OK how to train a good multilingual tokenizers / choices for optimal multilingual tokenizers / design choices for good multilingual tokenizers
+- OK Comparison of balancing methods -> Comparison of vocabulary balancing methods
+
+capitalization of chapter names? 
+- search google?
+- look at other theses
+
+publish a paper?
+
 # meeting
 - think about research questions
     - what are the questions (introduction)
@@ -41,23 +64,13 @@ Thursday:
 
 - remove alphabet discussion from the paper results section
 
-- popsat tokmix
-
-
-- přidat tabulky s clusteringy do experiments
-
-- vyhodit: 2Here we have departed slightly from the recipe in the papers and used 1M lines per language
-    - popsat doopravdy jak jsem to udělal (opravené)
-
 - projít citace
-- přepsat konec introduction
 
 # Finished chapters
 
 - Results = (finished), waiting for Tomasz comments
     - possibly add the comparison between CPT and AR
 - Background = finished
-    - leda přidat pixel networks, character level, a přidávání tokenů do vocabu
 
 # Ideas
 
