@@ -24,22 +24,22 @@
     max\_sentencepiece\_length & Maximum length of sentence piece & 16 \\
     \hline
     max\_sentence\_length & Maximum length of sentence in byte & 4192 \\
-    \hline
-    split\_by\_unicode\_script & Use Unicode script to split sentence pieces & true \\
-    \hline
-    split\_by\_number & Split tokens by numbers (0-9) & true \\
-    \hline
-    split\_by\_whitespace & Use a white space to split sentence pieces & true \\
-    \hline
-    split\_digits & Split all digits (0-9) into separate pieces & false \\
-    \hline
-    treat\_whitespace\_as\_suffix & Treat whitespace marker as suffix instead of prefix & false \\
-    \hline
-    allow\_whitespace\_only\_pieces & Allow pieces that only contain (consecutive) whitespace tokens & false \\
-    \hline
-    normalization\_rule\_name & Normalization rule name. Choose from nfkc or identity & "nmt\_nfkc" \\
-    \hline
-    remove\_extra\_whitespaces & Removes leading, trailing, and duplicate internal whitespace & true \\
+    % \hline
+    % split\_by\_unicode\_script & Use Unicode script to split sentence pieces & true \\
+    % \hline
+    % split\_by\_number & Split tokens by numbers (0-9) & true \\
+    % \hline
+    % split\_by\_whitespace & Use a white space to split sentence pieces & true \\
+    % \hline
+    % split\_digits & Split all digits (0-9) into separate pieces & false \\
+    % \hline
+    % treat\_whitespace\_as\_suffix & Treat whitespace marker as suffix instead of prefix & false \\
+    % \hline
+    % allow\_whitespace\_only\_pieces & Allow pieces that only contain (consecutive) whitespace tokens & false \\
+    % \hline
+    % normalization\_rule\_name & Normalization rule name. Choose from nfkc or identity & "nmt\_nfkc" \\
+    % \hline
+    % remove\_extra\_whitespaces & Removes leading, trailing, and duplicate internal whitespace & true \\
     \hline
     \end{tabular}
     \caption{Default parameters for Sentencepiece training. We bold the parameters that we modify in some of our experiments. Summarized from \url{https://github.com/google/sentencepiece/blob/master/doc/options.md}}
@@ -47,25 +47,25 @@
 \end{table}
     
 
-\chapter{Distances between languages}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\textwidth]{figures/chung_distances.pdf}
-    \caption{Cosine distances between the language vectors $\vec{v}^l$ for Chung et al.}
-    \label{fig:chung_distances}
-\end{figure}
+% \chapter{Distances between languages}
 
 % \begin{figure}[h]
 %     \centering
-%     \includegraphics[width=\textwidth]{figures/liang_cosine_distances.pdf}
-%     \caption{Cosine distances between the language vectors $\vec{v}^l$ for Liang et al.}
-%     \label{fig:liang_cosine_distances}
+%     \includegraphics[width=\textwidth]{figures/chung_distances.pdf}
+%     \caption{Cosine distances between the language vectors $\vec{v}^l$ for Chung et al.}
+%     \label{fig:chung_distances}
 % \end{figure}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\textwidth]{figures/liang_euclid_distances.pdf}
-    \caption{Euclidean distances between the language vectors $\vec{v}^l$ for Liang et al.}
-    \label{fig:liang_euclid_distances}
-\end{figure}
+% % \begin{figure}[h]
+% %     \centering
+% %     \includegraphics[width=\textwidth]{figures/liang_cosine_distances.pdf}
+% %     \caption{Cosine distances between the language vectors $\vec{v}^l$ for Liang et al.}
+% %     \label{fig:liang_cosine_distances}
+% % \end{figure}
+
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=\textwidth]{figures/liang_euclid_distances.pdf}
+%     \caption{Euclidean distances between the language vectors $\vec{v}^l$ for Liang et al.}
+%     \label{fig:liang_euclid_distances}
+% \end{figure}

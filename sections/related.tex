@@ -27,14 +27,14 @@
 
 In this thesis, we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end, we first introduce multilingual language models. Then, we explain the concept of subword tokenization and the standard subword tokenization methods. Lastly, we show what problems have been identified when using standard tokenizers in multilingual settings and what methods have been proposed to mitigate these problems.
 
-\tomasz{Rewrite the intro: Be more clear and sepecific}
-\tomasz{Genearal remark: you may create separate section summarizing the metrics of allocation (e.g. fertility, ALP) ala overlap (e.g. Wasserstein)}
+% \tomasz{Rewrite the intro: Be more clear and sepecific}
+% \tomasz{Genearal remark: you may create separate section summarizing the metrics of allocation (e.g. fertility, ALP) ala overlap (e.g. Wasserstein)}
 
 \section{Multilingual language models}
 
 In recent years we have seen a dramatic rise in the use of neural language models. The premise of these models is the ability to learn unsupervised from large amounts of unlabeled data. 
 
-We focus on studying the properties of \textbf{multilingual} language models following \citet{devlin_bert_2019} (mBERT)\footnote{We cite the monolingual BERT paper as the mBERT model does not have an associated publication. In the literature, sometimes the mBERT Github README is cited for the multilingual variant\cite{devlin_bertmultilingualmd_2019}} and \citet{conneau_unsupervised_2020} (XLM-R). In these works, a Transformer \cite{vaswani_attention_nodate} based multilingual masked language model is pretrained on sentences sampled from a multilingual corpus of around 100 languages. This allows for cross-lingual transfer, which the authors show on a variety of language understanding tasks.
+We focus on studying the properties of \textbf{multilingual} language models following \citet{devlin_bert_2019} (mBERT)\footnote{We cite the monolingual BERT paper as the mBERT model does not have an associated publication. In the literature, sometimes the mBERT Github README is cited for the multilingual variant\cite{devlin_bertmultilingualmd_2019}} and \citet{conneau_unsupervised_2020} (XLM-R). In these works, a Transformer \cite{vaswani_attention_2017} based multilingual masked language model is pretrained on sentences sampled from a multilingual corpus of around 100 languages. This allows for cross-lingual transfer, which the authors show on a variety of language understanding tasks.
 
 The multilingual models such as mBERT or XLM-R are composed of the tokenizer, which splits the input text into tokens, the embedding matrix, which encodes the tokens into a sequence of word embeddings, and the Transformer encoder, which transforms the sequence of word embeddings into a sequence of so-called contextualized embeddings. The contextualized embeddings are then fed into a task-specific output layer --- usually a linear layer with a softmax activation. The pretraining is done using the masked language modeling task, where some of the input tokens are stochastically masked out and the model is trained to predict the masked tokens \cite{devlin_bert_2019}.
 
@@ -133,11 +133,11 @@ To tokenize an input text, the BPE algorithm then iteratively merges the pairs i
 
 First introduced in \cite{schuster_japanese_2012} the Wordpiece algorithm is a similar technique to BPE. It is used in the BERT \citep{devlin_bert_2019} masked language model. The training is based on a greedy merging of the subword units similar to BPE. Unlike BPE, Wordpiece does not use the frequency of the subword units to merge them. Instead, it merges the pair that maximizes the likelihood of an unigram language model trained on the corpus.
 
-Contrary to BPE and Unigram LM, there is no official, public implementation of the original Wordpiece algorithm. There are several implementations of the algorithm available but these diverge from the original algorithm. For example, the implementation in the Huggingface library \citep{wolf_transformers_2020} does not use the unigram language model to merge the subword units. Instead, the training follows the BPE procedure and only adds prefixes to the subword units to mimic the output format of the BERT Wordpiece implementation. \footnote{See the \href{https://github.com/huggingface/tokenizers/blob/291b2e23ae81cf94738835852213ce120152d121/tokenizers/src/models/wordpiece/trainer.rs}{Wordpiece implementation} in the Huggingface Tokenizers library.}
+Contrary to BPE and Unigram LM, there is no official, public implementation of the original Wordpiece algorithm. There are several implementations of the algorithm available but these diverge from the original algorithm. For example, the implementation in the Huggingface library \citep{wolf_transformers_2020} does not use the unigram language model to merge the subword units. Instead, the training follows the BPE procedure and only adds prefixes to the subword units to mimic the output format of the BERT Wordpiece implementation. \footnote{We refer the reader to the Huggingface Wordpiece implementation \url{https://github.com/huggingface/tokenizers/blob/291b2e23ae81cf94738835852213ce120152d121/tokenizers/src/models/wordpiece/trainer.rs}}
 
 % https://github.com/huggingface/tokenizers/blob/291b2e23ae81cf94738835852213ce120152d121/tokenizers/src/models/wordpiece/trainer.rs#L92
 
-The implementation in the Tensorflow library follows a different, top-down approach to creating the subword vocabulary. It starts with a vocabulary of words and then iteratively splits the words into subword units to reach a target vocabulary size. \footnote{See the Tensorflow documentation for the \href{https://www.tensorflow.org/text/api_docs/python/text/WordpieceTokenizer}{Wordpiece tokenizer}.}
+The implementation in the Tensorflow library follows a different, top-down approach to creating the subword vocabulary. It starts with a vocabulary of words and then iteratively splits the words into subword units to reach a target vocabulary size. \footnote{We refer the reader to the Tensorflow documentation for the Wordpiece tokenizer \url{https://www.tensorflow.org/text/api_docs/python/text/WordpieceTokenizer}}
 
 % 
 
@@ -312,7 +312,7 @@ In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \ci
     \label{fig:chung_vectors}
 \end{figure}
 
-Their method works by clustering similar languages together and then merging the cluster-level vocabularies. To cluster the languages using the k-means algorithm, it is necessary to define an Euclidean vector space with each language having a representative vector (\autoref{fig:chung_vectors}). To this end, the authors first train equally sized vocabularies $V^l$ for each language separately using the Unigram LM method. Then they create a merged vocabulary $V^L$ by taking the union of the vocabularies $V^l$. Then, to produce a language vector $\vec{v}^l$ for each language $l$, the presence of each subword $V^L_i$ is checked in the language-specific $V^l$ and the value is set to 1 if the subword is present and 0 otherwise. \xxx{this seems to be overly complicated explanation}
+Their method works by clustering similar languages together and then merging the cluster-level vocabularies. To cluster the languages using the k-means algorithm, it is necessary to define an Euclidean vector space with each language having a representative vector (\autoref{fig:chung_vectors}). To this end, the authors first train equally sized vocabularies $V^l$ for each language separately using the Unigram LM method. Then they create a merged vocabulary $V^L$ by taking the union of the vocabularies $V^l$. Then, to produce a language vector $\vec{v}^l$ for each language $l$, the presence of each subword $V^L_i$ is checked in the language-specific $V^l$ and the value is set to 1 if the subword is present and 0 otherwise.
 
 \begin{equation}
     \vec{v}^l_i = \begin{cases}
@@ -323,16 +323,36 @@ Their method works by clustering similar languages together and then merging the
 
 With the languages represented as vectors, the k-means algorithm can be used to cluster them. The authors use the cosine distance as the distance metric 
 % (or equivalently: they normalize the language vectors to have a length 1 before clustering).
-With 104 languages in total, the number of clusters is set to 8. The choice of $k$ is determined empirically by running a set of preliminary experiments and comparing the results on a multilingual question-answering benchmark. The resulting clusters are shown in \autoref{fig:chung_clusters}.
+With 104 languages in total, the number of clusters is set to 8. The choice of $k$ is determined empirically by running a set of preliminary experiments and comparing the results on a multilingual question-answering benchmark. The resulting clusters are shown in \autoref{tab:chung_clusters}.
 
 After the languages are clustered, the cluster-specific vocabularies are trained using the Unigram LM algorithm on the union of the corpora of the languages in the cluster. The size of each cluster-specific vocabulary is proportional to the size of the union of the individual (monolingual) vocabularies in the cluster. This means that more languages in a cluster lead to a larger vocabulary size assigned but also if the languages share tokens, this overlap decreases the vocabulary size. The final vocabulary is then constructed by simply taking the union over the cluster vocabularies.
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.8\textwidth]{img/temp/chung_clusters.png}
-    \caption{Clusters of languages used in \cite{chung_improving_2020}. The clusters are numbered from 0 to 7. Figure taken from \cite{chung_improving_2020}.}
-    \label{fig:chung_clusters}
-\end{figure}
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{img/temp/chung_clusters.png}
+%     \caption{Clusters of languages used in \cite{chung_improving_2020}. The clusters are numbered from 0 to 7. Figure taken from \cite{chung_improving_2020}.}
+%     \label{fig:chung_clusters}
+% \end{figure}
+
+\begin{table}[h]
+    \centering\footnotesize\sf
+    \begin{tabular}{lp{9cm}r}
+    \toprule
+    Cluster & Languages & Vocab. size \\
+    \midrule
+    c1 & af, sq, hy, az, bn, bs, my, ceb, hr, en, fi, ka, el, he, hu, id, ga, jv, lv, lt, ms, min, pl, pa, sco, hbs, sl, su, sw, tl, th, tr, uz, vi, cy, yo & 200,306 \\
+    c2 & ar, bpy, fa, azb, ur, lah & 40,218 \\
+    c3 & an, ast, eu, ca, gl, io, it, la, lmo, oc, pms, pt, ro, scn, es, war & 80,764 \\
+    c4 & ba, be, bg, ce, cv, kk, ky, mk, mn, ru, sr, tg, tt, uk & 82,163 \\
+    c5 & bar, br, fr, de, ht, nds, lb, mg, vo & 51,653 \\
+    c6 & zh-Hans, zh-Hant, ja, ko & 25,528 \\
+    c7 & cs, da, nl, et, is, nb, nn, sk, sv, fy & 57,681 \\
+    c8 & gu, hi, kn, ml, mr, ne, new, ta, te & 61,683 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Clusters of languages used in \cite{chung_improving_2020}. The clusters are numbered from. Table taken from \cite{chung_improving_2020}.}
+    \label{tab:chung_clusters}
+\end{table}
 
 The final vocabulary is then compared to the standard recipe of training a Unigram LM vocabulary on a joint corpus\footnote{The authors do not define what they mean by following the "standard recipe". Based on the related work the authors replicate closely (mBERT and XLM-R) and compare themselves to, we assume that the standard recipe is training a Unigram LM tokenizer on the pretraining data after the exponential subsampling described in \ref{sec:data_scope}. The authors do mention using the sampling factor $\alpha=0.7$ for the pretraining data in the Appendix.}. Because the proposed clustering method does not have a way of controlling the size of the final vocabulary as taking the union inadvertently leads to some tokens being merged, the authors compare the vocabularies by first following the clustering method and arriving at a 488k subword vocabulary. Then the standard method is followed to train a vocabulary of the same size.
 
@@ -445,14 +465,14 @@ The \textsc{VoCap} algorithm works by precomputing a series of tokenizer vocabul
     \item Adding the tokenizer vocabulary to the final vocabulary.
 \end{enumerate}
 
-After reaching the target size, the algorithm halts and returns the vocabulary constructed by the iterative merging. The algorithm is shown in \autoref{alg:vocab_allocation}.
+After reaching the target size, the algorithm halts and returns the vocabulary constructed by the iterative merging. % The algorithm is shown in \autoref{alg:vocab_allocation}.
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.8\textwidth]{img/temp/vocap_algo.png}
-    \caption{\textsc{VoCap} algorithm pseudocode \cite{zheng_allocating_2021}. Figure taken from \cite{zheng_allocating_2021}.}
-    \label{alg:vocab_allocation}
-\end{figure}
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{img/temp/vocap_algo.png}
+%     \caption{\textsc{VoCap} algorithm pseudocode \cite{zheng_allocating_2021}. Figure taken from \cite{zheng_allocating_2021}.}
+%     \label{alg:vocab_allocation}
+% \end{figure}
 
 With the \textsc{VoCap} algorithm, \Citeauthor{zheng_allocating_2021} then create new tokenizers with vocabulary sizes 250\,000 and 500\,000 on a multilingual corpus with 86 languages. The authors compare the performance of the \textsc{VoCap} tokenizers with baseline tokenizers trained directly on the multilingual corpus. The multilingual corpus is again subsampled before the standard tokenizer training following \citet{devlin_bert_2019,lample_cross-lingual_2019} with an exponential smoothing factor of $\alpha=0.7$.
 
@@ -465,12 +485,13 @@ The standard and \textsc{VoCap} tokenizers are compared using the ALP metric. Th
     \label{fig:alp_improvement}
 \end{figure}
 
-To validate these results, the authors then pretrain masked language models using the standard and \textsc{VoCap} tokenizers and conduct experiments on tasks from the XTREME benchmark \cite{hu_xtreme_nodate}. The comparison is done on natural language inference, paraphrase identification, part of speech tagging, named entity recognition and question answering. The averaged results over all tasks suggest that the \textsc{VoCap} tokenizers outperform the standard tokenizers by 0.4 percentage points for the 250\,000 vocabulary size and 1.7 percentage points for the increased 500\,000 vocabulary size. When investigating further the results for XNLI and NER, the authors show that improvements are gained in the low-resource and mid-resource languages. This is consistent with the ALP improvement results.
+To validate these results, the authors then pretrain masked language models using the standard and \textsc{VoCap} tokenizers and conduct experiments on tasks from the XTREME benchmark \cite{hu_xtreme_2020}. The comparison is done on natural language inference, paraphrase identification, part of speech tagging, named entity recognition and question answering. The averaged results over all tasks suggest that the \textsc{VoCap} tokenizers outperform the standard tokenizers by 0.4 percentage points for the 250\,000 vocabulary size and 1.7 percentage points for the increased 500\,000 vocabulary size. When investigating further the results for XNLI and NER, the authors show that improvements are gained in the low-resource and mid-resource languages. This is consistent with the ALP improvement results.
 
 % With the \textsc{VoCap} algorithm \Citeauthor{zheng_allocating_2021} then create new tokenizers with sizes 250k and 500k and show that for larger dictionaries (500k vocabulary size) their method outperforms the standard method of training a joint vocabulary on the union of the corpora. 
 
 
 \subsection{Combination of methods for scaling the vocabulary size}
+\label{sec:liang}
 
 In the paper \textit{XLM-V: Overcoming the Vocabulary Bottleneck in Multilingual Masked Language Models}, \citeauthor{liang_xlm-v_2023} introduce a new multilingual language model with a 1M token vocabulary. To create this large vocabulary, the authors propose a new tokenization method by combining the two methods described in the previous sections \ref{sec:chung} and \ref{sec:zheng}. 
 
