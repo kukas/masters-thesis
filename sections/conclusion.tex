@@ -1,0 +1,108 @@
+
+\chapwithtoc{Conclusion}
+
+% In the conclusion, you should summarize what was achieved by the thesis. In a few paragraphs, try to answer the following:
+% \begin{itemize}
+% \item Was the problem stated in the introduction solved? (Ideally include a list of successfully achieved goals.)
+% \item What is the quality of the result? Is the problem solved for good and the mankind does not need to ever think about it again, or just partially improved upon? (Is the incompleteness caused by overwhelming problem complexity that would be out of thesis scope\todo{This is quite common.}, or any theoretical reasons, such as computational hardness?)
+% \item Does the result have any practical applications that improve upon something realistic?
+% \item Is there any good future development or research direction that could further improve the results of this thesis? (This is often summarized in a separate subsection called `Future work'.)
+% \end{itemize}
+
+% Introduction
+
+% In this thesis, we ask what makes a good tokenization method for multilingual models, how to measure it and what factors influence it \tomasz{isn't it also a research question?}. Moreover, our focus is achieving better tokenization for all languages, especially the ones that have been shown to be underrepresented in the previous multilingual models \cite{rust_how_2021}. We fill a methodological gap by proposing a robust set of metrics for measuring the quality of tokenization methods in the multilingual setting. Our metrics measure whether tokenizers effectively represent meaningful language-specific tokens in the vocabulary (\textit{vocabulary allocation}) and whether the units they learn are shared across languages (\textit{vocabulary overlap}). The questions we address are: \textbf{Q1:} How do subword tokenizers differ in overlap and allocation of learned vocabularies? And \textbf{Q2:} Which properties of multilingual tokenizers affect the language model representation quality?
+
+% After we establish our metrics, we address the underresearched question of \textbf{Q3:} What is the reason that the standard tokenizer training method does not work well in the multilingual setting? To this end, we examine the effect of the training data size, character coverage, and most importantly, the data imbalance between high-resource and low-resource languages present in the tokenizer training data. We find that the data imbalance has a significant effect on the resulting tokenizer and by balancing the training data, we can achieve better tokenization for all languages.
+
+% With our new analytical tools for the standard tokenization methods and their properties, we turn to the three existing works by \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} which we collectively address to as "balancing methods" proposed for improving tokenization for all training languages. We find that the three works report empirical improvements of their methods but compare themselves to highly unbalanced baselines. We therefore ask \textbf{Q4:} What is the effect of using the vocabulary balancing methods on the representation of low-resource languages? And
+% \textbf{Q5:} How do the vocabulary balancing methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
+
+% Through in-depth analysis, we find that the three methods we reproduce \cite{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} improve tokenization by balancing the \textit{vocabulary allocation} between the languages. We further show, that in our setting, similar results can be achieved by a simpler method of uniform sampling of languages during the tokenizer training. 
+
+% Findings of Experimental chapter 1
+
+% \textbf{Q1:} How do subword tokenizers differ in overlap and allocation of learned vocabularies?
+% \textbf{Q2:} Which properties of multilingual tokenizers affect the language model representation quality?
+
+% We find that the choice of the tokenization method largely influences the vocabulary allocation and overlap metrics (\textbf{Q1}). We see that Huggingface BPE better allocates the vocabulary overall and has a lower overlap between languages. On the other hand, the Huggingface Unigram tokenizer segments the text into shorter tokens and the average vocabulary overlap between all languages is much higher.
+
+% We find that the differences between tokenizers are reflected in the representation quality (\textbf{Q2}). High vocabulary allocation metrics are correlated with better probe performance, especially on the word-level tasks. Moreover, the cross-lingual performance is correlated with higher vocabulary allocation and lower overlap.
+
+% Findings of Experimental chapter 2
+
+% In this chapter, we have investigated \textbf{Q3:} What is the reason that the standard tokenizer training method does not work well in the multilingual setting? To this end, we explore how different design choices affect the quality of the tokenizers. 
+
+% We find that the implementation of the Unigram algorithm in the Huggingface library is subpar and that the Sentencepiece implementation yields better results.
+
+% We observe that we need around 100k-1M lines per language to train a good, multilingual tokenizer. 
+
+% The alphabet size affects the number of UNK tokens but does not have a significant influence on the rest of the metrics if we stay in the range of 1000-5000 alphabet size. 
+
+% Most importantly, we observe that tokenizer training data imbalance influences the per-language metrics heavily and that it lowers the tokenization quality for the low-resource languages more than it improves it for the high-resource.
+
+% Findings of Experimental chapter 3
+
+
+% \textbf{Q4:} What is the effect of using the reproduced methods on the representation of low-resource languages? And
+% \textbf{Q5:} How do the reproduced methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
+
+% We find that the balancing methods of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} improve the representation of low-resource languages by increasing the \textit{vocabulary allocation} for these languages at the cost of lowering the \textit{vocabulary allocation} for the high-resource ones. 
+
+% We also find that the Unigram tokenizer trained with a balanced dataset ($\alpha=0.0$) achieves a similar effect as the replicated methods. 
+
+% We find a striking similarity between the Unigram tokenizer trained on a balanced dataset and the Zheng method. We find that by maximizing the ALP across languages, Zheng method achieves a similar effect to running an Unigram tokenizer training on a balanced dataset.
+
+% We find that the clustering methods with a high number of clusters behave similarly to the Unigram tokenizer trained on a balanced dataset. We assume that the reason is that the clustering methods with a high $k$ are similar to the Zheng method in that they train separate tokenizers for the majority of languages and only a few languages are grouped together.
+
+% On the other hand, we find that the clustering methods with lower number of clusters are susceptible to a decrease in performance when high-resource and low-resource languages are assigned to the same cluster.
+
+% By running the extrinsic evaluation, we validate the observations we made using the intrinsic evaluation. We find that the balancing methods improve the word-level tasks for low-resource languages while having no impact on the sentence-level task. 
+
+% Interestingly, we find that the balancing has a net-positive effect for cross-lingual transfer across all languages.
+
+% Our findings suggest that in our scaled-down setting of 20 languages and 120k vocabulary size, the simpler method of training a standard Unigram tokenizer on a joint, balanced corpus is sufficient to create a good multilingual vocabulary that represents all languages well.
+
+
+% \textbf{Q1:} How do subword tokenizers differ in overlap and allocation of learned vocabularies?
+% \textbf{Q2:} Which properties of multilingual tokenizers affect the language model representation quality?
+% \textbf{Q3:} What is the reason that the standard tokenizer training method does not work well in the multilingual setting? 
+% \textbf{Q4:} What is the effect of using the reproduced methods on the representation of low-resource languages? And
+% \textbf{Q5:} How do the reproduced methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
+
+% main focus
+In this thesis, our main focus was to explore the characteristics of tokenization methods for multilingual models and investigate their impact on language model representation quality. 
+
+% methodology
+To this end, we proposed a set of metrics for measuring the vocabulary allocation and overlap of tokenizer vocabularies. We compared our metrics to existing ones and we proposed a set of experiments to validate the usefulness of our metrics and investigate the properties of tokenization methods. 
+
+We found that our metrics are useful for assessing the differences between tokenization methods and that vocabulary allocation and overlap are good predictors of language model performance for word-level tasks.
+% ADD? Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank), and when there is less overlap between the languages (high Jensen-Shannon divergence).
+
+% We found that the choice between Unigram and BPE algorithms implemented in the Huggingface library significantly influences vocabulary allocation and overlap metrics. We also discovered that high vocabulary allocation correlated with improved representation quality, particularly on word-level tasks and cross-lingual performance.
+
+With our established methodological framework, we then investigated the reasons for the subpar performance of standard tokenization methods in the multilingual setting. We demonstrated that to train a satisfactory tokenizer, we need around 100k to 1M lines of text per language. We also showed that the alphabet size does not largely affect our proposed metrics and that the default setting of covering 99.95\% of Unicode characters leads to a well performing tokenizer. 
+
+We found that the main factors impacting the tokenization quality are the choice of implementation and data imbalance. We found that the Huggingface library yields subpar Unigram tokenizers and using the original Sentencepiece library mitigates a large gap in vocabulary allocation metrics we observed. More importantly, our research highlighted the strong impact of the data imbalance between high-resource and low-resource languages on the resulting tokenizer. 
+
+Our experiments indicate, that the standard tokenizer training method is susceptible to training data imbalance which leads to a decrease in tokenization quality for the low-resource languages. Sampling data uniformly from each language during the tokenizer training mitigates this effect and leads to a better tokenization for the underresourced languages at a smaller cost on the high-resource.
+
+After investigating the standard tokenization scheme, we turned our attention to three existing works by \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} proposed for improving tokenization for low-resource languages. We identified that these vocabulary balancing methods use a highly unbalanced baseline to report their empirical improvements. We therefore investigated, how exactly these methods improve the tokenization quality for low-resource languages and how they compare to the standard method of training the tokenizer on a balanced and unbalanced joint corpus.
+
+We found a surprising correspondence between the balancing methods and the Unigram tokenizer trained on a balanced dataset. We found that the balancing methods improve the tokenization quality for low-resource languages by increasing the vocabulary allocation for these languages at the cost of lowering the vocabulary allocation for the high-resource ones, similar to the standard method trained on uniformly sampled languages. Moreover, we found that the methods based on clustering are susceptible to a decrease in performance when high-resource and low-resource languages are assigned to the same cluster.
+
+Our findings showed that for all methods, the improvements on low-resource representation translate to improvement in word-level tasks in both in-language setting as well as cross-lingual transfer. 
+
+Overall, our findings contribute to understanding tokenization methods for multilingual models. We propose a methodology for assessing the differences between tokenizers, emphasize the importance of selecting appropriate implementation, training parameters and data balance, and we show that with proper care, the simpler tokenization method of training a tokenizer on joint, multilingual corpus can achieve similar results to the balancing methods in our experimental setting.
+
+\section{Limitations and future work}
+
+
+
+- our comparison is limited to 20 langs and small models
+    - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
+    - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.
+    - we still believe that our methodology is a contribution in itself and following it we could compare the methods on a larger scale, if we had access to more computational resources
+        - for example we could pose the question after how many languages does the Zheng method become better than Sentencepiece Unigram. Then we could investigate which parameters could influence this possible detriment in performance (number of init sentencepieces, pruning steps etc.)
+- we also focus heavily on Sentencepiece Unigram as it is the most popular method. From our experiments it seems that Huggingface BPE is a good alternative to Sentencepiece Unigram and it would be interesting to compare it to the other methods
+- limitation - we didnt investigate BPE more in depth
