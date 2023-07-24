@@ -53,16 +53,37 @@
 \def\StudyBranch{Artificial Intelligence}
 
 \def\Dedication{%
-    Dedication. \xxx{It is nice to say thanks to supervisors, friends, family, book authors and food providers.}
+    I would like to thank Tomasz Limisiewicz for the time and effort he put into supervising this thesis. I am grateful for his guidance and insightful discussions, which not only shaped the outcome of this thesis but also, hopefully, refined my research skills.
+
+    I would like to thank Ondřej Dušek for all the friendly and encouraging calls we had before I started working on this thesis. 
+
+    I am grateful to David Mareček for inspiring me to work on this topic and for connecting me with Tomasz.
+    
+    Finally, I would like to thank my family and friends for their unwavering support and encouragement throughout my long and eventful studies. Special thanks go to my mother and brother for all the "gofs", to my father for sharing with me his endless curiosity about the world and science, and to my fiancée, who has always believed in me and supported me in every way possible.
 }
 
 \def\AbstractEN{%
-    \xxx{Abstracts are an abstract form of art. Use the most precise, shortest sentences that state what problem the thesis addresses, how it is approached, pinpoint the exact result achieved, and describe the applications and significance of the results. Highlight anything novel that was discovered or improved by the thesis. Maximum length is 200 words, but try to fit into 120. Abstracts are often used for deciding if a reviewer will be suitable for the thesis; a well-written abstract thus increases the probability of getting a reviewer who will like the thesis.}
+    % \xxx{Abstracts are an abstract form of art. Use the most precise, shortest sentences that state what problem the thesis addresses, how it is approached, pinpoint the exact result achieved, and describe the applications and significance of the results. Highlight anything novel that was discovered or improved by the thesis. Maximum length is 200 words, but try to fit into 120. Abstracts are often used for deciding if a reviewer will be suitable for the thesis; a well-written abstract thus increases the probability of getting a reviewer who will like the thesis.}
     % ABSTRACT IS NOT A COPY OF YOUR THESIS ASSIGNMENT!
+    In this thesis, we explore the differences between tokenization methods for multilingual neural language models and investigate their impact on language model representation quality. 
+    
+    We propose a set of metrics to evaluate the quality of tokenizations. We show that the metrics capture the differences between tokenizers and that they correlate with the downstream performance of multilingual language models.
+    
+    Then, using our metrics, we assess why is the standard tokenizer training on a multilingual corpus reported to be ineffective for multilingual models. We investigate design choices such as data size, implementation or alphabet size. We identify that the issue might be caused by data imbalance and to solve it we propose to sample tokenizer training data uniformly. 
+
+    We compare the standard tokenizer training with three proposed methods we replicate, that aim to mitigate the same reported issues. We show that the principle behind the improvements of the proposed methods is the same as with the uniform sampling.
+
+    Our findings offer a deeper understanding of tokenization methods for multilingual models. We propose a methodology and guidelines for training multilingual tokenizers. Lastly, we show how to achieve improvements in tokenization without the need for more complex tokenization methods.
 }
 
 \def\AbstractCS{%
-    \xxx{You will need to submit both Czech and English abstract to the SIS, no matter what language you use in the thesis. If writing in English, translate the contents of \texttt{\textbackslash{}AbstractEN} into this field. In case you do not speak czech, your supervisor should be able to help you with the translation.}
+    V této práci jsou zkoumány rozdíly mezi metodami tokenizace pro vícejazyčné neuronové modely  (multilingual language models) a rovněž jejich vliv na kvalitu jazykového modelu. Je definována sada metrik, které jsou použity pro vyhodnocení kvality tokenizace: pomocí experimentů je demonstrováno, že užité metriky zachycují rozdíly mezi tokenizátory a korelují s výkonem vícejazyčných neuronových modelů. 
+
+    Některé práce věnované vícejazyčné tokenizaci uvádí, že standardní postup trénování tokenizátorů na vícejazyčném korpusu není vhodný pro vícejazyčné modely. Tato práce hledá důvod uvedených problémů. Jako možné příčiny jsou zkoumány velikost dat, implementace nebo velikost abecedy. V práci docházíme k závěru, že problém je pravděpodobně způsoben nevyvážeností dat mezi jazyky a navrhujeme řešení v podobě rovnoměrného vzorkování trénovacích dat tokenizátoru.
+
+    V diplomové práci jsou replikovány tři studie, které se zabývají vylepšením metod vícejazyčné tokenizace a jsou porovnány se standardním trénováním na rovnoměrných datech. Díky porovnání je zjištěno, že princip, který stojí za zlepšením u replikovaných metod, je stejný jako u rovnoměrného vzorkování.
+
+    Výsledky diplomové práce poskytují hlubší vhled do problematiky tokenizace pro vícejazyčné modely. Je navržena metodika a doporučení pro trénování vícejazyčných tokenizérů. Nakonec je ukázáno, jak dosáhnout zlepšení tokenizace bez nutnosti použití složitějších tokenizačních metod.
 }
 
 % 3 to 5 keywords (recommended), each enclosed in curly braces.

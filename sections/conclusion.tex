@@ -1,5 +1,6 @@
 
-\chapwithtoc{Conclusion}
+\chapter{Conclusion}
+\label{chap:conclusion}
 
 % In the conclusion, you should summarize what was achieved by the thesis. In a few paragraphs, try to answer the following:
 % \begin{itemize}
@@ -70,13 +71,11 @@
 % \textbf{Q4:} What is the effect of using the reproduced methods on the representation of low-resource languages? And
 % \textbf{Q5:} How do the reproduced methods compare to the standard method of training the tokenizer on balanced and unbalanced joint corpus?
 
-% main focus
 In this thesis, our main focus was to explore the characteristics of tokenization methods for multilingual models and investigate their impact on language model representation quality. 
 
-% methodology
 To this end, we proposed a set of metrics for measuring the vocabulary allocation and overlap of tokenizer vocabularies. We compared our metrics to existing ones and we proposed a set of experiments to validate the usefulness of our metrics and investigate the properties of tokenization methods. 
 
-We found that our metrics are useful for assessing the differences between tokenization methods and that vocabulary allocation and overlap are good predictors of language model performance for word-level tasks.
+We found that our metrics are useful for assessing the differences between tokenization methods and that vocabulary allocation and overlap are good predictors of language model performance for word-level tasks. Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank), and when there is less overlap between the languages (high Jensen-Shannon divergence).
 % ADD? Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank), and when there is less overlap between the languages (high Jensen-Shannon divergence).
 
 % We found that the choice between Unigram and BPE algorithms implemented in the Huggingface library significantly influences vocabulary allocation and overlap metrics. We also discovered that high vocabulary allocation correlated with improved representation quality, particularly on word-level tasks and cross-lingual performance.
@@ -89,20 +88,24 @@ Our experiments indicate, that the standard tokenizer training method is suscept
 
 After investigating the standard tokenization scheme, we turned our attention to three existing works by \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} proposed for improving tokenization for low-resource languages. We identified that these vocabulary balancing methods use a highly unbalanced baseline to report their empirical improvements. We therefore investigated, how exactly these methods improve the tokenization quality for low-resource languages and how they compare to the standard method of training the tokenizer on a balanced and unbalanced joint corpus.
 
-We found a surprising correspondence between the balancing methods and the Unigram tokenizer trained on a balanced dataset. We found that the balancing methods improve the tokenization quality for low-resource languages by increasing the vocabulary allocation for these languages at the cost of lowering the vocabulary allocation for the high-resource ones, similar to the standard method trained on uniformly sampled languages. Moreover, we found that the methods based on clustering are susceptible to a decrease in performance when high-resource and low-resource languages are assigned to the same cluster.
+We found a surprising correspondence between the balancing methods and the Unigram tokenizer trained on a uniformly sampled dataset. We found that the balancing methods improve the tokenization quality for low-resource languages by increasing the vocabulary allocation for these languages at the cost of lowering the vocabulary allocation for the high-resource ones, similar to the standard method trained on uniformly sampled languages. Moreover, we found that the methods based on clustering are susceptible to a decrease in performance when high-resource and low-resource languages are assigned to the same cluster.
 
-Our findings showed that for all methods, the improvements on low-resource representation translate to improvement in word-level tasks in both in-language setting as well as cross-lingual transfer. 
+Our findings show that for all methods, the improvements on low-resource representation translate to improvement in word-level tasks in both in-language setting as well as cross-lingual transfer. 
 
 Overall, our findings contribute to understanding tokenization methods for multilingual models. We propose a methodology for assessing the differences between tokenizers, emphasize the importance of selecting appropriate implementation, training parameters and data balance, and we show that with proper care, the simpler tokenization method of training a tokenizer on joint, multilingual corpus can achieve similar results to the balancing methods in our experimental setting.
 
 \section{Limitations and future work}
+% - our comparison is limited to 20 langs and small models
+%     - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
+%     - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.
+%     - we still believe that our methodology is a contribution in itself and following it we could compare the methods on a larger scale, if we had access to more computational resources
+%         - for example we could pose the question after how many languages does the Zheng method become better than Sentencepiece Unigram. Then we could investigate which parameters could influence this possible detriment in performance (number of init sentencepieces, pruning steps etc.)
+% - we also focus heavily on Sentencepiece Unigram as it is the most popular method. From our experiments it seems that Huggingface BPE is a good alternative to Sentencepiece Unigram and it would be interesting to compare it to the other methods
+% - limitation - we didnt investigate BPE more in depth
 
+Lastly, we acknowledge that due to computational limitations, we were not able to compare tokenizers on a larger scale. The language models were scaled down, the training data subsampled, vocabulary size reduced, and the number of languages limited to 20. We believe that our methodology is a contribution in itself and following it leads to a better understanding of the reasons for the differences between tokenizers. On the other hand, we are aware that the findings of our experiments are limited to the experimental setting we used. 
 
+For future work, we would like to explore our research questions on a larger scale. Moreover, it would be interesting to investigate deeper the Huggingface BPE tokenizer as we found it to have the best overall performance in our experiments.
 
-- our comparison is limited to 20 langs and small models
-    - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
-    - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.
-    - we still believe that our methodology is a contribution in itself and following it we could compare the methods on a larger scale, if we had access to more computational resources
-        - for example we could pose the question after how many languages does the Zheng method become better than Sentencepiece Unigram. Then we could investigate which parameters could influence this possible detriment in performance (number of init sentencepieces, pruning steps etc.)
-- we also focus heavily on Sentencepiece Unigram as it is the most popular method. From our experiments it seems that Huggingface BPE is a good alternative to Sentencepiece Unigram and it would be interesting to compare it to the other methods
-- limitation - we didnt investigate BPE more in depth
+% For example, we could pose the question after how many languages does the Zheng method become better than Sentencepiece Unigram. Then we could investigate which parameters could influence this possible detriment in performance (number of init sentencepieces, pruning steps etc.).
+

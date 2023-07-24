@@ -42,7 +42,7 @@ Finally, for the data balance experiment, we train 5 tokenizers with an increasi
 
 The results are presented in \autoref{tab:hugg_vs_sentpiece}. We see that the implementation has an effect on tokenization. We compare the Sentencepiece Unigram ($\alpha$=0.25) tokenizer trained on the same data and with the same parameters (100\% alphabet coverage) as the Huggingface Unigram ($\alpha$=0.25). We see that there is a large difference between the two. The Huggingface Unigram underperforms all of our tokenizers. On the other hand, the Sentencepiece Unigram approaches the metrics of both BPE tokenizers. We further see that if we restrict the vocabulary size for the Sentencepiece Unigram (($\alpha$=0.3)), we close the gap between Unigram and BPE. 
 
-Interestingly, we observe that the Huggingface implementation of BPE (\textit{huggingface\_bpe\_alpha0.25}) seems to be better than the Sentencepiece implementation of BPE (\textit{bpe alpha0.25}) in our experimental setup, yielding higher vocabulary allocation metrics (CPT and AR).
+Interestingly, we observe that the Huggingface implementation of BPE seems to be better than the Sentencepiece implementation of BPE in our experimental setup, yielding higher vocabulary allocation metrics (CPT and AR).
 
 Because of the subpar implementation of the Unigram algorithm in the Huggingface library, we use the Sentencepiece implementation for the rest of the experiments.
 

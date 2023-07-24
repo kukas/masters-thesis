@@ -1,5 +1,12 @@
 \chapter{Results}
 
+
+% Then we introduce the experiments. To address the research question \textbf{Q1}, we train three tokenizers and compare them using our proposed metrics. We then pretrain masked language models using these tokenizers and see if the metrics are good predictors of the downstream performance (\textbf{Q2}). 
+
+% With the metrics validated, we investigate the influence of the implementation, data size, alphabet size and data imbalance on the tokenization quality (\textbf{Q3}).
+
+% Finally, we replicate the experiments of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023},
+
 \tomasz{This chapter introduction is wordy and hard to grasp. 
 In places you write about the stuff that should be explained in experimental design chapter.
 In outher sentences you jump to conclusions before showin the supporting evidence.
@@ -25,25 +32,21 @@ I suggest to just write down a walktrough of the results chapter, i.e., list the
 % - we check this by comparing the balancing methods on downstream and we do not see any significant differences between them. We do see improvements over the strong baseline in some cases.
 % - therefore we can conclude that balancing does influence NER and POS tagging although with the comparison to alpha0.3, the improvements are very small
 
-In this chapter, we present the results of our experiments. First, we validate the usefulness of our proposed vocabulary allocation and vocabulary overlap metrics. We train three tokenizers \tomaszrep{using the Huggingface Tokenizers library and}{[E]} assess whether they differ in the metrics we propose. We see that there are significant differences between the three tokenizers. Then we look at how these differences \tomaszrep{manifest}{are manifested} when we use these tokenizers to train otherwise identical multilingual models. We observe that the differences in tokenizers are reflected in the learned representations of the models. 
-\tomaszrep{Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank), and when there is less overlap between the languages (high Jensen-Shannon divergence).}{[C]}
 
 \tomaszrep{Then we switch to the original Sentencepiece library, which is used in the related work we replicate}{[E]} \cite{conneau_unsupervised_2020,chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023}. 
 \tomaszrep{We see that there are differences in the implementation of the Unigram and BPE algorithms between the two libraries and that the Huggingface library yields subpar Unigram tokenizers.}
- We further assess other factors that influence the tokenizer's quality, such as the total training data size, the size of the alphabet, and most importantly the language imbalance in the training dataset.
-\tomaszrep{ We observe that we need around 100k-1M lines per language to train a good, multilingual tokenizer. The alphabet size does affect the number of UNK tokens but does not have a significant influence on the rest of the metrics if we stay in the range of 1000-5000 alphabet size. As for the language imbalance, we observe that it does influence the per-language metrics heavily and that it lowers the tokenization quality for the low-resource languages more than it improves it for the high-resource.}{[C]}
+We further assess other factors that influence the tokenizer's quality, such as the total training data size, the size of the alphabet, and most importantly the language imbalance in the training dataset.
+In this chapter, we present the results of our experiments. First, we validate the usefulness of our proposed vocabulary allocation and vocabulary overlap metrics. We train three tokenizers \tomaszrep{using the Huggingface Tokenizers library and}{[E]} assess whether they differ in the metrics we propose. We see that there are significant differences between the three tokenizers. Then we look at how these differences \tomaszrep{manifest}{are manifested} when we use these tokenizers to train otherwise identical multilingual models. We observe that the differences in tokenizers are reflected in the learned representations of the models. 
 The last batch of experiments becomes the main baseline we use for comparing the next experiments.\tomasz{The batch of experiments cannot become baseline. We can design experiments to compare with given baselines.}
 
 Finally, we replicate the works of \citet{chung_improving_2020,zheng_allocating_2021,liang_xlm-v_2023} and create several variations of their tokenizers that aim to improve the text segmentations, especially for the low-resource languages. We carefully compare these replicated tokenizers with the traditional method of training Sentencepiece Unigram tokenizers on a joint, multilingual corpus. 
 
 While the aforementioned \tomaszrep{authors do}{works} compare their methods to the standard tokenizer training, the crucial difference in our methodology is that we additionally compare their replicated language-balancing methods with the vanilla Sentencepiece tokenizer trained on a \textbf{balanced} multilingual dataset. 
-\tomaszrep{We find that when compared to this stronger, yet simple baseline, the replicated approaches do not yield significant improvements on our proposed tokenizer metrics, neither per language nor overall.}{[C]}
 
 \xxx{maybe rewrite the previous two paragraphs, it is a bit confusing? Now on the second read it doesnt seem so bad}
 
 We then validate our findings by training a second batch of masked language models that differ only in the tokenizer used. We choose the clustering method of \citet{chung_improving_2020} and allocation method of \citet{zheng_allocating_2021} and compare them with Sentencepiece Unigram tokenizers trained on balanced and unbalanced data. 
 
-\tomaszrep{We observe that the replicated methods of Chung, Zheng, and balanced Unigram do improve the language modeling capabilities over the unbalanced baseline on the word-level tasks while having no impact on the sentence-level task. On the other hand, we do not observe significant differences between the replicated methods and the simple baseline of training the tokenizer on a balanced set which is in line with our previous assessment where we used our proposed tokenizer metrics to arrive at the same conclusion. Our findings suggest that in our scaled-down setting of 20 languages and 120k vocabulary size, the simpler method of training a tokenizer on a joint, balanced corpus is sufficient to create a good multilingual vocabulary that represents all languages well.}{[C]}
 
 \section{The influence of tokenizer metrics on the language representation quality}
 \label{sec:influence_of_metrics}

@@ -1,3 +1,22 @@
+# Final, final priorities
+
+- OK fix pdfa
+
+- capitalize chapter names
+- OK abstract
+- OK limitattions
+- OK go through the thesis and Tomasz comments
+
+- add back sentence retrieval?
+
+- OK add xmpdata
+
+- OK fix the layout
+-  OK poděkování
+
+----------------
+- podepsat výtisky
+
 # meeting 2
 
 structure of the chapters
@@ -52,17 +71,6 @@ publish a paper?
 
 - experimental setup
     - (low priority) Tokenizer implementations and important parameters
-
-Thursday:
-- fix the layout
-- poděkování
-- pdfa
-    - figures from paper break pdfa
-- citations cleanup
-- podepsat výtisky
-
-
-- remove alphabet discussion from the paper results section
 
 - projít citace
 

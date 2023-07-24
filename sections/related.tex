@@ -25,16 +25,16 @@
 
 % In order to organize Chapter Two, you will first start with an introduction about the general problem and your topic. Then you will provide an advance organizer, which indicates what will be covered in the literature review.
 
-In this thesis, we investigate the effect of subword tokenization on the performance of multilingual pretrained models. To that end, we first introduce multilingual language models. Then, we explain the concept of subword tokenization and the standard subword tokenization methods. Lastly, we show what problems have been identified when using standard tokenizers in multilingual settings and what methods have been proposed to mitigate these problems.
+In this chapter, we describe our related work. We introduce multilingual language models and the tasks that are used to assess their performance. Then, we explain the concept of subword tokenization and the standard subword tokenization methods. Lastly, we show what problems have been identified when using standard tokenizers in multilingual settings and what methods have been proposed to mitigate these problems.
 
 % \tomasz{Rewrite the intro: Be more clear and sepecific}
 % \tomasz{Genearal remark: you may create separate section summarizing the metrics of allocation (e.g. fertility, ALP) ala overlap (e.g. Wasserstein)}
 
 \section{Multilingual language models}
 
-In recent years we have seen a dramatic rise in the use of neural language models. The premise of these models is the ability to learn unsupervised from large amounts of unlabeled data. 
+In recent years, we have seen a dramatic rise in the use of neural language models. The premise of these models is the ability to learn unsupervised from large amounts of unlabeled data. 
 
-We focus on studying the properties of \textbf{multilingual} language models following \citet{devlin_bert_2019} (mBERT)\footnote{We cite the monolingual BERT paper as the mBERT model does not have an associated publication. In the literature, sometimes the mBERT Github README is cited for the multilingual variant\cite{devlin_bertmultilingualmd_2019}} and \citet{conneau_unsupervised_2020} (XLM-R). In these works, a Transformer \cite{vaswani_attention_2017} based multilingual masked language model is pretrained on sentences sampled from a multilingual corpus of around 100 languages. This allows for cross-lingual transfer, which the authors show on a variety of language understanding tasks.
+We focus on studying the properties of \textbf{multilingual} language models following the works of \citet{devlin_bert_2019} and \citet{conneau_unsupervised_2020}, who introduced the models mBERT\footnote{We cite the monolingual BERT paper as the mBERT model does not have an associated publication. In the literature, sometimes the mBERT Github README is cited for the multilingual variant\cite{devlin_bertmultilingualmd_2019}} and XLM-R, respectively. In these works, a Transformer \cite{vaswani_attention_2017} based multilingual masked language model is pretrained on sentences sampled from a multilingual corpus of around 100 languages. Training the models on a multilingual dataset allows the model to learn a shared representation for all languages. This shared representation can then be used for cross-lingual transfer, which the authors show on a variety of language understanding tasks.
 
 The multilingual models such as mBERT or XLM-R are composed of the tokenizer, which splits the input text into tokens, the embedding matrix, which encodes the tokens into a sequence of word embeddings, and the Transformer encoder, which transforms the sequence of word embeddings into a sequence of so-called contextualized embeddings. The contextualized embeddings are then fed into a task-specific output layer --- usually a linear layer with a softmax activation. The pretraining is done using the masked language modeling task, where some of the input tokens are stochastically masked out and the model is trained to predict the masked tokens \cite{devlin_bert_2019}.
 
@@ -104,11 +104,11 @@ Subword tokenization methods split up words into subword units, which are then u
 
 \subsection{Byte Pair Encoding (BPE)}
 
-The Byte Pair Encoding (BPE) algorithm was introduced by \citet{sennrich_neural_2016}. They have adapted a compression algorithm \cite{gage_new_1994} to learn a subword vocabulary from a corpus. This method was shown to improve the performance of neural machine translation (NMT) models. BPE was subsequently used for some of the well-known pretrained models such as GPT-2 \citep{radford_improving_2018}.
+The Byte Pair Encoding (BPE) algorithm was introduced by \citet{sennrich_neural_2016}. They have adapted a compression algorithm by \citet{gage_new_1994} to learn a subword vocabulary from a corpus. This method was shown to improve the performance of neural machine translation (NMT) models. BPE was subsequently used for some of the well-known pretrained models such as GPT-2 \citep{radford_improving_2018}.
 
-The principle of BPE is to iteratively merge the most frequent byte pairs in the corpus until the vocabulary size reaches the target size. The algorithm starts with a vocabulary of unique characters used in the input corpus. Using this vocabulary, we then compute the frequency of every character pair and merge the most frequent pair to create a new subword unit. We recompute the frequency of the subword unit pairs and repeat the process until the target vocabulary size is reached.
+The principle of BPE is to iteratively merge the most frequent byte pairs in the corpus until the vocabulary size reaches the target size. The algorithm starts with a vocabulary of only the unique characters used in the input corpus. Using this initial vocabulary, we then compute the frequency of every character pair and merge the most frequent pair to create a new subword unit. We recompute the frequency of the subword unit pairs and repeat the process until the target vocabulary size is reached.
 
-To tokenize an input text, the BPE algorithm then iteratively merges the pairs in the same order as they were merged during training. The algorithm stops when it has merged all pairs in the vocabulary. The output of the algorithm is a sequence of subword units that can be used as the input tokens for the neural model. We show the pseudocode of the BPE algorithm in Algorithm \ref{alg:bpe}.
+To tokenize an input text, the BPE algorithm then iteratively merges the pairs in the same order as they were merged during training. The algorithm stops when it has merged all pairs in the vocabulary. The output of the algorithm is a sequence of subword units that can be used as the input tokens for the neural model. We show the pseudocode of the BPE tokenizer training in Algorithm \ref{alg:bpe}.
 
 \begin{algorithm}
     \begin{algorithmic}
@@ -144,7 +144,7 @@ The implementation in the Tensorflow library follows a different, top-down appro
 \subsection{Unigram LM}
 \label{sec:unigram}
 
-The Unigram LM tokenizer, sometimes referred to as the SentencePiece tokenizer \citep{kudo_sentencepiece_2018}, was introduced by \citet{kudo_subword_2018}. The motivation for this method was to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
+The Unigram LM tokenizer, sometimes referred to as the Sentencepiece tokenizer after the name of the library that implements it \citep{kudo_sentencepiece_2018}, was introduced by \citet{kudo_subword_2018}. The motivation for this method is to create a probabilistic model for subword tokenization. With this model, it is then possible to sample different segmentations of the input text. Training on these varied segmentations empirically improves the performance of the NMT models. In large language models such as XLM-R, the Unigram tokenizer is used deterministically, always choosing the most probable segmentation.
 
 Given an input sentence $X$, the Unigram LM algorithm finds the most probable segmentation $x^\star$ for the input sentence X:
 
@@ -167,7 +167,7 @@ Here, the subword occurrence probabilities cannot be computed using occurrence s
 
 By maximizing the marginal likelihood, the Unigram LM considers all possible segmentations of the input sentences when estimating the subword occurrence probabilities $p(x_i)$. After optimization of $p(x)$, it is then possible to compute the most probable segmentation $x^\star$ for a given input sentence $X$ using the Viterbi algorithm.
 
-The training of the Unigram LM works in a top-down fashion. It starts with a large seed vocabulary of the most frequent character n-grams. The default setting is seeding the vocabulary with top 1M most frequent character n-grams with $n \leq 16$. These character n-grams are then iteratively pruned down to the target vocabulary size in the following way:
+The training of the Unigram LM works in a top-down fashion. It starts with a large seed vocabulary of the most frequent substrings (character n-grams). The default setting is seeding the vocabulary with top 1\,000\,000 most frequent character n-grams with $n \leq 16$. These character n-grams are then iteratively pruned down to the target vocabulary size in the following way:
 
 \begin{enumerate}
     \item With a given vocabulary $\mathcal{V}$, estimate the subword occurrence probabilities $p(x_i)$ using the EM algorithm.
@@ -307,7 +307,7 @@ In their paper \Citetitle{chung_improving_2020} \cite{chung_improving_2020}, \ci
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.9\textwidth]{img/temp/chung_language_vectors.png}
+    \includegraphics[width=0.7\textwidth]{img/temp/chung_language_vectors.png}
     \caption{Binary vector representations used for language clustering. Figure taken from \cite{chung_improving_2020}.}
     \label{fig:chung_vectors}
 \end{figure}
@@ -357,7 +357,7 @@ After the languages are clustered, the cluster-specific vocabularies are trained
 The final vocabulary is then compared to the standard recipe of training a Unigram LM vocabulary on a joint corpus\footnote{The authors do not define what they mean by following the "standard recipe". Based on the related work the authors replicate closely (mBERT and XLM-R) and compare themselves to, we assume that the standard recipe is training a Unigram LM tokenizer on the pretraining data after the exponential subsampling described in \ref{sec:data_scope}. The authors do mention using the sampling factor $\alpha=0.7$ for the pretraining data in the Appendix.}. Because the proposed clustering method does not have a way of controlling the size of the final vocabulary as taking the union inadvertently leads to some tokens being merged, the authors compare the vocabularies by first following the clustering method and arriving at a 488k subword vocabulary. Then the standard method is followed to train a vocabulary of the same size.
 
 The authors evaluate the vocabularies intrinsically - by examining the average number of tokens per sentence, out-of-vocabulary rate and vocabulary overlap using the Wasserstein-1 distance.
-By computing the average number of tokens per sentence for the whole corpus and for each language separately, the authors show that their method leads to a smaller average number of tokens per sentence for the whole corpus and further show that the improvements are more prominent for the low-resource languages. The authors also show that the out-of-vocabulary rate is lower for the language-clustered vocabulary, again the largest reductions in the OOV rate are in the low-resource and rare-script languages. Finally, the authors show on four selected languages that the language-clustered vocabulary leads to a smaller Wasserstein-1 distance between two similar languages and at the same time larger distance between two linguistically different languages.\footnote{We argue in \autoref{sec:jsd} that the Wasserstein-1 distance is not a suitable metric for measuring the distance between two vocabularies. It is a metric defined on probability measures and not on probability distributions.}
+By computing the average number of tokens per sentence for the whole corpus and for each language separately, the authors show that their method leads to a smaller average number of tokens per sentence for the whole corpus and further show that the improvements are more prominent for the low-resource languages. The authors also show that the out-of-vocabulary rate is lower for the language-clustered vocabulary, again the largest reductions in the OOV rate are in the low-resource and rare-script languages. Finally, the authors show on four selected languages that the language-clustered vocabulary leads to a smaller Wasserstein-1 distance between two similar languages and at the same time larger distance between two linguistically different languages\footnote{We argue in \autoref{sec:jsd} that the Wasserstein-1 distance is not a suitable metric for measuring the distance between two vocabularies. It is a metric defined on probability measures and not on probability distributions.}.
 
 The clustered vocabulary is then used to train a smaller and bigger multilingual masked language model and evaluated on three distinct, multilingual tasks (question answering, natural language inference and named entity recognition). The baselines selected are the original mBERT model, XLM-R model and a smaller reproduction of XLM-R with an increased vocabulary size to match the parameter size of the introduced model. The authors show improvements for the smaller model on all three tasks over their baseline reproduction. Then they show the improvements in QA and NER tasks for the bigger model over the XLM-R and mBERT baselines. 
 
@@ -530,7 +530,7 @@ After the preliminary run, they fully train the final model with the 1M vocabula
 
 % -  Rust uses mBERT which was trained with alpha=0.7
 
-\subsection{Other approaches}
+\subsection{Other tokenization approaches}
 
 Several other works propose different methods for tokenization. In the thesis, we focus on methods that propose novel tokenization methods. There are however different approaches for text representation that aim to improve the performance of multilingual language models. We briefly describe some of them in this section.
 

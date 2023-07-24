@@ -2,27 +2,61 @@
 \chapter{Discussion}
 
 
+% \section{Discussion of the language vectors}
+% \label{sec:language_vectors}
 
-\section{On the baseline selection}
-
-All three papers introduced in the previous section utilize two types of baselines to show the improvements of their proposed methods. The first type of baseline is a direct comparison to the existing multilingual language model from which their experiments originate. For all papers it is the original XLM-R model from \citet{conneau_unsupervised_2020}, \citet{chung_improving_2020} additionaly compares their model to mBERT \cite{devlin_bert_2019}. The second type of baseline is obtained by retraining the original XLM-R model with the same training procedures as the proposed methods to control for variables that may influence the results, other than the tokenizer training method. In particular, \citet{chung_improving_2020} specifies that they control for the hyperparameters, number of pretraining languages and number of parameters of the model which as they point out is strongly correlated with the performance of the multilingual model. \cite{conneau_unsupervised_2020}
-
-One difference that the three papers have in common is that they use a higher $\alpha$ scaling factor for the language balance than the original XLM-R paper for the baseline recreation. \citet{zheng_allocating_2021} uses $\alpha=0.7$ while \citet{chung_improving_2020,liang_xlm-v_2023} use $\alpha=0.5$ for their reproduction of XLM-R. This makes the data used for training the model and crucially the tokenizer more biased towards the high-resource languages compared to the original paper, where the factor $\alpha=0.3$ is selected. This choice may affect the balance of the languages in the tokenizer and in turn affect the multilingual performance of the model.
-
-We propose to compare the reproduced methods with the original method from \citet{conneau_unsupervised_2020} by setting the scaling factor $\alpha=0.3$. Moreover, we also propose a second baseline, where we simply use the balancing factor $\alpha=0.0$, which leads to the tokenizer that should be even less biased towards any language. 
+% Here we need to handle the tokens that occur 0 times for a given language and thus would have an infinite negative log-likelihood. From Figure 1 in \cite{liang_xlm-v_2023} we infer, that the authors substitute inf with 0. This is strange considering that log-likelihood of 0 implies probability 1. The euclidean distance between two language vector representations used in the k-means algorithm could be then affected by low-occurence tokens that occur infrequently in one language (high negative log-likelihood) but do not occur in another ($v^l_i = 0$). Nevertheless as we show in figure \xxx{ref}, the language similarities still correlate with the overlap count based similarity used in \cite{chung_improving_2020}
 
 
-- we have shown the importance of the data balance for the language representation quality
-    - Rust et al uses alpha=0.7 from mbert
-    - Chung uses alpha=0.7 from xlm-r etc
+
+% from results
+
+% \tomaszrep{Especially when considering word-level downstream tasks, the learned contextualized representations are better when the tokenizer segments the text into longer tokens (high characters per token), when the tokenizer allocates tokens more uniformly (high average rank), and when there is less overlap between the languages (high Jensen-Shannon divergence).}{[C]}
+% \tomaszrep{ We observe that we need around 100k-1M lines per language to train a good, multilingual tokenizer. The alphabet size does affect the number of UNK tokens but does not have a significant influence on the rest of the metrics if we stay in the range of 1000-5000 alphabet size. As for the language imbalance, we observe that it does influence the per-language metrics heavily and that it lowers the tokenization quality for the low-resource languages more than it improves it for the high-resource.}{[C]}
+
+% While the aforementioned \tomaszrep{authors do}{works} compare their methods to the standard tokenizer training, the crucial difference in our methodology is that we additionally compare their replicated language-balancing methods with the vanilla Sentencepiece tokenizer trained on a \textbf{balanced} multilingual dataset. 
+% \tomaszrep{We find that when compared to this stronger, yet simple baseline, the replicated approaches do not yield significant improvements on our proposed tokenizer metrics, neither per language nor overall.}{[C]}
+
+% \tomaszrep{We observe that the replicated methods of Chung, Zheng, and balanced Unigram do improve the language modeling capabilities over the unbalanced baseline on the word-level tasks while having no impact on the sentence-level task. On the other hand, we do not observe significant differences between the replicated methods and the simple baseline of training the tokenizer on a balanced set which is in line with our previous assessment where we used our proposed tokenizer metrics to arrive at the same conclusion. Our findings suggest that in our scaled-down setting of 20 languages and 120k vocabulary size, the simpler method of training a tokenizer on a joint, balanced corpus is sufficient to create a good multilingual vocabulary that represents all languages well.}{[C]}
+
+
+% Zheng-balanced unigram similarity:
+
+%This result seems to validate the choice of the ALP metric for the selection of vocabulary sizes in the Zheng method (see \autoref{fig:zheng_vs_alphas_alp}) but it also calls into question the necessity of the separate training of tokenizers for each language. One advantage of the Zheng method is that splitting the data into separate languages lowers the memory requirements for the training of the separate Sentencepiece Unigram. However, this comes at a cost of higher overall compute time because of the need for training hundreds of tokenizers to be able to select the ones that maximize the overall ALP after merging them.
+
+% on character coverage
+% - BPE was best even though it has the lowest character coverage
+
+% \section{On the baseline selection}
+
+% All three papers introduced in the previous section utilize two types of baselines to show the improvements of their proposed methods. The first type of baseline is a direct comparison to the existing multilingual language model from which their experiments originate. For all papers it is the original XLM-R model from \citet{conneau_unsupervised_2020}, \citet{chung_improving_2020} additionaly compares their model to mBERT \cite{devlin_bert_2019}. The second type of baseline is obtained by retraining the original XLM-R model with the same training procedures as the proposed methods to control for variables that may influence the results, other than the tokenizer training method. In particular, \citet{chung_improving_2020} specifies that they control for the hyperparameters, number of pretraining languages and number of parameters of the model which as they point out is strongly correlated with the performance of the multilingual model. \cite{conneau_unsupervised_2020}
+
+% One difference that the three papers have in common is that they use a higher $\alpha$ scaling factor for the language balance than the original XLM-R paper for the baseline recreation. \citet{zheng_allocating_2021} uses $\alpha=0.7$ while \citet{chung_improving_2020,liang_xlm-v_2023} use $\alpha=0.5$ for their reproduction of XLM-R. This makes the data used for training the model and crucially the tokenizer more biased towards the high-resource languages compared to the original paper, where the factor $\alpha=0.3$ is selected. This choice may affect the balance of the languages in the tokenizer and in turn affect the multilingual performance of the model.
+
+% We propose to compare the reproduced methods with the original method from \citet{conneau_unsupervised_2020} by setting the scaling factor $\alpha=0.3$. Moreover, we also propose a second baseline, where we simply use the balancing factor $\alpha=0.0$, which leads to the tokenizer that should be even less biased towards any language. 
+
+
+% - we have shown the importance of the data balance for the language representation quality
+%     - Rust et al uses alpha=0.7 from mbert
+%     - Chung uses alpha=0.7 from xlm-r etc
 
 - limitation - we didnt investigate BPE more in depth
 
+- on overlap
+    - we see that overlap surprisingly does not change much even if we train separate tokenizers and then merge them
+    - seemingly the most important factor is the granularity of tokenization. If tokens are short, it is more likely that they will overlap with other languages. On the other hand making tokens longer will make them more language specific.
+    - but short tokens are bad, we see that token length correlates the most with the downstream performance
+    - so it is a question whether we want to have overlap if it is brought at the cost of shorter tokens.
+    - data balance affects overlap by making some languages underrepresented and thus forced to share tokens with other languages - we see this in chung where the low resource languages are squished into the high resource ones
 
-- our comparison is limited to 20 langs and small models
-    - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
-    - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.
-- we also focus heavily on Sentencepiece Unigram as it is the most popular method. From our experiments it seems that Huggingface BPE is a good alternative to Sentencepiece Unigram and it would be interesting to compare it to the other methods
+- clustering methods cluster together typologically different langugaes that share the script. 
+
+% - our comparison is limited to 20 langs and small models
+%     - it is not feasible for us to train Sentencepiece on more than 40M lines of text which limits the number of languages we can compare
+%     - this is a clear advantage of the Zheng method where they can train a separate tokenizer for each language - and thus overcome this liimtation.
+%     - we still believe that our methodology is a contribution in itself and following it we could compare the methods on a larger scale, if we had access to more computational resources
+%         - for example we could pose the question after how many languages does the Zheng method become better than Sentencepiece Unigram. Then we could investigate which parameters could influence this possible detriment in performance (number of init sentencepieces, pruning steps etc.)
+% - we also focus heavily on Sentencepiece Unigram as it is the most popular method. From our experiments it seems that Huggingface BPE is a good alternative to Sentencepiece Unigram and it would be interesting to compare it to the other methods
 
 - alpha0 assumes that we have enough data for each language
     - this might not be the case for some extremely-low-resource languages
@@ -37,3 +71,4 @@ We propose to compare the reproduced methods with the original method from \cite
 - Chung runs the preliminary expeirment over different cluster numbers and finds the 8 to be best. We see that the best tokenizer is yielded with higher number of clusters ? The reason might be that their method doesnt fix the vocabluary size and higher number of clusters means smaller vocabulary size
 
 - strangely, we see that alpha=0.7/0.5 which are the baselines for chung and liang are quite close to our replications with low number of clusters. Low number of clusters is selected in CHung/linag so whats going on there?
+
